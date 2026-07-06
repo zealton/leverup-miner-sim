@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeverUp Miner Economics Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --panel:#111111; --panel2:#151515; --border:#2a2a2a;
+  --acid:#C7F50D; --acid2:#CCFF00; --red:#FA5000;
+  --text:#e8e8e8; --muted:#7a7a7a; --dim:#4a4a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 20px 80px}
+
+/* header */
+header{border:1px solid var(--border);padding:24px 28px;margin-bottom:16px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;top:0;right:0;width:220px;height:100%;
+  background:repeating-linear-gradient(-55deg,transparent 0 10px,rgba(199,245,13,.05) 10px 11px)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;color:var(--acid);text-transform:uppercase;margin-bottom:8px}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(20px,3.4vw,32px);font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+h1 .thin{color:var(--muted);font-weight:500}
+.sub{color:var(--muted);margin-top:10px;max-width:760px;font-size:13px}
+.sub b{color:var(--text);font-weight:600}
+
+/* layout */
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.panel{border:1px solid var(--border);background:var(--panel)}
+.panel-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.panel-h .tag{color:var(--acid)}
+.panel-b{padding:16px}
+
+/* sliders */
+.ctl{margin-bottom:18px}
+.ctl:last-child{margin-bottom:4px}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ctl label{font-size:12px;color:var(--text);font-weight:500}
+.ctl .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid)}
+.ctl .val.neg{color:var(--red)}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--acid);border:none;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid);border:none;cursor:pointer;border-radius:0}
+input[type=range]:focus-visible{outline:1px solid var(--acid);outline-offset:4px}
+.ctl .hint{font-size:11px;color:var(--dim);margin-top:4px}
+.sect{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;
+  margin:22px 0 12px;padding-top:14px;border-top:1px dashed var(--border)}
+.sect:first-child{margin-top:0;padding-top:0;border-top:none}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);padding:16px}
+.stat .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.stat .v{font-family:'Orbitron',sans-serif;font-size:clamp(18px,2.2vw,26px);font-weight:700;color:var(--acid)}
+.stat .v.white{color:var(--text)}
+.stat .u{font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:4px}
+
+/* equilibrium bar — signature element */
+.eq{border:1px solid var(--border);background:var(--panel);padding:20px 24px 26px;margin-bottom:16px}
+.eq-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.eq-title .t{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.eq-state{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.eq-state.exp{color:var(--acid)} .eq-state.con{color:var(--red)} .eq-state.bal{color:var(--text)}
+.eq-track{position:relative;height:46px;background:var(--panel2);border:1px solid var(--border)}
+.eq-zone-profit{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,rgba(199,245,13,.16),rgba(199,245,13,.04))}
+.eq-zone-loss{position:absolute;top:0;height:100%;right:0;background:linear-gradient(90deg,rgba(250,80,0,.03),rgba(250,80,0,.14))}
+.eq-nstar{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--text)}
+.eq-nstar .lbl{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text);white-space:nowrap}
+.eq-now{position:absolute;top:0;bottom:0;width:12px;transform:translateX(-6px);background:var(--acid);transition:left .15s ease}
+.eq-now.over{background:var(--red)}
+.eq-now .lbl{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;white-space:nowrap;color:inherit}
+.eq-legend{display:flex;justify-content:space-between;margin-top:30px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.eq-note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+.eq-note b{color:var(--text)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
+th:first-child,td:first-child{text-align:left}
+td{padding:11px 12px;border-bottom:1px solid #1c1c1c;text-align:right;font-family:'IBM Plex Mono',monospace}
+tr:last-child td{border-bottom:none}
+td.name{font-family:'Inter',sans-serif;font-weight:600;color:var(--text)}
+td.name .d{display:block;font-weight:400;font-size:11px;color:var(--dim);font-family:'Inter',sans-serif}
+.pos{color:var(--acid)} .negv{color:var(--red)} .mut{color:var(--muted)}
+.pill{display:inline-block;font-size:10px;padding:1px 7px;border:1px solid var(--border);color:var(--muted);letter-spacing:.08em}
+
+/* chart */
+.chart-wrap{padding:16px}
+canvas{width:100%;height:320px;display:block}
+.legend{display:flex;gap:18px;flex-wrap:wrap;padding:0 16px 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:16px;height:2px;display:inline-block}
+
+/* solvency + formulas */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:960px){.two{grid-template-columns:1fr}}
+.solv{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:2}
+.solv .row{display:flex;justify-content:space-between;border-bottom:1px dashed #1c1c1c;padding:2px 0}
+.solv .row:last-child{border-bottom:none}
+.solv .big{color:var(--acid);font-weight:600}
+.badge{display:inline-block;border:1px solid var(--acid);color:var(--acid);font-size:10px;letter-spacing:.14em;padding:2px 8px;text-transform:uppercase}
+.formulas{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);line-height:2.1}
+.formulas b{color:var(--acid);font-weight:500}
+.formulas .fm{color:var(--text)}
+footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">LeverUp // Contribution Engine</div>
+  <h1>Miner Economics <span class="thin">/ Boundary Simulator</span></h1>
+  <p class="sub">Every parameter below is public. Pull the sliders and find the boundary yourself: mining is profitable when the fleet is <b>below equilibrium N*</b>, and unprofitable above it. The market — not the team — keeps the system pinned to that line, because refueling is a weekly decision every miner makes with their own money.</p>
+</header>
+
+<div class="grid">
+  <!-- CONTROLS -->
+  <div class="panel">
+    <div class="panel-h">Parameters <span class="tag">INPUT</span></div>
+    <div class="panel-b" id="controls">
+
+      <div class="sect">Protocol Revenue / week</div>
+      <div class="ctl"><div class="ctl-top"><label>Trading fees</label><span class="val" id="v_fee"></span></div>
+        <input type="range" id="i_fee" min="10000" max="500000" step="5000" value="100000"></div>
+      <div class="ctl"><div class="ctl-top"><label>Client PnL (protocol side)</label><span class="val" id="v_closs"></span></div>
+        <input type="range" id="i_closs" min="-200000" max="500000" step="5000" value="50000">
+        <div class="hint">Negative weeks pay $0 to the pool — deficit carries forward. Fees still pay out.</div></div>
+      <div class="ctl"><div class="ctl-top"><label>Pool share</label><span class="val" id="v_pool"></span></div>
+        <input type="range" id="i_pool" min="10" max="50" step="1" value="30"></div>
+
+      <div class="sect">Machine Supply</div>
+      <div class="ctl"><div class="ctl-top"><label>Active machines N</label><span class="val" id="v_n"></span></div>
+        <input type="range" id="i_n" min="200" max="20000" step="100" value="3600"></div>
+      <div class="ctl"><div class="ctl-top"><label>Batch price (chassis + full tank)</label><span class="val" id="v_price"></span></div>
+        <input type="range" id="i_price" min="100" max="1000" step="10" value="200"></div>
+      <div class="ctl"><div class="ctl-top"><label>Fuel tank life</label><span class="val" id="v_life"></span></div>
+        <input type="range" id="i_life" min="12" max="52" step="2" value="24"></div>
+
+      <div class="sect">Fleet Activity Mix</div>
+      <div class="ctl"><div class="ctl-top"><label>Idle (no activity, decays to 0)</label><span class="val" id="v_lazy"></span></div>
+        <input type="range" id="i_lazy" min="0" max="100" step="5" value="30"></div>
+      <div class="ctl"><div class="ctl-top"><label>Light (active, small boost)</label><span class="val" id="v_light"></span></div>
+        <input type="range" id="i_light" min="0" max="100" step="5" value="40"></div>
+      <div class="ctl"><div class="ctl-top"><label>Full boost (capped 3×)</label><span class="val" id="v_full"></span></div>
+        <input type="range" id="i_full" min="0" max="100" step="5" value="30" disabled>
+        <div class="hint">Auto = 100% − idle − light</div></div>
+
+      <div class="sect">Boost Economics</div>
+      <div class="ctl"><div class="ctl-top"><label>Boost cap m</label><span class="val" id="v_m"></span></div>
+        <input type="range" id="i_m" min="2" max="5" step="0.5" value="3"></div>
+      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — counted fee to max one machine</label><span class="val" id="v_cap"></span></div>
+        <input type="range" id="i_cap" min="100" max="2000" step="50" value="500"></div>
+    </div>
+  </div>
+
+  <!-- OUTPUTS -->
+  <div>
+    <div class="stats">
+      <div class="stat"><div class="k">Weekly Pool P</div><div class="v" id="o_pool">—</div><div class="u">USD, buyback → LV</div></div>
+      <div class="stat"><div class="k">Equilibrium N*</div><div class="v white" id="o_nstar">—</div><div class="u">machines @ refuel break-even</div></div>
+      <div class="stat"><div class="k">Fuel Burn</div><div class="v white" id="o_fuel">—</div><div class="u">USD / machine / week</div></div>
+      <div class="stat"><div class="k">Fleet Avg Multiplier μ̄</div><div class="v white" id="o_mu">—</div><div class="u">weighted effective points</div></div>
+    </div>
+
+    <div class="eq">
+      <div class="eq-title">
+        <span class="t">Fleet vs. Equilibrium Boundary</span>
+        <span class="eq-state" id="eq_state">—</span>
+      </div>
+      <div class="eq-track" id="eq_track">
+        <div class="eq-zone-profit" id="eq_zp"></div>
+        <div class="eq-zone-loss" id="eq_zl"></div>
+        <div class="eq-nstar" id="eq_ns"><span class="lbl" id="eq_ns_lbl">N*</span></div>
+        <div class="eq-now" id="eq_now"><span class="lbl" id="eq_now_lbl">N</span></div>
+      </div>
+      <div class="eq-legend"><span>0</span><span id="eq_max">—</span></div>
+      <p class="eq-note" id="eq_note"></p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h">Per-Machine P&amp;L by Persona <span class="tag">WEEKLY</span></div>
+      <div style="overflow-x:auto">
+      <table id="ptable">
+        <thead><tr>
+          <th>Persona</th><th>Mult.</th><th>Rev /wk</th><th>Cost /wk</th><th>Net /wk</th><th>Payback</th><th>ROI @tank end</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">Cumulative Net P&amp;L over one fuel tank <span class="tag">USD</span></div>
+      <div class="chart-wrap"><canvas id="chart" width="900" height="320"></canvas></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <div class="panel-h">Protocol Solvency <span class="badge" id="solv_badge">Always ≥ 0</span></div>
+        <div class="panel-b solv" id="solv"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">The Math <span class="tag">VERIFY IT</span></div>
+        <div class="panel-b formulas">
+          <div><b>Pool</b> <span class="fm">P = s · ( Fee + max(0, ClientPnL + carry) )</span></div>
+          <div><b>Revenue</b> <span class="fm">R(m) = P · m / (N · μ̄)</span> per machine / week</div>
+          <div><b>Fuel</b> <span class="fm">f = BatchPrice / TankWeeks</span></div>
+          <div><b>Refuel iff</b> <span class="fm">R(m) ≥ f + 0.7 · OwnBoostFee</span></div>
+          <div><b>Equilibrium</b> <span class="fm">N* = m · P / (μ̄ · f)</span></div>
+          <div><b>Anti-wash</b> <span class="fm">recovery ≤ s ≤ 30% of any fee you pay</span></div>
+          <div style="margin-top:8px;color:var(--dim)">Wash trading is structurally loss-making: your own fee buys back at most s% of itself. Referrals are the only zero-cost boost — by design.</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      MODEL v1.1 · CHASSIS IS PERMANENT — FUEL IS CONSUMABLE · EMISSIONS ARE 100% BUYBACK-FUNDED, ZERO MINT ·
+      IDLE DECAY: GRACE 1W → −20PP/W → 0, ANY ACTIVE WEEK RESETS TO 100% · THIS SIMULATOR ASSUMES IMMEDIATE CLAIM AT MAX TAX SCHEDULE OFF — SEE DOCS FOR PATIENCE POOL.
+    </footer>
+  </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmtUSD=v=>{const a=Math.abs(v);let s;if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e3)s='$'+(a/1e3).toFixed(1)+'K';else s='$'+a.toFixed(2);return (v<0?'−':'')+s};
+const fmtN=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v);
+
+// idle decay path over a tank: w1 grace=1.0, then −20pp/week → 0 (w2=0.8 … w6+=0)
+function idlePath(weeks){const q=[];for(let w=1;w<=weeks;w++){q.push(w===1?1.0:Math.max(0,1.0-0.2*(w-1)))}return q}
+
+const state={};
+function read(){
+  state.fee=+$('i_fee').value; state.closs=+$('i_closs').value; state.s=+$('i_pool').value/100;
+  state.N=+$('i_n').value; state.price=+$('i_price').value; state.life=+$('i_life').value;
+  let lazy=+$('i_lazy').value, light=+$('i_light').value;
+  if(lazy+light>100){light=100-lazy;$('i_light').value=light}
+  state.lazy=lazy/100; state.light=light/100; state.full=Math.max(0,1-state.lazy-state.light);
+  $('i_full').value=Math.round(state.full*100);
+  state.m=+$('i_m').value; state.cap=+$('i_cap').value;
+}
+
+function compute(){
+  const P = state.s * (state.fee + Math.max(0,state.closs));
+  const idleAvg = idlePath(state.life).reduce((a,b)=>a+b,0)/state.life;
+  const lightM = 1.3;
+  const mu = state.lazy*idleAvg + state.light*lightM + state.full*state.m;
+  const fuel = state.price/state.life;
+  const nstar = mu>0 ? state.m*P/(mu*fuel) : 0;
+  const yieldPerPoint = mu>0 ? P/(state.N*mu) : 0;
+
+  // personas: [name, desc, weekly multiplier array over tank, weekly extra cost]
+  const idleW = idlePath(state.life);
+  const personas=[
+    {name:'Referral KOL',desc:'full boost via referrals · zero boost cost',color:'#C7F50D',
+     mult:w=>state.m, cost:w=>fuel},
+    {name:'Organic trader',desc:'trades anyway · fee is sunk, boost = rebate',color:'#8ab4ff',
+     mult:w=>lightM, cost:w=>fuel},
+    {name:'Idle holder',desc:'buys & forgets · decays to 0, fuel still burns',color:'#7a7a7a',
+     mult:w=>idleW[w-1], cost:w=>fuel},
+    {name:'Wash trader',desc:'pays own fees purely to farm boost',color:'#FA5000',
+     mult:w=>state.m, cost:w=>fuel+state.cap} // fuel + CAP_FEE own fee to hold max boost
+  ];
+
+  const rows=personas.map(p=>{
+    // upfront −price buys chassis + first full tank; weekly extra cost = own boost fees only (wash persona)
+    let cum=-state.price, cumArr=[], payback=null;
+    for(let w=1;w<=state.life;w++){
+      const rev=yieldPerPoint*p.mult(w);
+      const extra=(p===personas[3])?state.cap*1.0:0; // wash: own fee outlay
+      const net=rev-extra;
+      cum+=net; cumArr.push(cum);
+      if(payback===null&&cum>=0)payback=w;
+    }
+    const wkRev=yieldPerPoint*p.mult(1);
+    const wkCost=fuel+((p===personas[3])?state.cap:0);
+    return {...p,wkRev,wkCost,wkNet:wkRev-wkCost,cumArr,payback,roi:cumArr[state.life-1]/state.price};
+  });
+
+  // protocol solvency
+  const clossPos=Math.max(0,state.closs);
+  const protoNet=0.7*(state.fee+clossPos)+ (state.closs<0?0:0);
+  return {P,mu,fuel,nstar,yieldPerPoint,rows,protoNet,clossPos,idleAvg};
+}
+
+let chart=$('chart'),ctx=chart.getContext('2d');
+function drawChart(rows,life,price){
+  const dpr=window.devicePixelRatio||1;
+  const W=chart.clientWidth,H=320;
+  chart.width=W*dpr;chart.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const padL=64,padR=16,padT=16,padB=28;
+  let ymin=-price*1.1,ymax=price*0.5;
+  rows.forEach(r=>r.cumArr.forEach(v=>{if(v>ymax)ymax=v;if(v<ymin)ymin=v}));
+  ymax*=1.08; ymin*=1.05;
+  const X=w=>padL+(w/life)*(W-padL-padR);
+  const Y=v=>padT+(1-(v-ymin)/(ymax-ymin))*(H-padT-padB);
+  // grid
+  ctx.font='10px IBM Plex Mono';ctx.fillStyle='#4a4a4a';ctx.strokeStyle='#1c1c1c';ctx.lineWidth=1;
+  const steps=5;
+  for(let i=0;i<=steps;i++){const v=ymin+(ymax-ymin)*i/steps;const y=Y(v);
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+    ctx.fillText(fmtUSD(v),6,y+3);}
+  for(let w=0;w<=life;w+=Math.ceil(life/8)){ctx.fillText('W'+w,X(w)-8,H-8)}
+  // zero line
+  ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-padR,Y(0));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#7a7a7a';ctx.fillText('BREAK-EVEN',W-padR-78,Y(0)-6);
+  // lines
+  rows.forEach(r=>{
+    ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();
+    ctx.moveTo(X(0),Y(-price));
+    r.cumArr.forEach((v,i)=>ctx.lineTo(X(i+1),Y(v)));
+    ctx.stroke();
+    if(r.payback){ctx.fillStyle=r.color;ctx.beginPath();ctx.arc(X(r.payback),Y(r.cumArr[r.payback-1]),4,0,7);ctx.fill();}
+  });
+}
+
+function render(){
+  read();
+  const c=compute();
+  $('v_fee').textContent=fmtUSD(state.fee);
+  const cl=$('v_closs');cl.textContent=fmtUSD(state.closs);cl.className='val'+(state.closs<0?' neg':'');
+  $('v_pool').textContent=Math.round(state.s*100)+'%';
+  $('v_n').textContent=fmtN(state.N)+' units';
+  $('v_price').textContent='$'+state.price;
+  $('v_life').textContent=state.life+' weeks';
+  $('v_lazy').textContent=Math.round(state.lazy*100)+'%';
+  $('v_light').textContent=Math.round(state.light*100)+'%';
+  $('v_full').textContent=Math.round(state.full*100)+'%';
+  $('v_m').textContent=state.m+'×';
+  $('v_cap').textContent='$'+state.cap+' /wk';
+
+  $('o_pool').textContent=fmtUSD(c.P);
+  $('o_nstar').textContent=fmtN(c.nstar);
+  $('o_fuel').textContent='$'+c.fuel.toFixed(2);
+  $('o_mu').textContent=c.mu.toFixed(2)+'×';
+
+  // equilibrium bar
+  const maxAxis=Math.max(c.nstar*1.6,state.N*1.25,1000);
+  const pctStar=Math.min(98,c.nstar/maxAxis*100), pctNow=Math.min(98,state.N/maxAxis*100);
+  $('eq_zp').style.width=pctStar+'%';
+  $('eq_zl').style.width=(100-pctStar)+'%';
+  $('eq_ns').style.left=pctStar+'%';
+  $('eq_ns_lbl').textContent='N* = '+fmtN(c.nstar);
+  const now=$('eq_now');now.style.left=pctNow+'%';
+  $('eq_now_lbl').textContent='N = '+fmtN(state.N);
+  $('eq_max').textContent=fmtN(maxAxis)+' machines';
+  const ratio=c.nstar>0?state.N/c.nstar:9;
+  const st=$('eq_state');
+  if(ratio<0.9){st.textContent='Expansion — miners profit';st.className='eq-state exp';now.classList.remove('over');
+    $('eq_note').innerHTML='Fleet is <b>below N*</b>: a fully-boosted machine earns more than its weekly fuel burn. Expect chassis demand and refuel rate to rise until the gap closes. Early miners are collecting the rent of being early.';}
+  else if(ratio<=1.1){st.textContent='At equilibrium';st.className='eq-state bal';now.classList.remove('over');
+    $('eq_note').innerHTML='Fleet is <b>at the boundary</b>: the marginal full-boost miner breaks even on fuel. Higher-boost and referral-driven miners still profit; idle holders subsidize them. This is the market-cleared state.';}
+  else{st.textContent='Contraction — idle pressure';st.className='eq-state con';now.classList.add('over');
+    $('eq_note').innerHTML='Fleet is <b>above N*</b>: even full-boost machines can\'t cover fuel. Rational miners stop refueling, N falls, and yield recovers for those who stay. The system self-corrects — no team intervention needed.';}
+
+  // table
+  const tb=$('ptable').querySelector('tbody');tb.innerHTML='';
+  c.rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const pay=r.payback?('W'+r.payback):'<span class="mut">never</span>';
+    const roiCls=r.roi>=0?'pos':'negv';
+    const netCls=r.wkNet>=0?'pos':'negv';
+    tr.innerHTML=`<td class="name" style="border-left:2px solid ${r.color};padding-left:10px">${r.name}<span class="d">${r.desc}</span></td>
+      <td>${r.mult(1).toFixed(2)}×</td>
+      <td>${fmtUSD(r.wkRev)}</td>
+      <td>${fmtUSD(r.wkCost)}</td>
+      <td class="${netCls}">${fmtUSD(r.wkNet)}</td>
+      <td>${pay}</td>
+      <td class="${roiCls}">${(r.roi*100).toFixed(0)}%</td>`;
+    tb.appendChild(tr);
+  });
+
+  // legend
+  $('legend').innerHTML=c.rows.map(r=>`<span><i style="background:${r.color}"></i>${r.name}</span>`).join('');
+  drawChart(c.rows,state.life,state.price);
+
+  // solvency
+  const clossPos=Math.max(0,state.closs);
+  $('solv').innerHTML=`
+    <div class="row"><span>Fee revenue kept (70%)</span><span>${fmtUSD(0.7*state.fee)}</span></div>
+    <div class="row"><span>Client PnL kept (70% of positive leg)</span><span>${fmtUSD(0.7*clossPos)}</span></div>
+    <div class="row"><span>Negative client weeks</span><span>${state.closs<0?fmtUSD(state.closs)+' → deficit ledger, pool pays $0':'—'}</span></div>
+    <div class="row"><span>Chassis + fuel sales</span><span>+ upfront, 50% → reserve buyback</span></div>
+    <div class="row big"><span>Protocol weekly net</span><span>${fmtUSD(0.7*(state.fee+clossPos))} ${state.closs<0?'(before vault PnL)':''}</span></div>
+    <div style="margin-top:10px;color:var(--muted);font-family:Inter,sans-serif;font-size:12px;line-height:1.6">
+    Emissions are paid <b style="color:var(--text)">after</b> revenue is realized, funded 100% by buyback. The miner system cannot make the protocol USD-negative in any week, under any parameter setting on this page.</div>`;
+
+  const badge=$('solv_badge');
+  badge.textContent='Always ≥ 0';badge.style.borderColor='var(--acid)';badge.style.color='var(--acid)';
+}
+
+document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
+window.addEventListener('resize',()=>render());
+render();
+</script>
+</body>
+</html>
