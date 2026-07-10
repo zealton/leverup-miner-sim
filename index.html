@@ -26,6 +26,25 @@ h1 .thin{color:var(--muted);font-weight:500}
 .sub{color:var(--muted);margin-top:10px;max-width:760px;font-size:13px}
 .sub b{color:var(--text);font-weight:600}
 
+/* chinese mechanism intro */
+.intro{border:1px solid var(--border);background:var(--panel);margin-bottom:16px}
+.intro-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.intro-h .tag{color:var(--acid)}
+.intro-b{padding:18px 20px}
+.intro-lede{font-size:14px;color:var(--text);line-height:1.8;max-width:900px;margin-bottom:14px}
+.intro-lede b{color:var(--acid);font-weight:600}
+.intro-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+@media(max-width:960px){.intro-steps{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.intro-steps{grid-template-columns:1fr}}
+.istep{background:var(--panel2);padding:14px 14px 16px}
+.istep .n{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--acid);margin-bottom:6px}
+.istep .t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.istep .d{font-size:12px;color:var(--muted);line-height:1.7}
+.istep .d b{color:var(--text);font-weight:600}
+.intro-foot{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.8}
+.intro-foot b{color:var(--text)}
+
 /* layout */
 .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
 @media(max-width:960px){.grid{grid-template-columns:1fr}}
@@ -119,6 +138,26 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
   <h1>Miner Economics <span class="thin">/ Boundary Simulator</span></h1>
   <p class="sub">Every parameter below is public. Pull the sliders and find the boundary yourself: mining is profitable when the fleet is <b>below equilibrium N*</b>, and unprofitable above it. The market — not the team — keeps the system pinned to that line, because refueling is a weekly decision every miner makes with their own money.</p>
 </header>
+
+<section class="intro" lang="zh">
+  <div class="intro-h">这是什么机制？<span class="tag">机制说明 // MECHANISM</span></div>
+  <div class="intro-b">
+    <p class="intro-lede">这是 LeverUp「贡献引擎」矿机模型的<b>公开边界模拟器</b>。核心思想：矿机的收益全部来自协议的<b>真实收入回购</b>（零增发），而"是否续费加油"这个每周决策，让市场自己把矿机总量钉在盈亏平衡线 N* 上——无需团队干预。下面所有参数都是公开的，拖动滑块即可自己验证。</p>
+    <div class="intro-steps">
+      <div class="istep"><div class="n">01 / 买矿机</div><div class="t">机身 + 满油箱</div>
+        <div class="d">一次性买入（如 <b>$200</b>）：机身<b>永久</b>拥有，燃料按周消耗，烧完需续费。</div></div>
+      <div class="istep"><div class="n">02 / 挖收益</div><div class="t">真实收入分池</div>
+        <div class="d">协议每周把真实收入（手续费 + 客户亏损）的一部分（如 <b>30%</b>）回购成奖池，按算力占比分给所有矿机。<b>100% 回购、零增发</b>。</div></div>
+      <div class="istep"><div class="n">03 / 加速</div><div class="t">交易或推荐 → 最高 3×</div>
+        <div class="d">交易或推荐好友可给矿机加速（上限 <b>3×</b>）；完全不活跃的矿机产出会逐周<b>衰减到 0</b>。</div></div>
+      <div class="istep"><div class="n">04 / 加油决策</div><div class="t">市场自动平衡</div>
+        <div class="d">只有当周收益 ≥ 燃料成本，理性矿工才会续费。矿机太多 → 收益摊薄 → 有人退出 → 收益回升。均衡点就是 <b>N*</b>。</div></div>
+      <div class="istep"><div class="n">05 / 反刷量</div><div class="t">刷量必亏</div>
+        <div class="d">自己刷手续费，最多只能拿回所付费用的 <b>30%</b>——结构上必然亏损。推荐是唯一的零成本加速方式（有意为之）。</div></div>
+    </div>
+    <p class="intro-foot"><b>怎么读下面的图：</b>当前矿机数 N 在 N* 左侧（绿色区）= 挖矿有利润、舰队会扩张；在右侧（红色区）= 满速矿机也覆盖不了燃料费、理性矿工停止续费、系统自动收缩。协议端在任何参数下都不会出现 USD 净流出。</p>
+  </div>
+</section>
 
 <div class="grid">
   <!-- CONTROLS -->
