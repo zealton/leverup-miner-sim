@@ -208,6 +208,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
     <div class="panel-h"><span>我的矿机<span class="tip" data-tip="矿机 = 永久机身 NFT。油费每周从产出中自动内扣，你永远不需要手动加油。">?</span></span>
       <button class="primary" id="btn_buy" style="padding:5px 14px">＋ 购买矿机 $200</button></div>
     <div class="panel-b">
+      <div class="kv" id="my_share" style="margin-bottom:14px;display:none"></div>
       <div class="mgrid" id="mgrid"></div>
     </div>
   </div>
@@ -216,12 +217,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
   <div class="panel">
     <div class="panel-h">协议侧（全网）<span class="tag">MOCK</span></div>
     <div class="panel-b">
-      <div class="kv">
-        <div class="row"><span>本周奖池 P</span><span id="p_pool">—</span></div>
-        <div class="row"><span>全网矿机 N</span><span id="p_n">—</span></div>
-        <div class="row"><span>均衡点 N*</span><span id="p_nstar">—</span></div>
-        <div class="row"><span>油费（内扣）</span><span>$8.33 /台/周</span></div>
-      </div>
+      <div class="kv" id="proto_kv"></div>
       <div class="eq-track">
         <div class="eq-zone-profit" id="eq_zp"></div>
         <div class="eq-zone-loss" id="eq_zl"></div>
@@ -241,7 +237,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 </div>
 
 <footer>
-  原型参数（早期规模）：整机 $200 · 等效油费 $8.33/台/周 · 加速上限 3× · CAP_FEE $500/周 · 奖池 P ≈ $4.5K ± 波动 · 全网从 ~350 台起步、均衡约 1.1K 台 · 休眠判定 = 连续 2 周产出 &lt; 油费 · 点火 $10 · 所有数据均为 MOCK，仅用于流程演示。
+  原型参数（早期规模）：整机 $200 · 等效油费 $8.33/台/周 · 加速上限 3× · CAP_FEE $500/周 · 平台手续费 ≈ $15K/周 ± 波动 × 分成 30% → 奖池 P ≈ $4.5K · 全网从 ~350 台起步、均衡约 1.1K 台 · 休眠判定 = 连续 2 周产出 &lt; 油费 · 点火 $10 · 所有数据均为 MOCK，仅用于流程演示。
 </footer>
 </div>
 
@@ -285,12 +281,12 @@ const fmtN=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v
 let seed=42;
 const rand=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
 
-const FUEL=8.33, M_CAP=3, CAP_FEE=500, MU=1.46, PRICE=200, IGNITE=10, REF_FEE=250, SLEEP_AFTER=2;
+const FUEL=8.33, M_CAP=3, CAP_FEE=500, MU=1.46, PRICE=200, IGNITE=10, REF_FEE=250, SLEEP_AFTER=2, POOL_SHARE=0.3;
 
 let S;
 function init(){
   seed=42;
-  S={week:0,usdt:1000,pending:0,refs:0,P:4500,N:350,machines:[],ledger:[],hist:[],nextId:1};
+  S={week:0,usdt:1000,pending:0,refs:0,Ftot:15000,P:4500,N:350,machines:[],ledger:[],hist:[],nextId:1};
   $('i_fee').value=300;
   log('info','演示开始：钱包里有 $1,000 USDT。先买一台矿机试试 →');
   render();
@@ -303,7 +299,8 @@ function log(type,text){S.ledger.unshift({week:S.week,type,text});if(S.ledger.le
 function stepWeek(){
   S.week++;
   // protocol mock: pool fluctuates, N drifts mechanically toward N*
-  S.P=4500*(0.85+0.3*rand());
+  S.Ftot=15000*(0.85+0.3*rand());
+  S.P=POOL_SHARE*S.Ftot;
   const ns=nstar();
   S.N=Math.max(50,Math.round(S.N+0.09*(ns-S.N)+(rand()-0.5)*30));
   S.hist.push({N:S.N,ns});
@@ -351,11 +348,35 @@ function render(){
     <div class="row"><span>每台分摊</span><span>$${act.length?per.toFixed(0):'—'}</span></div>
     <div class="row hl"><span>对应倍率</span><span>${!act.length?'—':f>0?mult.toFixed(2)+'×':'衰减中'}</span></div>`;
 
-  // protocol
+  // protocol: pool composition
   const ns=nstar();
-  $('p_pool').textContent=fmt(S.P);
-  $('p_n').textContent=fmtN(S.N);
-  $('p_nstar').textContent=fmtN(ns);
+  const myFee=Math.min(+$('i_fee').value,S.Ftot);
+  const others=Math.max(0,S.Ftot-myFee);
+  $('proto_kv').innerHTML=`
+    <div class="row"><span>本周平台手续费</span><span>${fmt(S.Ftot)}</span></div>
+    <div class="row"><span>├ 我产生的</span><span>${fmt(myFee)}</span></div>
+    <div class="row"><span>└ 其他矿工 / 交易者<span class="tip" data-tip="全网其他账号本周产生的交易手续费——他们既是奖池的出资方，也是和你分蛋糕的竞争者。">?</span></span><span>${fmt(others)}</span></div>
+    <div class="row"><span>分成比例（入奖池）<span class="tip" data-tip="平台手续费的 <b>30%</b> 进入矿机奖池，其余留存归协议。你自己交易的手续费同样只回来 30%——所以刷量必亏。">?</span></span><span>${Math.round(POOL_SHARE*100)}%</span></div>
+    <div class="row hl"><span>本周奖池 P</span><span>${fmt(S.P)}</span></div>
+    <div class="row"><span>全网矿机 N</span><span>${fmtN(S.N)}</span></div>
+    <div class="row"><span>均衡点 N*</span><span>${fmtN(ns)}</span></div>
+    <div class="row"><span>油费（内扣）</span><span>$8.33 /台/周</span></div>`;
+
+  // my share of the pool
+  const shareBox=$('my_share');
+  if(act.length){
+    const pm=mc=>f>0?1+(M_CAP-1)*Math.min(1,(f/act.length)/CAP_FEE):(mc.mult??1);
+    const myPts=act.reduce((a,mc)=>a+pm(mc),0);
+    const totPts=S.N*MU;
+    const share=totPts>0?myPts/totPts:0;
+    shareBox.style.display='block';
+    shareBox.innerHTML=`
+      <div class="row"><span>我的算力（倍率合计，${act.length} 台运行中）</span><span>${myPts.toFixed(2)} 点</span></div>
+      <div class="row"><span>全网总算力（N × μ̄）</span><span>${totPts.toFixed(0)} 点</span></div>
+      <div class="row hl"><span>我的分成比例<span class="tip" data-tip="我的算力 ÷ 全网总算力。奖池按这个比例分给你；下面的预计产出是<b>未扣油费</b>的毛收入。">?</span></span><span>${(share*100).toFixed(3)}% → 预计本周产出 ${fmt(S.P*share)}</span></div>`;
+  }else{
+    shareBox.style.display='none';shareBox.innerHTML='';
+  }
   const maxAxis=Math.max(ns*1.5,S.N*1.25);
   const ps=Math.min(96,ns/maxAxis*100),pn=Math.min(96,S.N/maxAxis*100);
   $('eq_zp').style.width=ps+'%';$('eq_zl').style.width=(100-ps)+'%';
