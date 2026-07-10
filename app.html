@@ -241,7 +241,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 </div>
 
 <footer>
-  原型参数与经济模拟器一致：整机 $200 · 等效油费 $8.33/台/周 · 加速上限 3× · CAP_FEE $500/周 · 奖池 P ≈ $45K ± 波动 · 休眠判定 = 连续 2 周产出 &lt; 油费 · 点火 $10 · 所有数据均为 MOCK，仅用于流程演示。
+  原型参数（早期规模）：整机 $200 · 等效油费 $8.33/台/周 · 加速上限 3× · CAP_FEE $500/周 · 奖池 P ≈ $4.5K ± 波动 · 全网从 ~350 台起步、均衡约 1.1K 台 · 休眠判定 = 连续 2 周产出 &lt; 油费 · 点火 $10 · 所有数据均为 MOCK，仅用于流程演示。
 </footer>
 </div>
 
@@ -278,7 +278,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 
 <script>
 const $=id=>document.getElementById(id);
-const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e4)s='$'+(a/1e3).toFixed(1)+'K';else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
+const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e4)s='$'+(a/1e3).toFixed(1)+'K';else if(a>=1e3)s='$'+a.toFixed(0);else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
 const fmtN=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v);
 
 // deterministic mock randomness (demo reproducible)
@@ -290,7 +290,7 @@ const FUEL=8.33, M_CAP=3, CAP_FEE=500, MU=1.46, PRICE=200, IGNITE=10, REF_FEE=25
 let S;
 function init(){
   seed=42;
-  S={week:0,usdt:1000,pending:0,refs:0,P:45000,N:4200,machines:[],ledger:[],hist:[],nextId:1};
+  S={week:0,usdt:1000,pending:0,refs:0,P:4500,N:350,machines:[],ledger:[],hist:[],nextId:1};
   $('i_fee').value=300;
   log('info','演示开始：钱包里有 $1,000 USDT。先买一台矿机试试 →');
   render();
@@ -303,9 +303,9 @@ function log(type,text){S.ledger.unshift({week:S.week,type,text});if(S.ledger.le
 function stepWeek(){
   S.week++;
   // protocol mock: pool fluctuates, N drifts mechanically toward N*
-  S.P=45000*(0.85+0.3*rand());
+  S.P=4500*(0.85+0.3*rand());
   const ns=nstar();
-  S.N=Math.max(500,Math.round(S.N+0.09*(ns-S.N)+(rand()-0.5)*300));
+  S.N=Math.max(50,Math.round(S.N+0.09*(ns-S.N)+(rand()-0.5)*30));
   S.hist.push({N:S.N,ns});
 
   const act=S.machines.filter(m=>m.status==='run');
