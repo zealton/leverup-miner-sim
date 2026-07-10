@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeverUp 矿机流程原型 · 自动休眠版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --panel:#111111; --panel2:#151515; --border:#2a2a2a;
+  --acid:#C7F50D; --acid2:#CCFF00; --red:#FA5000; --blue:#8ab4ff;
+  --text:#e8e8e8; --muted:#7a7a7a; --dim:#4a4a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 20px 80px}
+
+header{border:1px solid var(--border);padding:22px 26px;margin-bottom:16px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;top:0;right:0;width:220px;height:100%;
+  background:repeating-linear-gradient(-55deg,transparent 0 10px,rgba(199,245,13,.05) 10px 11px)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;color:var(--acid);text-transform:uppercase;margin-bottom:8px}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(19px,3vw,28px);font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+h1 .thin{color:var(--muted);font-weight:500}
+.sub{color:var(--muted);margin-top:10px;max-width:820px;font-size:13px}
+.sub b{color:var(--text);font-weight:600}
+.backlink{position:absolute;top:22px;right:26px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:6px 12px;z-index:1}
+.backlink:hover{color:var(--acid);border-color:var(--acid)}
+
+/* flow strip */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
+@media(max-width:960px){.flow{grid-template-columns:1fr 1fr}}
+.fstep{background:var(--panel2);padding:12px 14px}
+.fstep .n{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--acid);margin-bottom:4px}
+.fstep .t{font-size:13px;font-weight:600;color:var(--text)}
+.fstep .d{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6}
+.fstep .act{display:inline-block;font-size:10px;border:1px solid var(--acid);color:var(--acid);padding:0 6px;margin-left:6px;letter-spacing:.06em}
+.fstep .auto{display:inline-block;font-size:10px;border:1px solid var(--dim);color:var(--muted);padding:0 6px;margin-left:6px;letter-spacing:.06em}
+
+/* wallet / control bar */
+.bar{border:1px solid var(--border);background:var(--panel);padding:14px 18px;margin-bottom:16px;
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.bar .addr{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.bar .addr b{color:var(--text)}
+.bal{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.bal b{color:var(--text);font-size:14px;margin-left:6px}
+.bal.hl b{color:var(--acid)}
+.spacer{flex:1}
+button{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;
+  background:none;border:1px solid var(--border);color:var(--text);padding:8px 16px}
+button:hover{border-color:var(--acid);color:var(--acid)}
+button.primary{background:var(--acid);border-color:var(--acid);color:#0a0a0a;font-weight:600}
+button.primary:hover{background:var(--acid2);color:#0a0a0a}
+button:disabled{opacity:.35;cursor:not-allowed}
+button:disabled:hover{border-color:var(--border);color:var(--text)}
+.week{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--acid)}
+.week span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:.14em;display:block}
+
+/* layout */
+.grid{display:grid;grid-template-columns:300px 1fr 300px;gap:16px;margin-bottom:16px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}.gc{grid-column:span 2}}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.gc{grid-column:span 1}}
+.panel{border:1px solid var(--border);background:var(--panel)}
+.panel-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.panel-h .tag{color:var(--acid)}
+.panel-b{padding:16px}
+
+/* activity panel */
+.ctl{margin-bottom:16px}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ctl label{font-size:12px;color:var(--text);font-weight:500}
+.ctl .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid)}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--acid);border:none;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid);border:none;cursor:pointer;border-radius:0}
+.hint{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.6}
+.kv{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:2}
+.kv .row{display:flex;justify-content:space-between;border-bottom:1px dashed #1c1c1c;padding:2px 0}
+.kv .row:last-child{border-bottom:none}
+.kv .row span:last-child{color:var(--text)}
+.kv .row.hl span:last-child{color:var(--acid);font-weight:600}
+
+/* machine cards */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.mcard{border:1px solid var(--border);background:var(--panel2);padding:14px;position:relative}
+.mcard.sleep{opacity:.85;border-color:#3a2018}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mid{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);font-weight:600}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:2px 8px;border:1px solid}
+.badge.run{color:var(--acid);border-color:var(--acid)}
+.badge.sleep{color:var(--red);border-color:var(--red)}
+.badge.idle{color:var(--muted);border-color:var(--dim)}
+.mmult{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:10px}
+.mmult small{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);font-weight:400;letter-spacing:.14em;margin-left:6px}
+.mrow{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);padding:3px 0;border-bottom:1px dashed #1c1c1c}
+.mrow:last-of-type{border-bottom:none}
+.mrow .pos{color:var(--acid)} .mrow .negv{color:var(--red)} .mrow .w{color:var(--text)}
+.dots{margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:.1em}
+.dots i{font-style:normal;color:var(--red)}
+.mcard .ignite{width:100%;margin-top:10px;border-color:var(--red);color:var(--red)}
+.mcard .ignite:hover{border-color:var(--acid);color:var(--acid)}
+.sleep-veil{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--red);letter-spacing:.2em;margin-bottom:8px}
+.empty{border:1px dashed var(--border);padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1}
+.empty b{color:var(--text)}
+
+/* protocol panel */
+.eq-track{position:relative;height:34px;background:var(--panel2);border:1px solid var(--border);margin:14px 0 26px}
+.eq-zone-profit{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,rgba(199,245,13,.16),rgba(199,245,13,.04))}
+.eq-zone-loss{position:absolute;top:0;height:100%;right:0;background:linear-gradient(90deg,rgba(250,80,0,.03),rgba(250,80,0,.14))}
+.eq-nstar{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--text)}
+.eq-nstar .lbl{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text);white-space:nowrap}
+.eq-now{position:absolute;top:0;bottom:0;width:10px;transform:translateX(-5px);background:var(--acid);transition:left .3s ease}
+.eq-now.over{background:var(--red)}
+.eq-now .lbl{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;white-space:nowrap;color:inherit}
+canvas{width:100%;height:120px;display:block}
+
+/* ledger */
+.ledger{max-height:300px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td{padding:8px 12px;border-bottom:1px solid #1c1c1c;font-family:'IBM Plex Mono',monospace;color:var(--muted)}
+td:first-child{width:64px;color:var(--dim)}
+td .pos{color:var(--acid)} td .negv{color:var(--red)} td .w{color:var(--text)} td .bl{color:var(--blue)}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--acid);max-width:400px;width:100%;padding:0}
+.modal .panel-h{border-bottom:1px solid var(--border)}
+.modal .panel-b{font-size:13px;color:var(--muted);line-height:1.8}
+.modal .panel-b b{color:var(--text)}
+.modal .kv{margin:12px 0}
+.modal .btns{display:flex;gap:10px;margin-top:16px}
+.modal .btns button{flex:1}
+.note-acid{border-left:2px solid var(--acid);padding:8px 12px;background:rgba(199,245,13,.05);font-size:12px;margin-top:10px}
+
+/* toast */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#161616;border:1px solid var(--acid);
+  color:var(--text);font-size:13px;padding:10px 18px;display:none;z-index:60;box-shadow:0 10px 28px rgba(0,0,0,.55)}
+
+/* tooltips */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none;
+  border:1px solid var(--dim);border-radius:50%;margin-left:5px;vertical-align:1px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;color:var(--muted);
+  cursor:help;user-select:none;text-transform:none;letter-spacing:0}
+.tip:hover,.tip.on{border-color:var(--acid);color:var(--acid)}
+#tipbox{position:fixed;z-index:99;max-width:280px;display:none;pointer-events:none;
+  background:#161616;border:1px solid var(--acid);padding:10px 13px;box-shadow:0 10px 28px rgba(0,0,0,.55);
+  font-family:'Inter',sans-serif;font-size:12px;line-height:1.75;color:var(--text);
+  letter-spacing:0;text-transform:none;text-align:left;white-space:normal;font-weight:400}
+#tipbox b{color:var(--acid);font-weight:600}
+
+footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="backlink" href="/">← 返回经济模拟器</a>
+  <div class="eyebrow">LeverUp // 贡献引擎 // 交互原型</div>
+  <h1>矿机流程原型 <span class="thin">/ 自动休眠版</span></h1>
+  <p class="sub">这是「<b>无需加油</b>」设计的可点击原型（mock 数据）：油费每周从矿机产出中<b>自动内扣</b>，连续 2 周产出盖不住油费的矿机<b>自动休眠</b>。用户全程只有三个动作：<b>买矿机、领收益、（可选）点火唤醒</b>。点「模拟下一周」推进时间，观察整个闭环。</p>
+</header>
+
+<div class="flow">
+  <div class="fstep"><div class="n">01</div><div class="t">买矿机 <span class="act">用户操作</span></div><div class="d">一次性支付 $200，获得永久机身 NFT，自动开始挖矿。</div></div>
+  <div class="fstep"><div class="n">02</div><div class="t">自动结算 <span class="auto">全自动</span></div><div class="d">每周：派发 = max(0, 产出 − 油费)。没有加油按钮。</div></div>
+  <div class="fstep"><div class="n">03</div><div class="t">拉加速 <span class="auto">可选</span></div><div class="d">交易 / 推荐提升账号活跃度，矿机最高 3×。多台矿机共享、互相稀释。</div></div>
+  <div class="fstep"><div class="n">04</div><div class="t">自动休眠 <span class="auto">全自动</span></div><div class="d">连续 2 周产出 &lt; 油费 → 休眠：不产出、不扣油、机身保留。</div></div>
+  <div class="fstep"><div class="n">05</div><div class="t">点火唤醒 <span class="act">用户操作</span></div><div class="d">$10 唤醒休眠矿机。优先用待领取收益抵扣，不足部分用 USDT。</div></div>
+</div>
+
+<div class="bar">
+  <span class="addr">钱包 <b>0x3F…9A2C</b></span>
+  <span class="bal">USDT<b id="b_usdt">$1,000.00</b></span>
+  <span class="bal hl">待领取<span class="tip" data-tip="矿机每周的净收益（产出 − 油费）自动累计到这里，随时可领取到钱包。">?</span><b id="b_pending">$0.00</b></span>
+  <button id="btn_claim" disabled>领取收益</button>
+  <span class="spacer"></span>
+  <span class="week" id="w_num">第 0 周<span>WEEK</span></span>
+  <button class="primary" id="btn_step">模拟下一周 ▶</button>
+  <button id="btn_fast">快进 4 周 ⏩</button>
+  <button id="btn_reset">重置演示</button>
+</div>
+
+<div class="grid">
+
+  <!-- account activity -->
+  <div class="panel">
+    <div class="panel-h">账号活跃度 <span class="tag">加速池</span></div>
+    <div class="panel-b">
+      <div class="ctl">
+        <div class="ctl-top"><label>本周交易手续费<span class="tip" data-tip="你本周在 LeverUp 交易产生的手续费。<b>本来就要交易的人</b>，这笔钱是沉没成本——加速等于白送的返佣。">?</span></label><span class="val" id="v_fee">$300</span></div>
+        <input type="range" id="i_fee" min="0" max="1500" step="50" value="300">
+        <div class="hint">拖到 $0 = 完全不活跃 → 矿机倍率每周衰减</div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label>推荐好友<span class="tip" data-tip="每位好友的活跃为你的账号贡献等效 $250 计费手续费。推荐是<b>唯一零成本</b>的加速方式（有意设计）。">?</span></label><span class="val" id="v_ref">0 位</span></div>
+        <button id="btn_ref" style="width:100%">＋ 邀请 1 位好友（模拟）</button>
+      </div>
+      <div class="kv" id="boost_kv"></div>
+      <div class="hint" style="margin-top:10px">加速按<b style="color:var(--text)">账号</b>计算，绑定的矿机均分。矿机越多、每台分到的加速越少——囤机无利可图。</div>
+    </div>
+  </div>
+
+  <!-- machines -->
+  <div class="panel gc">
+    <div class="panel-h"><span>我的矿机<span class="tip" data-tip="矿机 = 永久机身 NFT。油费每周从产出中自动内扣，你永远不需要手动加油。">?</span></span>
+      <button class="primary" id="btn_buy" style="padding:5px 14px">＋ 购买矿机 $200</button></div>
+    <div class="panel-b">
+      <div class="mgrid" id="mgrid"></div>
+    </div>
+  </div>
+
+  <!-- protocol side -->
+  <div class="panel">
+    <div class="panel-h">协议侧（全网）<span class="tag">MOCK</span></div>
+    <div class="panel-b">
+      <div class="kv">
+        <div class="row"><span>本周奖池 P</span><span id="p_pool">—</span></div>
+        <div class="row"><span>全网矿机 N</span><span id="p_n">—</span></div>
+        <div class="row"><span>均衡点 N*</span><span id="p_nstar">—</span></div>
+        <div class="row"><span>油费（内扣）</span><span>$8.33 /台/周</span></div>
+      </div>
+      <div class="eq-track">
+        <div class="eq-zone-profit" id="eq_zp"></div>
+        <div class="eq-zone-loss" id="eq_zl"></div>
+        <div class="eq-nstar" id="eq_ns"><span class="lbl">N*</span></div>
+        <div class="eq-now" id="eq_now"><span class="lbl" id="eq_now_lbl">N</span></div>
+      </div>
+      <canvas id="trend" width="300" height="120"></canvas>
+      <div class="hint" style="margin-top:8px">白线 = 全网 N，绿虚线 = N*。全网亏损矿机自动休眠、盈利时新机入场——N 被<b style="color:var(--text)">机械地</b>拉向 N*，不依赖任何人的理性。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ledger -->
+<div class="panel">
+  <div class="panel-h">结算流水 <span class="tag">自动</span></div>
+  <div class="ledger"><table><tbody id="ledger"></tbody></table></div>
+</div>
+
+<footer>
+  原型参数与经济模拟器一致：整机 $200 · 等效油费 $8.33/台/周 · 加速上限 3× · CAP_FEE $500/周 · 奖池 P ≈ $45K ± 波动 · 休眠判定 = 连续 2 周产出 &lt; 油费 · 点火 $10 · 所有数据均为 MOCK，仅用于流程演示。
+</footer>
+</div>
+
+<!-- buy modal -->
+<div class="overlay" id="ov_buy">
+  <div class="modal">
+    <div class="panel-h">购买矿机 <span class="tag">NFT</span></div>
+    <div class="panel-b">
+      <div class="kv">
+        <div class="row"><span>价格</span><span>$200 USDT</span></div>
+        <div class="row"><span>机身</span><span>永久 · NFT</span></div>
+        <div class="row"><span>油费</span><span>$8.33/周 · 产出内扣</span></div>
+        <div class="row hl"><span>需要手动加油？</span><span>永远不需要</span></div>
+      </div>
+      <div class="note-acid">买入即自动开始挖矿。若市场收益盖不住油费，矿机会自动休眠保护你——不会倒扣你的钱。</div>
+      <div class="btns"><button id="buy_cancel">取消</button><button class="primary" id="buy_ok">确认支付 $200</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ignite modal -->
+<div class="overlay" id="ov_ignite">
+  <div class="modal">
+    <div class="panel-h">点火唤醒 <span class="tag" id="ig_title">#—</span></div>
+    <div class="panel-b">
+      <p>唤醒休眠矿机，重新进入算力池。若市场仍在均衡点之上，它可能再次休眠——建议先拉高活跃度。</p>
+      <div class="kv" id="ig_kv"></div>
+      <div class="btns"><button id="ig_cancel">取消</button><button class="primary" id="ig_ok">确认点火</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e4)s='$'+(a/1e3).toFixed(1)+'K';else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
+const fmtN=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v);
+
+// deterministic mock randomness (demo reproducible)
+let seed=42;
+const rand=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+
+const FUEL=8.33, M_CAP=3, CAP_FEE=500, MU=1.46, PRICE=200, IGNITE=10, REF_FEE=250, SLEEP_AFTER=2;
+
+let S;
+function init(){
+  seed=42;
+  S={week:0,usdt:1000,pending:0,refs:0,P:45000,N:4200,machines:[],ledger:[],hist:[],nextId:1};
+  $('i_fee').value=300;
+  log('info','演示开始：钱包里有 $1,000 USDT。先买一台矿机试试 →');
+  render();
+}
+function fee(){return +$('i_fee').value + S.refs*REF_FEE}
+function nstar(){return M_CAP*S.P/(MU*FUEL)}
+
+function log(type,text){S.ledger.unshift({week:S.week,type,text});if(S.ledger.length>200)S.ledger.pop()}
+
+function stepWeek(){
+  S.week++;
+  // protocol mock: pool fluctuates, N drifts mechanically toward N*
+  S.P=45000*(0.85+0.3*rand());
+  const ns=nstar();
+  S.N=Math.max(500,Math.round(S.N+0.09*(ns-S.N)+(rand()-0.5)*300));
+  S.hist.push({N:S.N,ns});
+
+  const act=S.machines.filter(m=>m.status==='run');
+  const f=fee();
+  act.forEach(mc=>{
+    // account-level boost, split across running machines
+    if(f>0){mc.idleWeeks=0;mc.mult=1+(M_CAP-1)*Math.min(1,(f/act.length)/CAP_FEE)}
+    else{mc.idleWeeks++;mc.mult=Math.max(0,1-0.2*Math.max(0,mc.idleWeeks-1))}
+    const R=S.P*mc.mult/(S.N*MU);
+    const net=R-FUEL;
+    mc.lastR=R;mc.lastNet=net;
+    if(net>=0){
+      S.pending+=net;mc.lossStreak=0;mc.earned+=net;
+      log('ok',`矿机#${mc.id} 结算：产出 ${fmt(R)} − 油费 $8.33 → <span class="pos">净 +${fmt(net)}</span> 已入待领取`);
+    }else{
+      mc.lossStreak++;
+      log('loss',`矿机#${mc.id} 结算：产出 ${fmt(R)} &lt; 油费 $8.33 → 派发 $0，<span class="negv">计亏损 ${mc.lossStreak}/${SLEEP_AFTER}</span>`);
+      if(mc.lossStreak>=SLEEP_AFTER){
+        mc.status='sleep';
+        log('loss',`矿机#${mc.id} <span class="negv">已自动休眠</span>：连续 ${SLEEP_AFTER} 周产出低于油费。停止产出与扣油，机身保留，可随时点火唤醒。`);
+      }
+    }
+  });
+  if(act.length===0&&S.machines.length>0)log('info','所有矿机均在休眠——不产出也不扣油。拉高活跃度后点火唤醒。');
+  render();
+}
+
+function render(){
+  $('w_num').firstChild.textContent=`第 ${S.week} 周`;
+  $('b_usdt').textContent=fmt(S.usdt);
+  $('b_pending').textContent=fmt(S.pending);
+  $('btn_claim').disabled=S.pending<0.01;
+  $('v_fee').textContent='$'+$('i_fee').value;
+  $('v_ref').textContent=S.refs+' 位';
+
+  // boost breakdown
+  const act=S.machines.filter(m=>m.status==='run');
+  const f=fee(), per=act.length?f/act.length:f;
+  const mult=1+(M_CAP-1)*Math.min(1,per/CAP_FEE);
+  $('boost_kv').innerHTML=`
+    <div class="row"><span>账号加速池（等效计费）</span><span>$${f}</span></div>
+    <div class="row"><span>运行中矿机</span><span>${act.length} 台</span></div>
+    <div class="row"><span>每台分摊</span><span>$${act.length?per.toFixed(0):'—'}</span></div>
+    <div class="row hl"><span>对应倍率</span><span>${!act.length?'—':f>0?mult.toFixed(2)+'×':'衰减中'}</span></div>`;
+
+  // protocol
+  const ns=nstar();
+  $('p_pool').textContent=fmt(S.P);
+  $('p_n').textContent=fmtN(S.N);
+  $('p_nstar').textContent=fmtN(ns);
+  const maxAxis=Math.max(ns*1.5,S.N*1.25);
+  const ps=Math.min(96,ns/maxAxis*100),pn=Math.min(96,S.N/maxAxis*100);
+  $('eq_zp').style.width=ps+'%';$('eq_zl').style.width=(100-ps)+'%';
+  $('eq_ns').style.left=ps+'%';
+  const now=$('eq_now');now.style.left=pn+'%';now.classList.toggle('over',S.N>ns);
+  $('eq_now_lbl').textContent='N='+fmtN(S.N);
+  drawTrend();
+
+  // machines
+  const g=$('mgrid');g.innerHTML='';
+  if(!S.machines.length){
+    g.innerHTML=`<div class="empty">还没有矿机。<b>整个流程从这里开始</b> —— 点右上角「＋ 购买矿机 $200」。<br>买完之后你唯一要做的就是每周收钱。</div>`;
+  }
+  S.machines.forEach(mc=>{
+    const d=document.createElement('div');
+    d.className='mcard'+(mc.status==='sleep'?' sleep':'');
+    if(mc.status==='sleep'){
+      d.innerHTML=`<div class="mtop"><span class="mid">矿机 #${mc.id}</span><span class="badge sleep">休眠</span></div>
+        <div class="sleep-veil">ZZZ · 不产出 · 不扣油</div>
+        <div class="mrow"><span>累计净收益</span><span class="w">${fmt(mc.earned)}</span></div>
+        <div class="mrow"><span>机身</span><span class="w">永久保留</span></div>
+        <button class="ignite" data-id="${mc.id}">⚡ 点火唤醒 $${IGNITE}</button>`;
+    }else{
+      const stBadge=fee()>0?'<span class="badge run">运行中</span>':'<span class="badge idle">运行 · 倍率衰减</span>';
+      const netCls=(mc.lastNet??0)>=0?'pos':'negv';
+      d.innerHTML=`<div class="mtop"><span class="mid">矿机 #${mc.id}</span>${stBadge}</div>
+        <div class="mmult">${(mc.mult??1).toFixed(2)}×<small>倍率</small></div>
+        <div class="mrow"><span>上周产出</span><span class="w">${mc.lastR!=null?fmt(mc.lastR):'—'}</span></div>
+        <div class="mrow"><span>油费（内扣）</span><span>−$8.33</span></div>
+        <div class="mrow"><span>上周净</span><span class="${netCls}">${mc.lastNet!=null?(mc.lastNet>=0?'+':'')+fmt(Math.max(mc.lastNet,mc.lastNet)):'—'}</span></div>
+        <div class="mrow"><span>累计净收益</span><span class="w">${fmt(mc.earned)}</span></div>
+        <div class="dots">休眠计数 ${'<i>●</i>'.repeat(mc.lossStreak)}${'○'.repeat(Math.max(0,SLEEP_AFTER-mc.lossStreak))}（连续 ${SLEEP_AFTER} 周亏损自动休眠）</div>`;
+    }
+    g.appendChild(d);
+  });
+  g.querySelectorAll('.ignite').forEach(b=>b.addEventListener('click',()=>openIgnite(+b.dataset.id)));
+
+  // ledger
+  $('ledger').innerHTML=S.ledger.map(l=>`<tr><td>W${l.week}</td><td>${l.text}</td></tr>`).join('');
+}
+
+function drawTrend(){
+  const c=$('trend'),ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1,W=c.clientWidth,H=120;
+  c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  if(S.hist.length<2){ctx.fillStyle='#4a4a4a';ctx.font='10px IBM Plex Mono';ctx.fillText('推进几周后显示 N 收敛轨迹',10,H/2);return}
+  const all=S.hist.flatMap(h=>[h.N,h.ns]);
+  const ymin=Math.min(...all)*0.9,ymax=Math.max(...all)*1.1;
+  const X=i=>6+i/(S.hist.length-1)*(W-12);
+  const Y=v=>6+(1-(v-ymin)/(ymax-ymin))*(H-12);
+  ctx.strokeStyle='#C7F50D';ctx.setLineDash([3,3]);ctx.lineWidth=1;ctx.beginPath();
+  S.hist.forEach((h,i)=>i?ctx.lineTo(X(i),Y(h.ns)):ctx.moveTo(X(0),Y(h.ns)));ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#e8e8e8';ctx.lineWidth=1.5;ctx.beginPath();
+  S.hist.forEach((h,i)=>i?ctx.lineTo(X(i),Y(h.N)):ctx.moveTo(X(0),Y(h.N)));ctx.stroke();
+}
+
+// ---- user actions ----
+function toast(msg){const t=$('toast');t.innerHTML=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600)}
+
+$('btn_step').addEventListener('click',stepWeek);
+$('btn_fast').addEventListener('click',()=>{for(let i=0;i<4;i++)stepWeek()});
+$('btn_reset').addEventListener('click',init);
+$('i_fee').addEventListener('input',render);
+$('btn_ref').addEventListener('click',()=>{S.refs++;log('info',`邀请好友成功：账号加速池 +$${REF_FEE} 等效计费（零成本）`);render()});
+
+$('btn_buy').addEventListener('click',()=>$('ov_buy').classList.add('show'));
+$('buy_cancel').addEventListener('click',()=>$('ov_buy').classList.remove('show'));
+$('buy_ok').addEventListener('click',()=>{
+  if(S.usdt<PRICE){toast('USDT 余额不足');return}
+  S.usdt-=PRICE;
+  const mc={id:S.nextId++,status:'run',mult:1,lossStreak:0,idleWeeks:0,earned:0,lastR:null,lastNet:null};
+  S.machines.push(mc);
+  log('buy',`<span class="bl">购买矿机#${mc.id}</span>：支付 $200，永久机身已入账，自动开始挖矿（油费此后每周内扣）`);
+  $('ov_buy').classList.remove('show');
+  toast(`矿机 #${mc.id} 已开始挖矿 ⛏ 无需加油`);
+  render();
+});
+
+let igniteTarget=null;
+function openIgnite(id){
+  igniteTarget=S.machines.find(m=>m.id===id);
+  $('ig_title').textContent='#'+id;
+  const fromPending=Math.min(S.pending,IGNITE);
+  const fromUsdt=IGNITE-fromPending;
+  $('ig_kv').innerHTML=`
+    <div class="row"><span>点火费用</span><span>$${IGNITE.toFixed(2)}</span></div>
+    <div class="row"><span>待领取收益抵扣</span><span>−${fmt(fromPending)}</span></div>
+    <div class="row hl"><span>USDT 实付</span><span>${fmt(fromUsdt)}</span></div>`;
+  $('ov_ignite').classList.add('show');
+}
+$('ig_cancel').addEventListener('click',()=>$('ov_ignite').classList.remove('show'));
+$('ig_ok').addEventListener('click',()=>{
+  const fromPending=Math.min(S.pending,IGNITE);
+  const fromUsdt=IGNITE-fromPending;
+  if(S.usdt<fromUsdt){toast('USDT 余额不足');return}
+  S.pending-=fromPending;S.usdt-=fromUsdt;
+  igniteTarget.status='run';igniteTarget.lossStreak=0;igniteTarget.idleWeeks=0;igniteTarget.lastR=null;igniteTarget.lastNet=null;
+  log('buy',`<span class="bl">矿机#${igniteTarget.id} 点火唤醒</span>：待领取抵扣 ${fmt(fromPending)} + USDT ${fmt(fromUsdt)}，重新进入算力池`);
+  $('ov_ignite').classList.remove('show');
+  toast('⚡ 点火成功，下周起恢复结算');
+  render();
+});
+
+$('btn_claim').addEventListener('click',()=>{
+  const amt=S.pending;S.usdt+=amt;S.pending=0;
+  log('buy',`<span class="bl">领取收益</span>：${fmt(amt)} 已转入钱包 USDT 余额`);
+  toast(`已领取 ${fmt(amt)} 到钱包`);
+  render();
+});
+
+// tooltips
+const tipbox=document.createElement('div');tipbox.id='tipbox';document.body.appendChild(tipbox);
+let tipEl=null;
+function showTip(el){
+  if(tipEl)tipEl.classList.remove('on');
+  tipEl=el;tipbox.innerHTML=el.dataset.tip;tipbox.style.display='block';
+  tipbox.style.left='0px';tipbox.style.top='0px';
+  const r=el.getBoundingClientRect(),tw=tipbox.offsetWidth,th=tipbox.offsetHeight;
+  let x=Math.max(8,Math.min(r.left+r.width/2-tw/2,innerWidth-tw-8));
+  let y=r.top-th-10;if(y<8)y=r.bottom+10;
+  tipbox.style.left=x+'px';tipbox.style.top=y+'px';el.classList.add('on');
+}
+function hideTip(){if(tipEl){tipEl.classList.remove('on');tipEl=null}tipbox.style.display='none'}
+document.addEventListener('mouseover',e=>{const t=e.target.closest('.tip');if(t)showTip(t);else if(tipEl)hideTip()});
+document.addEventListener('click',e=>{const t=e.target.closest('.tip');if(t){tipEl===t?hideTip():showTip(t)}else hideTip()});
+window.addEventListener('scroll',hideTip,{passive:true});
+
+init();
+</script>
+</body>
+</html>
