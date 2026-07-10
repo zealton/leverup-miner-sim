@@ -45,6 +45,18 @@ h1 .thin{color:var(--muted);font-weight:500}
 .intro-foot{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.8}
 .intro-foot b{color:var(--text)}
 
+/* help tooltips */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none;
+  border:1px solid var(--dim);border-radius:50%;margin-left:5px;vertical-align:1px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;color:var(--muted);
+  cursor:help;user-select:none;text-transform:none;letter-spacing:0}
+.tip:hover,.tip.on{border-color:var(--acid);color:var(--acid)}
+#tipbox{position:fixed;z-index:99;max-width:280px;display:none;pointer-events:none;
+  background:#161616;border:1px solid var(--acid);padding:10px 13px;box-shadow:0 10px 28px rgba(0,0,0,.55);
+  font-family:'Inter',sans-serif;font-size:12px;line-height:1.75;color:var(--text);
+  letter-spacing:0;text-transform:none;text-align:left;white-space:normal;font-weight:400}
+#tipbox b{color:var(--acid);font-weight:600}
+
 /* layout */
 .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
 @media(max-width:960px){.grid{grid-template-columns:1fr}}
@@ -166,35 +178,35 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
     <div class="panel-b" id="controls">
 
       <div class="sect">协议每周收入</div>
-      <div class="ctl"><div class="ctl-top"><label>交易手续费</label><span class="val" id="v_fee"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>交易手续费<span class="tip" data-tip="协议每周从真实交易中收到的手续费总额——矿机奖池最主要的资金来源。">?</span></label><span class="val" id="v_fee"></span></div>
         <input type="range" id="i_fee" min="10000" max="500000" step="5000" value="100000"></div>
-      <div class="ctl"><div class="ctl-top"><label>客户盈亏（协议侧）</label><span class="val" id="v_closs"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>客户盈亏（协议侧）<span class="tip" data-tip="客户在平台上的净亏损，<b>正值 = 协议赚钱</b>。为负的周，奖池支付 $0，赤字滚存到之后的盈利周再抵扣。">?</span></label><span class="val" id="v_closs"></span></div>
         <input type="range" id="i_closs" min="-200000" max="500000" step="5000" value="50000">
         <div class="hint">亏损周奖池支付 $0——赤字滚存到后续周。手续费部分照常分配。</div></div>
-      <div class="ctl"><div class="ctl-top"><label>奖池分成比例</label><span class="val" id="v_pool"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>奖池分成比例<span class="tip" data-tip="协议收入中划入矿机奖池的比例 s（如 30%），其余留存归协议。这个 s 同时也是反刷量的关键：自己刷的手续费最多拿回 s%。">?</span></label><span class="val" id="v_pool"></span></div>
         <input type="range" id="i_pool" min="10" max="50" step="1" value="30"></div>
 
       <div class="sect">矿机供给</div>
-      <div class="ctl"><div class="ctl-top"><label>活跃矿机数 N</label><span class="val" id="v_n"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>活跃矿机数 N<span class="tip" data-tip="当前全网仍在烧燃料挖矿的矿机总数，即「舰队规模」。拖动它，看盈亏如何随规模变化。">?</span></label><span class="val" id="v_n"></span></div>
         <input type="range" id="i_n" min="200" max="20000" step="100" value="3600"></div>
-      <div class="ctl"><div class="ctl-top"><label>整机价格（机身 + 满油箱）</label><span class="val" id="v_price"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>整机价格（机身 + 满油箱）<span class="tip" data-tip="一次性买入价：包含<b>永久机身</b> + 第一箱燃料。机身不会消失，燃料按周消耗。">?</span></label><span class="val" id="v_price"></span></div>
         <input type="range" id="i_price" min="100" max="1000" step="10" value="200"></div>
-      <div class="ctl"><div class="ctl-top"><label>油箱续航</label><span class="val" id="v_life"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>油箱续航<span class="tip" data-tip="一箱燃料可以烧多少周。每周燃料成本 = 整机价格 ÷ 油箱周数；烧完必须续费，否则矿机停止产出。">?</span></label><span class="val" id="v_life"></span></div>
         <input type="range" id="i_life" min="12" max="52" step="2" value="24"></div>
 
-      <div class="sect">舰队活跃度构成</div>
-      <div class="ctl"><div class="ctl-top"><label>闲置（无活动，衰减至 0）</label><span class="val" id="v_lazy"></span></div>
+      <div class="sect">舰队活跃度构成<span class="tip" data-tip="「舰队」= 全网所有活跃矿机的总体（英文 fleet 的意象，像一支船队）。这里设定三类玩家各占的比例。">?</span></div>
+      <div class="ctl"><div class="ctl-top"><label>闲置（无活动，衰减至 0）<span class="tip" data-tip="买了矿机但完全不交易也不推荐的用户：宽限 1 周后产出每周 −20 个百分点直至归 0，但燃料照烧。">?</span></label><span class="val" id="v_lazy"></span></div>
         <input type="range" id="i_lazy" min="0" max="100" step="5" value="30"></div>
-      <div class="ctl"><div class="ctl-top"><label>轻度活跃（小幅加速）</label><span class="val" id="v_light"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>轻度活跃（小幅加速）<span class="tip" data-tip="偶尔交易、拿到约 1.3× 小幅加速的用户。">?</span></label><span class="val" id="v_light"></span></div>
         <input type="range" id="i_light" min="0" max="100" step="5" value="40"></div>
-      <div class="ctl"><div class="ctl-top"><label>满速加速（上限 3×）</label><span class="val" id="v_full"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>满速加速（上限 3×）<span class="tip" data-tip="通过大量交易或推荐把加速拉到上限 m 的用户。占比自动 = 100% − 闲置 − 轻度活跃。">?</span></label><span class="val" id="v_full"></span></div>
         <input type="range" id="i_full" min="0" max="100" step="5" value="30" disabled>
         <div class="hint">自动 = 100% − 闲置 − 轻度活跃</div></div>
 
       <div class="sect">加速经济学</div>
-      <div class="ctl"><div class="ctl-top"><label>加速上限 m</label><span class="val" id="v_m"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>加速上限 m<span class="tip" data-tip="单台矿机加速倍率的天花板（默认 3×），防止巨鲸把算力无限放大。">?</span></label><span class="val" id="v_m"></span></div>
         <input type="range" id="i_m" min="2" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — 单机拉满所需计费手续费</label><span class="val" id="v_cap"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — 单机拉满所需计费手续费<span class="tip" data-tip="一台矿机要维持满速加速，每周需要计入的手续费金额。刷量玩家得自己掏这笔钱——而最多只能拿回 30%，所以刷量必亏。">?</span></label><span class="val" id="v_cap"></span></div>
         <input type="range" id="i_cap" min="100" max="2000" step="50" value="500"></div>
     </div>
   </div>
@@ -202,15 +214,15 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
   <!-- OUTPUTS -->
   <div>
     <div class="stats">
-      <div class="stat"><div class="k">每周奖池 P</div><div class="v" id="o_pool">—</div><div class="u">USD，回购 → LV</div></div>
-      <div class="stat"><div class="k">均衡点 N*</div><div class="v white" id="o_nstar">—</div><div class="u">续费盈亏平衡时的矿机数</div></div>
-      <div class="stat"><div class="k">燃料消耗</div><div class="v white" id="o_fuel">—</div><div class="u">USD / 台 / 周</div></div>
-      <div class="stat"><div class="k">舰队平均倍率 μ̄</div><div class="v white" id="o_mu">—</div><div class="u">加权有效算力</div></div>
+      <div class="stat"><div class="k">每周奖池 P<span class="tip" data-tip="协议本周用来回购 LV 并分给全网矿机的资金总额：P = 分成比例 ×（手续费 + 客户盈亏正值部分）。<b>100% 来自真实收入，零增发</b>。">?</span></div><div class="v" id="o_pool">—</div><div class="u">USD，回购 → LV</div></div>
+      <div class="stat"><div class="k">均衡点 N*<span class="tip" data-tip="市场自动收敛到的全网矿机数：此时一台满速矿机的周收入恰好等于每周燃料成本。N 低于 N* 挖矿有利润，高于 N* 则亏损。">?</span></div><div class="v white" id="o_nstar">—</div><div class="u">续费盈亏平衡时的矿机数</div></div>
+      <div class="stat"><div class="k">燃料消耗<span class="tip" data-tip="每台矿机每周烧掉的成本 = 整机价格 ÷ 油箱周数。燃料烧完必须续费，否则停止产出。">?</span></div><div class="v white" id="o_fuel">—</div><div class="u">USD / 台 / 周</div></div>
+      <div class="stat"><div class="k">舰队平均倍率 μ̄<span class="tip" data-tip="「舰队」指全网所有活跃矿机的总体。μ̄ 是全网加速倍率的加权平均——闲置、轻度、满速三类矿机按占比加权得出。">?</span></div><div class="v white" id="o_mu">—</div><div class="u">加权有效算力</div></div>
     </div>
 
     <div class="eq">
       <div class="eq-title">
-        <span class="t">舰队规模 vs. 均衡边界</span>
+        <span class="t">舰队规模 vs. 均衡边界<span class="tip" data-tip="横轴是全网矿机数：<b>绿色区</b>（N &lt; N*）矿机有利润、舰队扩张；<b>红色区</b>（N &gt; N*）满速也亏损、矿工停止续费、系统自动收缩。">?</span></span>
         <span class="eq-state" id="eq_state">—</span>
       </div>
       <div class="eq-track" id="eq_track">
@@ -228,7 +240,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
       <div style="overflow-x:auto">
       <table id="ptable">
         <thead><tr>
-          <th>玩家类型</th><th>倍率</th><th>周收入</th><th>周成本</th><th>周净收益</th><th>回本周期</th><th>油箱耗尽时 ROI</th>
+          <th>玩家类型</th><th>倍率<span class="tip" data-tip="该类玩家矿机的有效加速倍率：闲置矿机会随时间衰减，满速矿机为上限 m。">?</span></th><th>周收入</th><th>周成本<span class="tip" data-tip="每周燃料成本；刷量玩家还要额外加上自付的 CAP_FEE 手续费。">?</span></th><th>周净收益</th><th>回本周期<span class="tip" data-tip="累计净收益转正（覆盖整机购入价）所需的周数。">?</span></th><th>油箱耗尽时 ROI<span class="tip" data-tip="一箱燃料烧完时：累计净收益 ÷ 整机购入价。100% 表示翻倍回本。">?</span></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -243,7 +255,7 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 
     <div class="two">
       <div class="panel">
-        <div class="panel-h">协议偿付能力 <span class="badge" id="solv_badge">恒 ≥ 0</span></div>
+        <div class="panel-h"><span>协议偿付能力<span class="tip" data-tip="验证矿机系统永远不会让协议倒贴钱：奖励只在收入<b>实现之后</b>、从留存收入中支付，任何参数组合下协议每周净额都 ≥ 0。">?</span></span> <span class="badge" id="solv_badge">恒 ≥ 0</span></div>
         <div class="panel-b solv" id="solv"></div>
       </div>
       <div class="panel">
@@ -440,6 +452,29 @@ function render(){
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
 window.addEventListener('resize',()=>render());
 render();
+
+// help tooltips: hover on desktop, tap on mobile
+const tipbox=document.createElement('div');tipbox.id='tipbox';document.body.appendChild(tipbox);
+let tipEl=null;
+function showTip(el){
+  if(tipEl)tipEl.classList.remove('on');
+  tipEl=el;tipbox.innerHTML=el.dataset.tip;tipbox.style.display='block';
+  tipbox.style.left='0px';tipbox.style.top='0px';
+  const r=el.getBoundingClientRect(),tw=tipbox.offsetWidth,th=tipbox.offsetHeight;
+  let x=Math.max(8,Math.min(r.left+r.width/2-tw/2,innerWidth-tw-8));
+  let y=r.top-th-10;if(y<8)y=r.bottom+10;
+  tipbox.style.left=x+'px';tipbox.style.top=y+'px';el.classList.add('on');
+}
+function hideTip(){if(tipEl){tipEl.classList.remove('on');tipEl=null}tipbox.style.display='none'}
+document.addEventListener('mouseover',e=>{
+  const t=e.target.closest('.tip');
+  if(t)showTip(t);else if(tipEl)hideTip();
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.tip');
+  if(t){tipEl===t?hideTip():showTip(t)}else hideTip();
+});
+window.addEventListener('scroll',hideTip,{passive:true});
 </script>
 </body>
 </html>
