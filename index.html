@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LeverUp Miner Economics Simulator</title>
+<title>LeverUp 矿机经济模拟器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -134,12 +134,12 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 <div class="wrap">
 
 <header>
-  <div class="eyebrow">LeverUp // Contribution Engine</div>
-  <h1>Miner Economics <span class="thin">/ Boundary Simulator</span></h1>
-  <p class="sub">Every parameter below is public. Pull the sliders and find the boundary yourself: mining is profitable when the fleet is <b>below equilibrium N*</b>, and unprofitable above it. The market — not the team — keeps the system pinned to that line, because refueling is a weekly decision every miner makes with their own money.</p>
+  <div class="eyebrow">LeverUp // 贡献引擎</div>
+  <h1>矿机经济模型 <span class="thin">/ 边界模拟器</span></h1>
+  <p class="sub">下面每一个参数都是公开的。拖动滑块，自己找到那条边界：当舰队规模<b>低于均衡点 N*</b> 时挖矿有利润，高于它则亏损。把系统钉在这条线上的是市场——而不是团队——因为"是否续费加油"是每个矿工每周用自己的钱做出的决策。</p>
 </header>
 
-<section class="intro" lang="zh">
+<section class="intro">
   <div class="intro-h">这是什么机制？<span class="tag">机制说明 // MECHANISM</span></div>
   <div class="intro-b">
     <p class="intro-lede">这是 LeverUp「贡献引擎」矿机模型的<b>公开边界模拟器</b>。核心思想：矿机的收益全部来自协议的<b>真实收入回购</b>（零增发），而"是否续费加油"这个每周决策，让市场自己把矿机总量钉在盈亏平衡线 N* 上——无需团队干预。下面所有参数都是公开的，拖动滑块即可自己验证。</p>
@@ -162,39 +162,39 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
 <div class="grid">
   <!-- CONTROLS -->
   <div class="panel">
-    <div class="panel-h">Parameters <span class="tag">INPUT</span></div>
+    <div class="panel-h">参数 <span class="tag">输入</span></div>
     <div class="panel-b" id="controls">
 
-      <div class="sect">Protocol Revenue / week</div>
-      <div class="ctl"><div class="ctl-top"><label>Trading fees</label><span class="val" id="v_fee"></span></div>
+      <div class="sect">协议每周收入</div>
+      <div class="ctl"><div class="ctl-top"><label>交易手续费</label><span class="val" id="v_fee"></span></div>
         <input type="range" id="i_fee" min="10000" max="500000" step="5000" value="100000"></div>
-      <div class="ctl"><div class="ctl-top"><label>Client PnL (protocol side)</label><span class="val" id="v_closs"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>客户盈亏（协议侧）</label><span class="val" id="v_closs"></span></div>
         <input type="range" id="i_closs" min="-200000" max="500000" step="5000" value="50000">
-        <div class="hint">Negative weeks pay $0 to the pool — deficit carries forward. Fees still pay out.</div></div>
-      <div class="ctl"><div class="ctl-top"><label>Pool share</label><span class="val" id="v_pool"></span></div>
+        <div class="hint">亏损周奖池支付 $0——赤字滚存到后续周。手续费部分照常分配。</div></div>
+      <div class="ctl"><div class="ctl-top"><label>奖池分成比例</label><span class="val" id="v_pool"></span></div>
         <input type="range" id="i_pool" min="10" max="50" step="1" value="30"></div>
 
-      <div class="sect">Machine Supply</div>
-      <div class="ctl"><div class="ctl-top"><label>Active machines N</label><span class="val" id="v_n"></span></div>
+      <div class="sect">矿机供给</div>
+      <div class="ctl"><div class="ctl-top"><label>活跃矿机数 N</label><span class="val" id="v_n"></span></div>
         <input type="range" id="i_n" min="200" max="20000" step="100" value="3600"></div>
-      <div class="ctl"><div class="ctl-top"><label>Batch price (chassis + full tank)</label><span class="val" id="v_price"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>整机价格（机身 + 满油箱）</label><span class="val" id="v_price"></span></div>
         <input type="range" id="i_price" min="100" max="1000" step="10" value="200"></div>
-      <div class="ctl"><div class="ctl-top"><label>Fuel tank life</label><span class="val" id="v_life"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>油箱续航</label><span class="val" id="v_life"></span></div>
         <input type="range" id="i_life" min="12" max="52" step="2" value="24"></div>
 
-      <div class="sect">Fleet Activity Mix</div>
-      <div class="ctl"><div class="ctl-top"><label>Idle (no activity, decays to 0)</label><span class="val" id="v_lazy"></span></div>
+      <div class="sect">舰队活跃度构成</div>
+      <div class="ctl"><div class="ctl-top"><label>闲置（无活动，衰减至 0）</label><span class="val" id="v_lazy"></span></div>
         <input type="range" id="i_lazy" min="0" max="100" step="5" value="30"></div>
-      <div class="ctl"><div class="ctl-top"><label>Light (active, small boost)</label><span class="val" id="v_light"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>轻度活跃（小幅加速）</label><span class="val" id="v_light"></span></div>
         <input type="range" id="i_light" min="0" max="100" step="5" value="40"></div>
-      <div class="ctl"><div class="ctl-top"><label>Full boost (capped 3×)</label><span class="val" id="v_full"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>满速加速（上限 3×）</label><span class="val" id="v_full"></span></div>
         <input type="range" id="i_full" min="0" max="100" step="5" value="30" disabled>
-        <div class="hint">Auto = 100% − idle − light</div></div>
+        <div class="hint">自动 = 100% − 闲置 − 轻度活跃</div></div>
 
-      <div class="sect">Boost Economics</div>
-      <div class="ctl"><div class="ctl-top"><label>Boost cap m</label><span class="val" id="v_m"></span></div>
+      <div class="sect">加速经济学</div>
+      <div class="ctl"><div class="ctl-top"><label>加速上限 m</label><span class="val" id="v_m"></span></div>
         <input type="range" id="i_m" min="2" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — counted fee to max one machine</label><span class="val" id="v_cap"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — 单机拉满所需计费手续费</label><span class="val" id="v_cap"></span></div>
         <input type="range" id="i_cap" min="100" max="2000" step="50" value="500"></div>
     </div>
   </div>
@@ -202,15 +202,15 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
   <!-- OUTPUTS -->
   <div>
     <div class="stats">
-      <div class="stat"><div class="k">Weekly Pool P</div><div class="v" id="o_pool">—</div><div class="u">USD, buyback → LV</div></div>
-      <div class="stat"><div class="k">Equilibrium N*</div><div class="v white" id="o_nstar">—</div><div class="u">machines @ refuel break-even</div></div>
-      <div class="stat"><div class="k">Fuel Burn</div><div class="v white" id="o_fuel">—</div><div class="u">USD / machine / week</div></div>
-      <div class="stat"><div class="k">Fleet Avg Multiplier μ̄</div><div class="v white" id="o_mu">—</div><div class="u">weighted effective points</div></div>
+      <div class="stat"><div class="k">每周奖池 P</div><div class="v" id="o_pool">—</div><div class="u">USD，回购 → LV</div></div>
+      <div class="stat"><div class="k">均衡点 N*</div><div class="v white" id="o_nstar">—</div><div class="u">续费盈亏平衡时的矿机数</div></div>
+      <div class="stat"><div class="k">燃料消耗</div><div class="v white" id="o_fuel">—</div><div class="u">USD / 台 / 周</div></div>
+      <div class="stat"><div class="k">舰队平均倍率 μ̄</div><div class="v white" id="o_mu">—</div><div class="u">加权有效算力</div></div>
     </div>
 
     <div class="eq">
       <div class="eq-title">
-        <span class="t">Fleet vs. Equilibrium Boundary</span>
+        <span class="t">舰队规模 vs. 均衡边界</span>
         <span class="eq-state" id="eq_state">—</span>
       </div>
       <div class="eq-track" id="eq_track">
@@ -224,11 +224,11 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
     </div>
 
     <div class="panel" style="margin-bottom:16px">
-      <div class="panel-h">Per-Machine P&amp;L by Persona <span class="tag">WEEKLY</span></div>
+      <div class="panel-h">各类型玩家单机盈亏 <span class="tag">每周</span></div>
       <div style="overflow-x:auto">
       <table id="ptable">
         <thead><tr>
-          <th>Persona</th><th>Mult.</th><th>Rev /wk</th><th>Cost /wk</th><th>Net /wk</th><th>Payback</th><th>ROI @tank end</th>
+          <th>玩家类型</th><th>倍率</th><th>周收入</th><th>周成本</th><th>周净收益</th><th>回本周期</th><th>油箱耗尽时 ROI</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -236,33 +236,33 @@ footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;co
     </div>
 
     <div class="panel">
-      <div class="panel-h">Cumulative Net P&amp;L over one fuel tank <span class="tag">USD</span></div>
+      <div class="panel-h">单个油箱周期内累计净盈亏 <span class="tag">USD</span></div>
       <div class="chart-wrap"><canvas id="chart" width="900" height="320"></canvas></div>
       <div class="legend" id="legend"></div>
     </div>
 
     <div class="two">
       <div class="panel">
-        <div class="panel-h">Protocol Solvency <span class="badge" id="solv_badge">Always ≥ 0</span></div>
+        <div class="panel-h">协议偿付能力 <span class="badge" id="solv_badge">恒 ≥ 0</span></div>
         <div class="panel-b solv" id="solv"></div>
       </div>
       <div class="panel">
-        <div class="panel-h">The Math <span class="tag">VERIFY IT</span></div>
+        <div class="panel-h">数学公式 <span class="tag">自己验证</span></div>
         <div class="panel-b formulas">
-          <div><b>Pool</b> <span class="fm">P = s · ( Fee + max(0, ClientPnL + carry) )</span></div>
-          <div><b>Revenue</b> <span class="fm">R(m) = P · m / (N · μ̄)</span> per machine / week</div>
-          <div><b>Fuel</b> <span class="fm">f = BatchPrice / TankWeeks</span></div>
-          <div><b>Refuel iff</b> <span class="fm">R(m) ≥ f + 0.7 · OwnBoostFee</span></div>
-          <div><b>Equilibrium</b> <span class="fm">N* = m · P / (μ̄ · f)</span></div>
-          <div><b>Anti-wash</b> <span class="fm">recovery ≤ s ≤ 30% of any fee you pay</span></div>
-          <div style="margin-top:8px;color:var(--dim)">Wash trading is structurally loss-making: your own fee buys back at most s% of itself. Referrals are the only zero-cost boost — by design.</div>
+          <div><b>奖池</b> <span class="fm">P = s · ( 手续费 + max(0, 客户盈亏 + 滚存) )</span></div>
+          <div><b>收入</b> <span class="fm">R(m) = P · m / (N · μ̄)</span> 单机每周</div>
+          <div><b>燃料</b> <span class="fm">f = 整机价格 / 油箱周数</span></div>
+          <div><b>续费条件</b> <span class="fm">R(m) ≥ f + 0.7 · 自付加速费</span></div>
+          <div><b>均衡</b> <span class="fm">N* = m · P / (μ̄ · f)</span></div>
+          <div><b>反刷量</b> <span class="fm">回收 ≤ s ≤ 所付手续费的 30%</span></div>
+          <div style="margin-top:8px;color:var(--dim)">刷量在结构上必然亏损：你自己付的手续费最多只能买回其中 s%。推荐是唯一的零成本加速——这是有意设计。</div>
         </div>
       </div>
     </div>
 
     <footer>
-      MODEL v1.1 · CHASSIS IS PERMANENT — FUEL IS CONSUMABLE · EMISSIONS ARE 100% BUYBACK-FUNDED, ZERO MINT ·
-      IDLE DECAY: GRACE 1W → −20PP/W → 0, ANY ACTIVE WEEK RESETS TO 100% · THIS SIMULATOR ASSUMES IMMEDIATE CLAIM AT MAX TAX SCHEDULE OFF — SEE DOCS FOR PATIENCE POOL.
+      模型 v1.1 · 机身永久 — 燃料为消耗品 · 排放 100% 由回购提供资金、零增发 ·
+      闲置衰减：宽限 1 周 → 每周 −20 个百分点 → 归 0，任一活跃周即恢复至 100% · 本模拟器假设按最高税率立即领取、未启用释放时间表——耐心池详见文档。
     </footer>
   </div>
 </div>
@@ -299,13 +299,13 @@ function compute(){
   // personas: [name, desc, weekly multiplier array over tank, weekly extra cost]
   const idleW = idlePath(state.life);
   const personas=[
-    {name:'Referral KOL',desc:'full boost via referrals · zero boost cost',color:'#C7F50D',
+    {name:'推荐型 KOL',desc:'靠推荐拉满加速 · 零加速成本',color:'#C7F50D',
      mult:w=>state.m, cost:w=>fuel},
-    {name:'Organic trader',desc:'trades anyway · fee is sunk, boost = rebate',color:'#8ab4ff',
+    {name:'自然交易者',desc:'本来就要交易 · 手续费是沉没成本，加速≈返佣',color:'#8ab4ff',
      mult:w=>lightM, cost:w=>fuel},
-    {name:'Idle holder',desc:'buys & forgets · decays to 0, fuel still burns',color:'#7a7a7a',
+    {name:'闲置持有者',desc:'买了就忘 · 产出衰减至 0，燃料照烧',color:'#7a7a7a',
      mult:w=>idleW[w-1], cost:w=>fuel},
-    {name:'Wash trader',desc:'pays own fees purely to farm boost',color:'#FA5000',
+    {name:'刷量玩家',desc:'纯为刷加速自付手续费',color:'#FA5000',
      mult:w=>state.m, cost:w=>fuel+state.cap} // fuel + CAP_FEE own fee to hold max boost
   ];
 
@@ -348,10 +348,10 @@ function drawChart(rows,life,price){
   for(let i=0;i<=steps;i++){const v=ymin+(ymax-ymin)*i/steps;const y=Y(v);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
     ctx.fillText(fmtUSD(v),6,y+3);}
-  for(let w=0;w<=life;w+=Math.ceil(life/8)){ctx.fillText('W'+w,X(w)-8,H-8)}
+  for(let w=0;w<=life;w+=Math.ceil(life/8)){ctx.fillText(w+'周',X(w)-8,H-8)}
   // zero line
   ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-padR,Y(0));ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='#7a7a7a';ctx.fillText('BREAK-EVEN',W-padR-78,Y(0)-6);
+  ctx.fillStyle='#7a7a7a';ctx.fillText('盈亏平衡线',W-padR-64,Y(0)-6);
   // lines
   rows.forEach(r=>{
     ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();
@@ -368,14 +368,14 @@ function render(){
   $('v_fee').textContent=fmtUSD(state.fee);
   const cl=$('v_closs');cl.textContent=fmtUSD(state.closs);cl.className='val'+(state.closs<0?' neg':'');
   $('v_pool').textContent=Math.round(state.s*100)+'%';
-  $('v_n').textContent=fmtN(state.N)+' units';
+  $('v_n').textContent=fmtN(state.N)+' 台';
   $('v_price').textContent='$'+state.price;
-  $('v_life').textContent=state.life+' weeks';
+  $('v_life').textContent=state.life+' 周';
   $('v_lazy').textContent=Math.round(state.lazy*100)+'%';
   $('v_light').textContent=Math.round(state.light*100)+'%';
   $('v_full').textContent=Math.round(state.full*100)+'%';
   $('v_m').textContent=state.m+'×';
-  $('v_cap').textContent='$'+state.cap+' /wk';
+  $('v_cap').textContent='$'+state.cap+' /周';
 
   $('o_pool').textContent=fmtUSD(c.P);
   $('o_nstar').textContent=fmtN(c.nstar);
@@ -391,21 +391,21 @@ function render(){
   $('eq_ns_lbl').textContent='N* = '+fmtN(c.nstar);
   const now=$('eq_now');now.style.left=pctNow+'%';
   $('eq_now_lbl').textContent='N = '+fmtN(state.N);
-  $('eq_max').textContent=fmtN(maxAxis)+' machines';
+  $('eq_max').textContent=fmtN(maxAxis)+' 台';
   const ratio=c.nstar>0?state.N/c.nstar:9;
   const st=$('eq_state');
-  if(ratio<0.9){st.textContent='Expansion — miners profit';st.className='eq-state exp';now.classList.remove('over');
-    $('eq_note').innerHTML='Fleet is <b>below N*</b>: a fully-boosted machine earns more than its weekly fuel burn. Expect chassis demand and refuel rate to rise until the gap closes. Early miners are collecting the rent of being early.';}
-  else if(ratio<=1.1){st.textContent='At equilibrium';st.className='eq-state bal';now.classList.remove('over');
-    $('eq_note').innerHTML='Fleet is <b>at the boundary</b>: the marginal full-boost miner breaks even on fuel. Higher-boost and referral-driven miners still profit; idle holders subsidize them. This is the market-cleared state.';}
-  else{st.textContent='Contraction — idle pressure';st.className='eq-state con';now.classList.add('over');
-    $('eq_note').innerHTML='Fleet is <b>above N*</b>: even full-boost machines can\'t cover fuel. Rational miners stop refueling, N falls, and yield recovers for those who stay. The system self-corrects — no team intervention needed.';}
+  if(ratio<0.9){st.textContent='扩张——挖矿有利润';st.className='eq-state exp';now.classList.remove('over');
+    $('eq_note').innerHTML='舰队规模<b>低于 N*</b>：一台满速矿机的周收入高于其燃料消耗。预期整机需求和续费率会上升，直到差距收敛。早期矿工正在收取"入场早"的租金。';}
+  else if(ratio<=1.1){st.textContent='处于均衡';st.className='eq-state bal';now.classList.remove('over');
+    $('eq_note').innerHTML='舰队规模<b>正处于边界</b>：边际满速矿工在燃料上恰好盈亏平衡。更高加速和推荐驱动的矿工仍然盈利；闲置持有者在补贴他们。这就是市场出清状态。';}
+  else{st.textContent='收缩——退出压力';st.className='eq-state con';now.classList.add('over');
+    $('eq_note').innerHTML='舰队规模<b>高于 N*</b>：连满速矿机都覆盖不了燃料费。理性矿工停止续费，N 下降，留下来的人收益回升。系统自我修正——无需团队干预。';}
 
   // table
   const tb=$('ptable').querySelector('tbody');tb.innerHTML='';
   c.rows.forEach(r=>{
     const tr=document.createElement('tr');
-    const pay=r.payback?('W'+r.payback):'<span class="mut">never</span>';
+    const pay=r.payback?('第'+r.payback+'周'):'<span class="mut">永不回本</span>';
     const roiCls=r.roi>=0?'pos':'negv';
     const netCls=r.wkNet>=0?'pos':'negv';
     tr.innerHTML=`<td class="name" style="border-left:2px solid ${r.color};padding-left:10px">${r.name}<span class="d">${r.desc}</span></td>
@@ -425,16 +425,16 @@ function render(){
   // solvency
   const clossPos=Math.max(0,state.closs);
   $('solv').innerHTML=`
-    <div class="row"><span>Fee revenue kept (70%)</span><span>${fmtUSD(0.7*state.fee)}</span></div>
-    <div class="row"><span>Client PnL kept (70% of positive leg)</span><span>${fmtUSD(0.7*clossPos)}</span></div>
-    <div class="row"><span>Negative client weeks</span><span>${state.closs<0?fmtUSD(state.closs)+' → deficit ledger, pool pays $0':'—'}</span></div>
-    <div class="row"><span>Chassis + fuel sales</span><span>+ upfront, 50% → reserve buyback</span></div>
-    <div class="row big"><span>Protocol weekly net</span><span>${fmtUSD(0.7*(state.fee+clossPos))} ${state.closs<0?'(before vault PnL)':''}</span></div>
+    <div class="row"><span>留存手续费收入（70%）</span><span>${fmtUSD(0.7*state.fee)}</span></div>
+    <div class="row"><span>留存客户盈亏（正值部分的 70%）</span><span>${fmtUSD(0.7*clossPos)}</span></div>
+    <div class="row"><span>协议亏损周</span><span>${state.closs<0?fmtUSD(state.closs)+' → 记入赤字账本，奖池支付 $0':'—'}</span></div>
+    <div class="row"><span>机身 + 燃料销售</span><span>+ 预付收入，50% → 储备回购</span></div>
+    <div class="row big"><span>协议每周净额</span><span>${fmtUSD(0.7*(state.fee+clossPos))} ${state.closs<0?'（未计金库盈亏）':''}</span></div>
     <div style="margin-top:10px;color:var(--muted);font-family:Inter,sans-serif;font-size:12px;line-height:1.6">
-    Emissions are paid <b style="color:var(--text)">after</b> revenue is realized, funded 100% by buyback. The miner system cannot make the protocol USD-negative in any week, under any parameter setting on this page.</div>`;
+    排放在收入<b style="color:var(--text)">实现之后</b>才支付，100% 由回购提供资金。在本页任何参数设置下，矿机系统都不可能让协议在任何一周出现 USD 净流出。</div>`;
 
   const badge=$('solv_badge');
-  badge.textContent='Always ≥ 0';badge.style.borderColor='var(--acid)';badge.style.color='var(--acid)';
+  badge.textContent='恒 ≥ 0';badge.style.borderColor='var(--acid)';badge.style.color='var(--acid)';
 }
 
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
