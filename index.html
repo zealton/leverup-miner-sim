@@ -260,6 +260,14 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
         <input type="range" id="i_cuser" min="0" max="0.3" step="0.01" value="0.02"></div>
 
+      <div class="sect">用户分层（行为假设）</div>
+      <div class="ctl"><div class="ctl-top"><label>卷王矿机占比<span class="tip" data-tip="刷量最猛的头部用户占全网矿机的比例。他们抢走大部分交易量占比 → 高 boost、快释放、多 remint 机会。">?</span></label><span class="val" id="v_hw"></span></div>
+        <input type="range" id="i_hw" min="1" max="30" step="1" value="10"></div>
+      <div class="ctl"><div class="ctl-top"><label>卷王刷量占比<span class="tip" data-tip="卷王贡献的交易量占全网总刷量的比例。集中度越高，普通用户被稀释得越狠——这就是「部分人高收益、其他人被稀释」的旋钮。">?</span></label><span class="val" id="v_hy"></span></div>
+        <input type="range" id="i_hy" min="10" max="90" step="5" value="60"></div>
+      <div class="ctl"><div class="ctl-top"><label>躺平矿机占比<span class="tip" data-tip="完全不刷量的矿机比例：下限归 0 前按 1× 基速释放，归 0 后<b>冻结</b>——他们让渡的时间价值就是卷王高收益的来源。">?</span></label><span class="val" id="v_idle"></span></div>
+        <input type="range" id="i_idle" min="0" max="60" step="5" value="20"></div>
+
       <div class="sect">Remint</div>
       <div class="ctl"><div class="ctl-top"><label>Remint 门槛（交易量/次）</label><span class="val" id="v_rth"></span></div>
         <input type="range" id="i_rth" min="100000" max="5000000" step="100000" value="1200000"></div>
@@ -323,8 +331,16 @@ footer a{color:var(--muted)}
       </table></div>
     </div>
 
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h"><span>分层收益 · 谁在补贴谁<span class="tip" data-tip="占比竞争是零和的：单台总产出固定，卷王赢的是<b>释放速度</b>（IRR）和 remint 机会；躺平者在下限归 0 后冻结，让渡的时间价值就是头部的高收益。头部的高年化是给全场看的广告，也是刷量动机的来源。">?</span></span><span class="tag">A 矿机 · 按分层</span></div>
+      <div style="overflow-x:auto"><table id="coh_table">
+        <thead><tr><th>分层</th><th>矿机占比</th><th>人均周刷量</th><th>Boost 归0前→后</th><th>实际寿命</th><th>回本 @当前市值</th><th>回本 @目标市值</th><th>ROI @目标</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
     <div class="panel">
-      <div class="panel-h">市值 → 用户收益体感（A 矿机 · 当前平均 boost）<span class="tag">敏感性</span></div>
+      <div class="panel-h">市值 → 用户收益体感（A 矿机 · 普通用户 boost）<span class="tag">敏感性</span></div>
       <div style="overflow-x:auto"><table id="mc_table">
         <thead><tr><th>LV 市值</th><th>LV 价格</th><th>单台日收益</th><th>回本天数</th><th>全周期 ROI</th><th>体感</th></tr></thead>
         <tbody></tbody>
@@ -409,6 +425,8 @@ function read(){
   P.mc=+$('i_mc').value; P.circ=+$('i_circ').value; P.plv=P.mc/P.circ;
   P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
   P.payt=+$('i_payt').value;
+  P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100;
+  if(P.hw+P.idle>0.9){P.idle=Math.max(0,0.9-P.hw);$('i_idle').value=Math.round(P.idle*100)}
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
   P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
   P.Q={A:+$('i_qa').value,B:+$('i_qb').value,C:+$('i_qc').value};
@@ -422,6 +440,12 @@ function read(){
 function floorAt(w){return w>=P.floorw?0:1}
 function shareBoost(share,fl){return fl+(P.bmax-fl)*Math.min(1,P.smax>0?share/P.smax:1)}
 function uniformBoost(n,fl){return n>0&&P.vol>0?shareBoost(1/n,fl):fl}
+function cohortAvgBoost(n,fl){
+  if(P.vol<=0||n<=0)return fl;
+  const h=P.hw,idle=P.idle,m=Math.max(0.0001,1-h-idle);
+  const sH=h>0?P.hy/(h*n):0, sM=(1-P.hy)/(m*n);
+  return h*shareBoost(sH,fl)+m*shareBoost(sM,fl)+idle*fl;
+}
 
 /* ---- aggregate weekly simulation (expected values, deterministic) ----
    scale: multiplier applied to per-miner LV amounts (for solving the emission budget) */
@@ -468,7 +492,7 @@ function simulate(scale){
     }
     // emission (competitive boost: uniform wash -> everyone's share = 1/active)
     const activeNow=cohorts.reduce((a,c)=>a+c.count,0);
-    const bW=uniformBoost(activeNow,floorAt(w));
+    const bW=cohortAvgBoost(activeNow,floorAt(w));
     let emitLV=0;
     cohorts.forEach(c=>{
       const rate=L[c.tier]/P.T*7*bW;
@@ -611,6 +635,9 @@ function render(){
   $('v_smax').textContent=(P.smax*100).toFixed(2)+'% 全网量';
   $('v_floorw').textContent=P.floorw===0?'立即 [0,'+P.bmax+'×]':'第 '+P.floorw+' 周起';
   $('v_vol').textContent=fmt(P.vol)+'/周';$('v_cuser').textContent=(P.cuser*100).toFixed(2)+'%';
+  $('v_hw').textContent=Math.round(P.hw*100)+'%';
+  $('v_hy').textContent=Math.round(P.hy*100)+'%';
+  $('v_idle').textContent=Math.round(P.idle*100)+'%';
   $('v_rth').textContent=fmt(P.rth);$('v_stay').textContent=Math.round(P.stay*100)+'%';
   $('v_gen').textContent=fmtI(P.gen)+' 台';$('v_daily').textContent=P.daily+' 台/日';
   $('v_grow').textContent=(P.grow>=0?'+':'')+Math.round(P.grow*100)+'%/周';
@@ -618,23 +645,30 @@ function render(){
   $('v_hor').textContent=P.hor+' 周';
   $('w_rth').textContent=fmt(P.rth);
 
-  const bEarly=uniformBoost(Math.max(1,P.gen),P.floorw>0?1:0);
-  const bLate=uniformBoost(Math.max(1,P.gen),0);
-  const b=bEarly;
+  const fl0=P.floorw>0?1:0;
+  const N0=Math.max(1,P.gen);
+  const bEarly=cohortAvgBoost(N0,fl0);
+  const bLate=cohortAvgBoost(N0,0);
+  const mFrac=Math.max(0.0001,1-P.hw-P.idle);
+  const volTyp=P.vol>0?P.vol*(1-P.hy)/mFrac:0;
+  const volHW=P.vol>0&&P.hw>0?P.vol*P.hy/P.hw:0;
+  const bTyp=P.vol>0?shareBoost(volTyp/(N0*P.vol),fl0):fl0;
+  const bHW=P.vol>0?shareBoost(volHW/(N0*P.vol),fl0):fl0;
+  const b=bTyp;
   const weeks=simulate(1);
   const cov=coverage(weeks);
   const maxEmit=P.L.A*P.Q.A+P.L.B*P.Q.B+P.L.C*P.Q.C;
 
   $('o_maxemit').textContent=fmtLV(maxEmit)+' LV';
   $('o_maxemit_u').textContent='占流通量 '+(maxEmit/P.circ*100).toFixed(1)+'% · 市值 '+fmt(maxEmit*P.plv);
-  $('o_boost').textContent=b.toFixed(2)+'× → '+bLate.toFixed(2)+'×';
-  $('o_boost_u').textContent='均匀刷量、'+fmtI(P.gen)+' 台分摊 · 下限归 0 前 → 后';
+  $('o_boost').textContent=bEarly.toFixed(2)+'× → '+bLate.toFixed(2)+'×';
+  $('o_boost_u').textContent='分层加权 · 归0前→后 · 卷王 '+bHW.toFixed(2)+'× / 普通 '+bTyp.toFixed(2)+'×';
   const oc=$('o_cover');oc.textContent=cov>=99?'∞':cov.toFixed(2)+'×';oc.className='v '+(cov>=1?'':'red');
 
   // user payback (A miner)
   const dailyYield=P.L.A/P.T*b*P.plv;
   const lifeDays=P.T/b;
-  const lifeWashCost=P.vol/7*lifeDays*P.cuser;
+  const lifeWashCost=volTyp/7*lifeDays*P.cuser;
   const totalCost=P.priceUsd+lifeWashCost;
   const totalOut=P.L.A*P.plv;
   const payback=dailyYield>0?totalCost/dailyYield:Infinity;
@@ -723,6 +757,36 @@ function render(){
   const fmtAnn=r=>r>=10?'≈'+fmtLV(r+1)+'×/年':(r*100).toFixed(0)+'%';
   $('u_apr').textContent=fmtAnn(aprNow)+' / '+fmtAnn(apyNow);
   $('u_apr_u').textContent='@当前市值 · 周期收益 '+(cycleNow*100).toFixed(0)+'% · 寿命 '+Math.round(lifeD)+' 天';
+
+  // cohort table
+  const cohRows=[
+    {name:'卷王',cls:'pos',frac:P.hw,vol:volHW,bE:bHW,bL:P.vol>0?shareBoost(volHW/(N0*P.vol),0):0},
+    {name:'普通活跃',cls:'w',frac:mFrac,vol:volTyp,bE:bTyp,bL:P.vol>0?shareBoost(volTyp/(N0*P.vol),0):0},
+    {name:'躺平',cls:'negv',frac:P.idle,vol:0,bE:fl0,bL:0}
+  ];
+  const ct=$('coh_table').querySelector('tbody');ct.innerHTML='';
+  const frozenPct=Math.min(100,P.floorw*7/P.T*100);
+  cohRows.forEach(r=>{
+    const isIdle=r.vol<=0;
+    const life=r.bE>0?P.T/r.bE:Infinity;
+    const wc=isFinite(life)?r.vol/7*life*P.cuser:0;
+    const cost=P.priceUsd+wc;
+    const pbAt=plv=>{const dy=P.L.A/P.T*r.bE*plv;return dy>0?cost/dy:Infinity};
+    const pbN=pbAt(P.plv),pbT=pbAt(P.tplv);
+    const frozen=isIdle&&P.floorw*7<P.T;
+    const roiT=frozen?(P.L.A*(frozenPct/100)*P.tplv-cost)/cost:(P.L.A*P.tplv-cost)/cost;
+    const pbCell=(v,lim)=>frozen?`<span class="negv">❄ 冻结于 ${frozenPct.toFixed(0)}%</span>`:v===Infinity?'—':`<span class="${v<=lim?'pos':'negv'}">${Math.round(v)} 天</span>`;
+    ct.insertAdjacentHTML('beforeend',`<tr>
+      <td class="name"><span class="${r.cls}">${r.name}</span></td>
+      <td>${Math.round(r.frac*100)}%</td>
+      <td>${isIdle?'$0':fmt(r.vol)}</td>
+      <td>${r.bE.toFixed(2)}× → ${r.bL.toFixed(2)}×</td>
+      <td>${frozen?'释放不完（冻结）':isFinite(life)?Math.round(life)+' 天':'—'}</td>
+      <td>${pbCell(pbN,P.payt)}</td>
+      <td>${pbCell(pbT,P.payt)}</td>
+      <td class="${roiT>=0?'pos':'negv'}">${(roiT*100).toFixed(0)}%</td>
+    </tr>`);
+  });
 
   // mc sensitivity table
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
