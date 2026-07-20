@@ -232,6 +232,8 @@ footer a{color:var(--muted)}
         <div class="hint">LV 单价 = <span id="v_plv" style="color:var(--acid)">—</span></div></div>
       <div class="ctl"><div class="ctl-top"><label>目标 LV 市值<span class="tip" data-tip="愿景市值：用于下方「各品质收益率」表，展示 LV 涨到这个市值时 A/B/C 矿机各自的收益率。">?</span></label><span class="val" id="v_tmc"></span></div>
         <input type="range" id="i_tmc" min="1000000" max="100000000" step="1000000" value="10000000"></div>
+      <div class="ctl"><div class="ctl-top"><label>目标回本天数<span class="tip" data-tip="设计目标：希望 A 矿机多少天回本（含刷量成本）。答案卡 ② 会反解出达成它的两条路径——需要的市值，或当前市值下需要的单台产出——并检查后者是否超出排放预算。">?</span></label><span class="val" id="v_payt"></span></div>
+        <input type="range" id="i_payt" min="3" max="90" step="1" value="14"></div>
       <div class="ctl"><div class="ctl-top"><label>矿机售价 x（MON）</label><span class="val" id="v_xmon"></span></div>
         <input type="range" id="i_xmon" min="50" max="20000" step="50" value="8000"></div>
       <div class="ctl"><div class="ctl-top"><label>MON 价格（USD）</label><span class="val" id="v_pmon"></span></div>
@@ -406,6 +408,7 @@ const P={};
 function read(){
   P.mc=+$('i_mc').value; P.circ=+$('i_circ').value; P.plv=P.mc/P.circ;
   P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
+  P.payt=+$('i_payt').value;
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
   P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
   P.Q={A:+$('i_qa').value,B:+$('i_qb').value,C:+$('i_qc').value};
@@ -635,8 +638,10 @@ function render(){
   const totalCost=P.priceUsd+lifeWashCost;
   const totalOut=P.L.A*P.plv;
   const payback=dailyYield>0?totalCost/dailyYield:Infinity;
-  $('o_payback').textContent=payback===Infinity?'—':Math.round(payback)+' 天';
-  $('o_payback_u').textContent='寿命 '+(isFinite(lifeDays)?Math.round(lifeDays)+' 天':'∞（boost 0）')+' · 全周期产出 '+fmt(totalOut);
+  const pb=$('o_payback');
+  pb.textContent=payback===Infinity?'—':Math.round(payback)+' 天';
+  pb.className='v '+(payback<=P.payt?'':payback>lifeDays?'red':'white');
+  $('o_payback_u').textContent='目标 '+P.payt+' 天 · 寿命 '+(isFinite(lifeDays)?Math.round(lifeDays)+' 天':'∞（boost 0）')+' · 全周期产出 '+fmt(totalOut);
 
   // ① emission budget
   const k=solveScale();
@@ -645,11 +650,16 @@ function render(){
   $('a1_v').innerHTML=k<=0?'当前入场无法承接任何排放':`单台 A ≤ <b>${fmtLV(P.L.A*k)}</b> LV`;
   $('a1_d').innerHTML=`当前设置：A=${fmtLV(P.L.A)}/台 → 最差周覆盖率 <b>${cov>=99?'∞':cov.toFixed(2)}×</b>${cov>=1?'（健康）':'（<b style="color:var(--red)">失衡</b>）'}。按当前入场速度反解：单台 A ≤ ${fmtLV(P.L.A*k)} LV（B/C 等比 ${fmtLV(P.L.B*k)} / ${fmtLV(P.L.C*k)}），对应总排放上限 ≈ <b>${fmtLV(maxEmit*k)} LV</b>（占流通 ${(maxEmit*k/P.circ*100).toFixed(1)}%，市值 ${fmt(maxEmit*k*P.plv)}）。`;
 
-  // ② market cap thresholds
+  // ② market cap thresholds around target payback
   const mcFor=days=>totalCost*P.circ*P.T/(P.L.A*b*days);
-  const mcReal=mcFor(lifeDays*0.6), mcStrong=mcFor(25), mcBoom=mcFor(10);
-  $('a2_v').innerHTML=`实在 ≥ <b>${fmt(mcReal)}</b> · 爆炸 ≥ <b>${fmt(mcBoom)}</b>`;
-  $('a2_d').innerHTML=`判定标准（矿机全成本 ${fmt(totalCost)}，boost ${b.toFixed(2)}×）：市值 ≥ ${fmt(mcReal)} 时寿命内稳回本（${Math.round(lifeDays*0.6)} 天回本）；≥ ${fmt(mcStrong)} 时 25 天回本；≥ ${fmt(mcBoom)} 时 <b>10 天回本、全周期 ROI ${(lifeDays/10*100-100).toFixed(0)}%+</b>。当前市值 ${fmt(P.mc)} → 回本 ${payback===Infinity?'不可能':Math.round(payback)+' 天'}${P.mc>=mcBoom?'（🔥 爆炸区）':P.mc>=mcReal?'（✓ 实在区）':'（⚠ 无感区）'}。`;
+  const mcReal=mcFor(lifeDays*0.6), mcBoom=mcFor(10);
+  const mcNeed=mcFor(P.payt);
+  const lNeed=P.plv>0&&b>0?totalCost*P.T/(P.plv*b*P.payt):Infinity;
+  const budgetL=P.L.A*k;
+  const hit=payback<=P.payt;
+  const a2=$('ans_mc');hit?a2.classList.remove('warn'):a2.classList.add('warn');
+  $('a2_v').innerHTML=`${P.payt} 天回本 → 市值 ≥ <b>${fmt(mcNeed)}</b>`;
+  $('a2_d').innerHTML=`当前市值 ${fmt(P.mc)} 下实际回本 <b>${payback===Infinity?'不可能':Math.round(payback)+' 天'}</b>${hit?'（🎯 已达标）':''}。达成 ${P.payt} 天的两条路径：① 市值涨到 <b>${fmt(mcNeed)}</b>（当前的 ${(mcNeed/P.mc).toFixed(1)}×）；② 当前市值下把单台 A 提到 <b>${fmtLV(lNeed)} LV</b>——排放预算上限 ${fmtLV(budgetL)} LV${lNeed>budgetL?'，<b style="color:var(--red)">超预算 '+(lNeed/Math.max(1,budgetL)).toFixed(1)+'×：两周冲劲 = 首批亏损获客，需 treasury 补贴、靠市值上行回收</b>':'（预算内 ✓）'}。参考：稳回本（${Math.round(lifeDays*0.6)} 天）需 ≥ ${fmt(mcReal)}；10 天爆炸需 ≥ ${fmt(mcBoom)}。`;
 
   // ③ cost
   const last=weeks[weeks.length-1];
@@ -664,6 +674,7 @@ function render(){
 
   // per-tier yield table at target MC
   $('v_tmc').textContent=fmt(P.tmc);
+  $('v_payt').textContent=P.payt+' 天';
   $('tier_tag').textContent='目标市值 '+fmt(P.tmc)+' · LV $'+P.tplv.toFixed(5);
   const washPerChance=P.rth*P.cuser;
   const qsum=P.Q.B+P.Q.C;
@@ -717,7 +728,7 @@ function render(){
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
   [500000,1000000,2000000,5000000,10000000,20000000,50000000].forEach(mc=>{
     const plv=mc/P.circ, dy=P.L.A/P.T*b*plv, pb=dy>0?totalCost/dy:Infinity, roi=(P.L.A*plv-totalCost)/totalCost;
-    const feel=pb<=10?'<span class="pos">🔥 爆炸</span>':pb<=25?'<span class="pos">很强</span>':pb<=lifeDays*0.6?'<span class="w">实在</span>':pb<=lifeDays?'<span style="color:var(--muted)">踩线回本</span>':'<span class="negv">无感</span>';
+    const feel=(pb<=P.payt?'🎯 ':'')+(pb<=10?'<span class="pos">🔥 爆炸</span>':pb<=25?'<span class="pos">很强</span>':pb<=lifeDays*0.6?'<span class="w">实在</span>':pb<=lifeDays?'<span style="color:var(--muted)">踩线回本</span>':'<span class="negv">无感</span>');
     const cur=Math.abs(mc-P.mc)/P.mc<0.12?' style="background:rgba(199,245,13,.06)"':'';
     tb.insertAdjacentHTML('beforeend',`<tr${cur}><td class="name">${fmt(mc)}${Math.abs(mc-P.mc)/P.mc<0.12?' ←当前':''}</td><td>$${plv.toFixed(5)}</td><td>${fmt(dy)}/天</td><td class="${pb<=lifeDays?'pos':'negv'}">${pb===Infinity?'—':Math.round(pb)+' 天'}</td><td class="${roi>=0?'pos':'negv'}">${(roi*100).toFixed(0)}%</td><td>${feel}</td></tr>`);
   });
