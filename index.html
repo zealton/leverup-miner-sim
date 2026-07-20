@@ -250,6 +250,13 @@ footer a{color:var(--muted)}
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
 
+    <div class="stats">
+      <div class="stat"><div class="k">用户整体投入<span class="tip" data-tip="模拟期内全体用户实际掏出的钱：矿机购买 + 刷量摩擦成本（交易量 × 刷量成本率）。B/C 通过 remint 获得、不额外付购机费。">?</span></div><div class="v white" id="u_in">—</div><div class="u" id="u_in_u">—</div></div>
+      <div class="stat"><div class="k">用户整体产出市值</div><div class="v white" id="u_out">—</div><div class="u">全部排放 LV × 当前价</div></div>
+      <div class="stat"><div class="k">用户整体净盈亏<span class="tip" data-tip="产出市值 − 投入。为负说明按当前 LV 价格、全体用户是净亏的——收益故事只能靠市值增长兑现。">?</span></div><div class="v" id="u_net">—</div><div class="u" id="u_net_u">—</div></div>
+      <div class="stat"><div class="k">A 矿机 APR / APY<span class="tip" data-tip="按<b>当前市值</b>与全成本（购机+刷量）计算。APR = 单周期收益率 × (365 ÷ 寿命)，单利年化；APY = (1 + 周期收益率)^(365 ÷ 寿命) − 1，假设每期产出全部复投买新矿机的复利年化。">?</span></div><div class="v white" id="u_apr">—</div><div class="u" id="u_apr_u">—</div></div>
+    </div>
+
     <div class="panel" style="margin-bottom:16px">
       <div class="panel-h">周排放市值 vs 周入场资金 <span class="tag">USD / 周</span></div>
       <div style="padding:16px 16px 0"><canvas id="c_flow" height="240"></canvas></div>
@@ -271,7 +278,7 @@ footer a{color:var(--muted)}
     <div class="panel" style="margin-bottom:16px">
       <div class="panel-h"><span>各品质收益率对比<span class="tip" data-tip="B/C 无法直接购买，其「期望获得成本」= 矿机售价 + 抽中该品质所需 remint 次数期望 × 每次机会的刷量成本（门槛 × 刷量成本率）。抽中概率按初始配额加权并扣除保持原品质概率。收益率未计入抽奖期间矿机本身的产出，属保守口径。">?</span></span><span class="tag" id="tier_tag">目标市值</span></div>
       <div style="overflow-x:auto"><table id="tier_table">
-        <thead><tr><th>品质</th><th>单台产出</th><th>期望获得成本</th><th>抽中概率/次</th><th>ROI @当前市值</th><th>ROI @目标市值</th><th>日收益 @目标</th><th>回本 @目标</th></tr></thead>
+        <thead><tr><th>品质</th><th>单台产出</th><th>期望获得成本</th><th>抽中概率/次</th><th>ROI @当前市值</th><th>ROI @目标市值</th><th>APR @目标<span class="tip" data-tip="单周期收益率 × (365 ÷ 实际寿命)。单利年化，不复投。">?</span></th><th>APY @目标<span class="tip" data-tip="(1 + 周期收益率)^(365 ÷ 实际寿命) − 1。假设每个周期结束把全部产出复投买新矿机（且始终买得到、参数不变）的复利年化，仅作量级参考。">?</span></th><th>日收益 @目标</th><th>回本 @目标</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </div>
@@ -345,7 +352,7 @@ function simulate(scale){
   const circ={A:0,B:0,C:0};
   let soldTotal=0,dead=0;
   const weeks=[];
-  let cumRev=0,cumCost=0;
+  let cumRev=0,cumCost=0,cumUin=0,cumUout=0;
   for(let w=0;w<P.hor;w++){
     // sales (A only, capped by A quota incl. slots freed by upgrades is ignored -> cap on cumulative sold)
     let sold=0;
@@ -392,7 +399,8 @@ function simulate(scale){
     const inflow=sold*P.priceUsd+volume*P.pnl;
     const emitUsd=emitLV*P.plv;
     cumRev+=inflow;cumCost+=emitUsd;
-    weeks.push({w,sold,inflow,emitLV,emitUsd,counts:{...counts},dead,cumRev,cumCost,volume});
+    cumUin+=sold*P.priceUsd+volume*P.cuser;cumUout+=emitUsd;
+    weeks.push({w,sold,inflow,emitLV,emitUsd,counts:{...counts},dead,cumRev,cumCost,volume,cumUin,cumUout});
   }
   return weeks;
 }
@@ -543,10 +551,14 @@ function render(){
     {t:'C',cls:'gold',cost:pC>0?P.priceUsd+washPerChance/pC:Infinity,p:pC,pTxt:(pC*100).toFixed(1)+'%'}
   ];
   const tt=$('tier_table').querySelector('tbody');tt.innerHTML='';
+  const lifeD=P.T/b;
+  const annCell=r=>isNaN(r)?'—':`<span class="${r>=0?'pos':'negv'}">${r>=10?'≈'+fmtLV(r+1)+'×/年':(r*100).toFixed(0)+'%'}</span>`;
   tiers.forEach(x=>{
     const L=P.L[x.t];
     const roiNow=x.cost>0&&x.cost!==Infinity?(L*P.plv-x.cost)/x.cost:NaN;
     const roiTgt=x.cost>0&&x.cost!==Infinity?(L*P.tplv-x.cost)/x.cost:NaN;
+    const apr=isNaN(roiTgt)?NaN:roiTgt*365/lifeD;
+    const apy=isNaN(roiTgt)?NaN:(1+roiTgt<=0?-1:Math.pow(1+roiTgt,365/lifeD)-1);
     const dyT=L/P.T*b*P.tplv;
     const pbT=x.cost!==Infinity&&dyT>0?x.cost/dyT:Infinity;
     const roiCell=r=>isNaN(r)?'<span class="negv">不可得</span>':`<span class="${r>=0?'pos':'negv'}">${r>=10?(r+1).toFixed(1)+'×':(r*100).toFixed(0)+'%'}</span>`;
@@ -557,10 +569,26 @@ function render(){
       <td>${x.pTxt}</td>
       <td>${roiCell(roiNow)}</td>
       <td>${roiCell(roiTgt)}</td>
+      <td>${annCell(apr)}</td>
+      <td>${annCell(apy)}</td>
       <td>${x.cost===Infinity?'—':fmt(dyT)+'/天'}</td>
-      <td class="${pbT<=P.T/b?'pos':'negv'}">${pbT===Infinity?'—':Math.round(pbT)+' 天'}</td>
+      <td class="${pbT<=lifeD?'pos':'negv'}">${pbT===Infinity?'—':Math.round(pbT)+' 天'}</td>
     </tr>`);
   });
+
+  // user aggregate view + A-miner APR/APY at current MC
+  $('u_in').textContent=fmt(last.cumUin);
+  $('u_in_u').textContent='购机 '+fmt(totSold*P.priceUsd)+' + 刷量成本 '+fmt(last.cumUin-totSold*P.priceUsd);
+  $('u_out').textContent=fmt(last.cumUout);
+  const unet=last.cumUout-last.cumUin;
+  const un=$('u_net');un.textContent=(unet>=0?'+':'')+fmt(unet);un.className='v '+(unet>=0?'':'red');
+  $('u_net_u').textContent='产出/投入 = '+(last.cumUin>0?(last.cumUout/last.cumUin*100).toFixed(0):'—')+'%（按当前 LV 价）';
+  const cycleNow=(totalOut-totalCost)/totalCost;
+  const aprNow=cycleNow*365/lifeD;
+  const apyNow=1+cycleNow<=0?-1:Math.pow(1+cycleNow,365/lifeD)-1;
+  const fmtAnn=r=>r>=10?'≈'+fmtLV(r+1)+'×/年':(r*100).toFixed(0)+'%';
+  $('u_apr').textContent=fmtAnn(aprNow)+' / '+fmtAnn(apyNow);
+  $('u_apr_u').textContent='@当前市值 · 周期收益 '+(cycleNow*100).toFixed(0)+'% · 寿命 '+Math.round(lifeD)+' 天';
 
   // mc sensitivity table
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
