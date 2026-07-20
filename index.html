@@ -187,10 +187,10 @@ footer a{color:var(--muted)}
     <div class="panel-b">
 
       <div class="sect">代币与价格</div>
-      <div class="ctl"><div class="ctl-top"><label>LV 市值（流通市值）<span class="tip" data-tip="决定 LV 单价 = 市值 ÷ 流通量。所有美元化的收益和成本都基于它。模型假设横盘（不模拟价格反身性）。">?</span></label><span class="val" id="v_mc"></span></div>
-        <input type="range" id="i_mc" min="200000" max="50000000" step="200000" value="2000000"></div>
+      <div class="ctl"><div class="ctl-top"><label>LV 市值（流通市值）<span class="tip" data-tip="决定 LV 单价 = 市值 ÷ 流通量。所有美元化的收益和成本都基于它。模型假设横盘（不模拟价格反身性）。<b>默认值取自 CMC 2026-07-20 实况：市值 $4.82M、流通 90M LV、价格 ≈$0.0535</b>。">?</span></label><span class="val" id="v_mc"></span></div>
+        <input type="range" id="i_mc" min="200000" max="50000000" step="200000" value="4800000"></div>
       <div class="ctl"><div class="ctl-top"><label>LV 流通量</label><span class="val" id="v_circ"></span></div>
-        <input type="range" id="i_circ" min="50000000" max="1000000000" step="50000000" value="200000000">
+        <input type="range" id="i_circ" min="10000000" max="1000000000" step="10000000" value="90000000">
         <div class="hint">LV 单价 = <span id="v_plv" style="color:var(--acid)">—</span></div></div>
       <div class="ctl"><div class="ctl-top"><label>目标 LV 市值<span class="tip" data-tip="愿景市值：用于下方「各品质收益率」表，展示 LV 涨到这个市值时 A/B/C 矿机各自的收益率。">?</span></label><span class="val" id="v_tmc"></span></div>
         <input type="range" id="i_tmc" min="1000000" max="100000000" step="1000000" value="10000000"></div>
