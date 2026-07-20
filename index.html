@@ -240,11 +240,11 @@ footer a{color:var(--muted)}
 
       <div class="sect">矿机与品质（A 发售 · B/C 仅 remint）</div>
       <div class="tierhead"><span></span><span>单台总产出 LV</span><span>配额（台）</span></div>
-      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="10000" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
-      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="30000" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
-      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="100000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="4300" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
+      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="11000" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="27000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
       <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）</label><span class="val" id="v_T"></span></div>
-        <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
+        <input type="range" id="i_T" min="30" max="365" step="5" value="60"></div>
 
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
@@ -252,7 +252,7 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需全网占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的交易量占比 ÷ 此值)。例：设 1% 时，你的周交易量达到全网 1% 即拉满。占比每周按当周交易量重算——上周刷的量这周不算，天然防「刷一次躺平」。">?</span></label><span class="val" id="v_smax"></span></div>
         <input type="range" id="i_smax" min="0.05" max="10" step="0.05" value="1"></div>
       <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
-        <input type="range" id="i_floorw" min="0" max="52" step="1" value="8"></div>
+        <input type="range" id="i_floorw" min="0" max="52" step="1" value="6"></div>
       <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="全网平均值：决定全网总交易量（= 台数 × 此值）、remint 机会速度和客损收入。均匀刷量时每台占比 = 1 ÷ 全网台数——矿机越多、大家的 boost 越低（占比竞争）。">?</span></label><span class="val" id="v_vol"></span></div>
         <input type="range" id="i_vol" min="0" max="500000" step="10000" value="50000"></div>
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
@@ -260,7 +260,7 @@ footer a{color:var(--muted)}
 
       <div class="sect">Remint</div>
       <div class="ctl"><div class="ctl-top"><label>Remint 门槛（交易量/次）</label><span class="val" id="v_rth"></span></div>
-        <input type="range" id="i_rth" min="100000" max="5000000" step="100000" value="500000"></div>
+        <input type="range" id="i_rth" min="100000" max="5000000" step="100000" value="1200000"></div>
       <div class="ctl"><div class="ctl-top"><label>保持原品质概率<span class="tip" data-tip="remint 有概率不改变品质（消耗机会）。其余概率按目标品质剩余配额加权分配——配额越稀有越难抽到。">?</span></label><span class="val" id="v_stay"></span></div>
         <input type="range" id="i_stay" min="0" max="80" step="5" value="30"></div>
 
@@ -268,7 +268,7 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>创世批销量（台 A）</label><span class="val" id="v_gen"></span></div>
         <input type="range" id="i_gen" min="50" max="2000" step="50" value="400"></div>
       <div class="ctl"><div class="ctl-top"><label>后续日均销量（台/日）</label><span class="val" id="v_daily"></span></div>
-        <input type="range" id="i_daily" min="0" max="100" step="1" value="5"></div>
+        <input type="range" id="i_daily" min="0" max="100" step="1" value="8"></div>
       <div class="ctl"><div class="ctl-top"><label>销量周增速</label><span class="val" id="v_grow"></span></div>
         <input type="range" id="i_grow" min="-30" max="50" step="5" value="10">
         <div class="hint">卖完 A 配额自动停售（后续批次 = 调大配额再看）</div></div>
