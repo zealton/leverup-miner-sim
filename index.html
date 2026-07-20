@@ -139,6 +139,9 @@ button:disabled{opacity:.35;cursor:not-allowed}
   font-family:'Inter',sans-serif;font-size:12px;line-height:1.75;color:var(--text);
   letter-spacing:0;text-transform:none;text-align:left;white-space:normal;font-weight:400}
 #tipbox b{color:var(--acid);font-weight:600}
+#charttip{position:fixed;z-index:99;display:none;pointer-events:none;min-width:160px;
+  background:#161616;border:1px solid var(--border);padding:8px 11px;box-shadow:0 10px 28px rgba(0,0,0,.55);
+  font-family:'Inter',sans-serif;font-size:12px;line-height:1.8;color:var(--text)}
 
 /* tabs */
 .tabbar{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
@@ -503,6 +506,34 @@ function grid(ctx,W,H,padL,ymin,ymax,fmtFn){
   for(let i=0;i<=4;i++){const v=ymin+(ymax-ymin)*i/4;const y=H-24-(v-ymin)/(ymax-ymin)*(H-40);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-8,y);ctx.stroke();ctx.fillText(fmtFn(v),4,y+3)}
 }
+/* chart hover: registered series -> crosshair + value tooltip */
+const CHARTS={};
+let chartTip=null,chartGuide=null;
+function regChart(id,meta){
+  CHARTS[id]=meta;
+  const c=$(id);
+  if(!c._hover){c._hover=true;c.addEventListener('mousemove',chartMove);c.addEventListener('mouseleave',chartLeave)}
+}
+function chartMove(e){
+  const c=e.currentTarget,M=CHARTS[c.id];if(!M)return;
+  if(!chartTip){chartTip=document.createElement('div');chartTip.id='charttip';document.body.appendChild(chartTip);
+    chartGuide=document.createElement('div');document.body.appendChild(chartGuide)}
+  const r=c.getBoundingClientRect(),W=r.width;
+  const span=Math.max(1,W-M.padL-M.padR);
+  const t=(e.clientX-r.left-M.padL)/span;
+  const idx=Math.max(0,Math.min(M.n-1,Math.round(t*(M.n-1))));
+  const px=r.left+M.padL+idx/Math.max(1,M.n-1)*span;
+  chartGuide.style.cssText=`display:block;position:fixed;left:${px}px;top:${r.top+8}px;height:${r.height-34}px;width:1px;background:rgba(232,232,232,.35);z-index:98;pointer-events:none`;
+  const rows=M.series.map(sr=>`<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:var(--muted)"><i style="display:inline-block;width:8px;height:8px;background:${sr.color};margin-right:6px"></i>${sr.label}</span><b style="font-family:'IBM Plex Mono',monospace">${sr.fmt(sr.vals[idx])}</b></div>`).join('');
+  chartTip.innerHTML=`<div style="font-family:'IBM Plex Mono',monospace;color:var(--acid);margin-bottom:3px">${M.xl(idx)}</div>${rows}`;
+  chartTip.style.display='block';
+  const tw=chartTip.offsetWidth,th=chartTip.offsetHeight;
+  let tx=e.clientX+16;if(tx+tw>innerWidth-8)tx=e.clientX-tw-16;
+  let ty=e.clientY-th/2;ty=Math.max(8,Math.min(ty,innerHeight-th-8));
+  chartTip.style.left=tx+'px';chartTip.style.top=ty+'px';
+}
+function chartLeave(){if(chartTip){chartTip.style.display='none';chartGuide.style.display='none'}}
+
 function drawFlow(weeks){
   const c=$('c_flow'),[ctx,W,H]=setup(c,240);
   const padL=56;
@@ -516,6 +547,10 @@ function drawFlow(weeks){
   ctx.fillStyle='#4a4a4a';for(let i=0;i<weeks.length;i+=Math.ceil(weeks.length/10))ctx.fillText('W'+i,X(i)-8,H-8);
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.inflow)]),'#C7F50D');
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.emitUsd)]),'#FA5000');
+  regChart('c_flow',{padL,padR:10,n:weeks.length,xl:i=>'第 '+i+' 周',series:[
+    {label:'新入场资金',color:'#C7F50D',vals:weeks.map(x=>x.inflow),fmt},
+    {label:'LV 排放市值',color:'#FA5000',vals:weeks.map(x=>x.emitUsd),fmt},
+    {label:'覆盖率',color:'#7a7a7a',vals:weeks.map(x=>x.emitUsd>1?x.inflow/x.emitUsd:Infinity),fmt:v=>isFinite(v)?v.toFixed(2)+'×':'∞'}]});
 }
 function drawFleet(weeks){
   const c=$('c_fleet'),[ctx,W,H]=setup(c,200);
@@ -535,6 +570,12 @@ function drawFleet(weeks){
   stack(x=>x.counts.A+x.counts.B,'rgba(138,180,255,.35)');base=x=>x.counts.A+x.counts.B;
   stack(x=>x.counts.A+x.counts.B+x.counts.C,'rgba(245,197,24,.4)');
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.dead)]),'#FA5000',1.5);
+  const fN=v=>fmtI(Math.round(v))+' 台';
+  regChart('c_fleet',{padL,padR:10,n:weeks.length,xl:i=>'第 '+i+' 周',series:[
+    {label:'A 品质',color:'#e8e8e8',vals:weeks.map(x=>x.counts.A),fmt:fN},
+    {label:'B 品质',color:'#8ab4ff',vals:weeks.map(x=>x.counts.B),fmt:fN},
+    {label:'C 品质',color:'#f5c518',vals:weeks.map(x=>x.counts.C),fmt:fN},
+    {label:'已耗尽（累计）',color:'#FA5000',vals:weeks.map(x=>x.dead),fmt:fN}]});
 }
 function drawPnl(weeks){
   const c=$('c_pnl'),[ctx,W,H]=setup(c,200);
@@ -549,6 +590,10 @@ function drawPnl(weeks){
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.cumRev)]),'#C7F50D');
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.cumCost)]),'#FA5000');
   line(ctx,weeks.map((x,i)=>[X(i),Y(x.cumRev-x.cumCost)]),'#e8e8e8');
+  regChart('c_pnl',{padL,padR:10,n:weeks.length,xl:i=>'第 '+i+' 周',series:[
+    {label:'累计收入',color:'#C7F50D',vals:weeks.map(x=>x.cumRev),fmt},
+    {label:'累计排放成本',color:'#FA5000',vals:weeks.map(x=>x.cumCost),fmt},
+    {label:'累计净损益',color:'#e8e8e8',vals:weeks.map(x=>x.cumRev-x.cumCost),fmt}]});
 }
 
 /* ---- render ---- */
@@ -958,6 +1003,9 @@ function sbResults(R){
   ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-10,Y(0));ctx.stroke();ctx.setLineDash([]);
   R.st.forEach((x,ui)=>line(ctx,x.series.map((v,i)=>[X(i),Y(v)]),ucolor(ui),2));
   ctx.setLineDash([6,4]);line(ctx,R.protoSeries.map((v,i)=>[X(i),Y(v)]),'#e8e8e8',1.6);ctx.setLineDash([]);
+  regChart('sb_chart',{padL,padR:10,n:R.H,xl:i=>'第 '+i+' 周 · 市值 '+fmt(sbPrice(i)*P.circ),series:[
+    ...R.st.map((x,ui)=>({label:x.u.name+' 净现金流',color:ucolor(ui),vals:x.series,fmt})),
+    {label:'协议净现金流',color:'#e8e8e8',vals:R.protoSeries,fmt}]});
   sbEl('sb_legend').innerHTML=R.st.map((x,ui)=>`<span><i style="background:${ucolor(ui)}"></i>${x.u.name}</span>`).join('')+'<span><i style="background:#e8e8e8"></i>协议（虚线）</span>';
   // log
   sbEl('sb_log').innerHTML=R.log.map(l=>`<div>${l}</div>`).join('')||'<div class="hint">暂无事件</div>';
