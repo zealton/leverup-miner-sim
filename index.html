@@ -65,6 +65,13 @@ input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:2px;
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--acid);border:none;cursor:pointer}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid);border:none;cursor:pointer;border-radius:0}
 .hint{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.6}
+.sliderrow{display:flex;gap:8px;align-items:center}
+.sliderrow input[type=range]{flex:1}
+.numin{width:92px;flex:none;background:var(--panel2);border:1px solid var(--border);color:var(--acid);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 7px;outline:none}
+.numin:focus{border-color:var(--acid)}
+.numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numin[type=number]{-moz-appearance:textfield;appearance:textfield}
 .sect{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;
   margin:20px 0 12px;padding-top:13px;border-top:1px dashed var(--border)}
 .sect:first-child{margin-top:0;padding-top:0;border-top:none}
@@ -584,8 +591,21 @@ function renderWallet(reset){
   $('w_log').innerHTML=WS.log.map(l=>`<div>${l}</div>`).join('');
 }
 
+// pair every slider with a synced number input (typing beyond range extends the slider)
+document.querySelectorAll('input[type=range]').forEach(r=>{
+  const num=document.createElement('input');
+  num.type='number';num.className='numin';num.step='any';num.value=r.value;
+  const wrap=document.createElement('div');wrap.className='sliderrow';
+  r.parentNode.insertBefore(wrap,r);wrap.appendChild(r);wrap.appendChild(num);
+  num.addEventListener('input',()=>{
+    const v=parseFloat(num.value);if(isNaN(v))return;
+    if(v>+r.max)r.max=v; if(v<+r.min)r.min=v;
+    r.value=v;render();
+  });
+  r.addEventListener('input',()=>{num.value=r.value});
+});
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
-document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input',render));
+document.querySelectorAll('.tierrow input[type=number]').forEach(el=>el.addEventListener('input',render));
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
 $('w_reset').addEventListener('click',()=>{read();wInit()});
