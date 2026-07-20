@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeverUp 矿机 · 产品交互原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --panel:#131313; --panel2:#191919; --border:#2a2a2a;
+  --acid:#C7F50D; --acid2:#CCFF00; --red:#FA5000; --blue:#8ab4ff; --gold:#f5c518;
+  --text:#f0f0f0; --muted:#8a8a8a; --dim:#4a4a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050505;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;min-height:100vh;
+  display:flex;justify-content:center;align-items:flex-start;gap:24px;padding:28px 16px 60px}
+
+/* phone frame */
+.phone{width:414px;max-width:100%;background:var(--bg);border:1px solid #333;border-radius:36px;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.7);display:flex;flex-direction:column;min-height:860px;position:relative}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.statusbar b{color:var(--text)}
+.appbody{flex:1;overflow-y:auto;padding:6px 16px 90px;scrollbar-width:none}
+.appbody::-webkit-scrollbar{display:none}
+
+/* bottom tabs */
+.tabs{position:absolute;bottom:0;left:0;right:0;display:flex;background:#0d0d0d;border-top:1px solid var(--border);padding:10px 8px 18px;z-index:10}
+.tabs button{flex:1;background:none;border:none;color:var(--dim);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabs button .ic{font-size:20px;line-height:1}
+.tabs button.on{color:var(--acid)}
+
+/* cards */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:14px}
+.card.hl{border-color:var(--acid);background:linear-gradient(180deg,rgba(199,245,13,.06),transparent 55%),var(--panel)}
+h1{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;letter-spacing:.02em}
+h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.sub{color:var(--muted);font-size:13px}
+.big{font-family:'Orbitron',sans-serif;font-size:34px;font-weight:800;color:var(--acid);line-height:1.1}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* onboarding steps */
+.step{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed #222}
+.step:last-child{border-bottom:none}
+.step .ic{font-size:26px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--panel2);border-radius:12px;flex:none}
+.step b{display:block;font-size:14.5px}
+.step span{font-size:12.5px;color:var(--muted);line-height:1.55;display:block;margin-top:2px}
+.step span i{color:var(--acid);font-style:normal;font-weight:600}
+
+/* buttons */
+.btn{display:block;width:100%;padding:15px;border-radius:16px;border:none;cursor:pointer;text-align:center;
+  font-family:'Inter',sans-serif;font-size:16px;font-weight:700;background:var(--acid);color:#0a0a0a;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--border);font-weight:600}
+.btn.mini{width:auto;display:inline-block;padding:9px 16px;font-size:13px;border-radius:12px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btnrow{display:flex;gap:10px}
+.btnrow .btn{flex:1}
+
+/* miner machine card */
+.tierchip{display:inline-flex;align-items:center;gap:6px;font-family:'Orbitron',sans-serif;font-weight:800;font-size:13px;
+  padding:4px 12px;border-radius:99px;border:1.5px solid}
+.tierchip.A{color:#e8e8e8;border-color:#555}
+.tierchip.B{color:var(--blue);border-color:var(--blue)}
+.tierchip.C{color:var(--gold);border-color:var(--gold)}
+.machine{position:relative;text-align:center;padding:6px 0 2px}
+.machine .emoji{font-size:56px;filter:drop-shadow(0 6px 18px rgba(199,245,13,.25))}
+.machine.stopped .emoji{filter:grayscale(1) opacity(.5)}
+.pulse{animation:pp 1.6s ease-in-out infinite}
+@keyframes pp{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.pbar{height:14px;background:#0d0d0d;border:1px solid var(--border);border-radius:99px;overflow:hidden;position:relative;margin:10px 0 6px}
+.pbar i{position:absolute;top:0;left:0;bottom:0;background:linear-gradient(90deg,#8a9b12,var(--acid));border-radius:99px;transition:width .5s}
+.pbar.warn i{background:linear-gradient(90deg,#7a2f10,var(--red))}
+.rowline{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:5px 0;border-bottom:1px dashed #1e1e1e}
+.rowline:last-child{border-bottom:none}
+.rowline b{color:var(--text);font-family:'IBM Plex Mono',monospace;font-weight:600}
+.rowline b.pos{color:var(--acid)} .rowline b.neg{color:var(--red)}
+.deadline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:9px;border-radius:12px;
+  background:var(--panel2);font-size:13px;color:var(--muted)}
+.deadline.warn{background:rgba(250,80,0,.12);color:var(--red);font-weight:600}
+
+/* gears */
+.gears{display:flex;gap:10px;margin-top:12px}
+.gear{flex:1;background:var(--panel2);border:1.5px solid var(--border);border-radius:16px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s}
+.gear.on{border-color:var(--acid);background:rgba(199,245,13,.08)}
+.gear .g{font-family:'Orbitron',sans-serif;font-weight:800;font-size:20px}
+.gear.on .g{color:var(--acid)}
+.gear .n{font-size:12px;font-weight:600;margin-top:2px}
+.gear .d{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.speedo{text-align:center;margin:6px 0 2px}
+.speedo .v{font-family:'Orbitron',sans-serif;font-size:40px;font-weight:900;color:var(--acid)}
+.speedo .v.slow{color:var(--muted)} .speedo .v.zero{color:var(--red)}
+.speedo .l{font-size:11px;color:var(--dim);letter-spacing:.2em;font-family:'IBM Plex Mono',monospace}
+
+/* lottery */
+.slotbox{text-align:center;padding:10px 0}
+.slotcard{width:150px;height:190px;margin:0 auto 14px;border-radius:20px;border:2px solid var(--border);background:var(--panel2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:44px;
+  transition:all .3s}
+.slotcard.spin{animation:sp .12s linear infinite}
+@keyframes sp{0%{transform:rotateX(0)}100%{transform:rotateX(360deg)}}
+.slotcard.win{border-color:var(--acid);box-shadow:0 0 40px rgba(199,245,13,.35)}
+.slotcard.winC{border-color:var(--gold);box-shadow:0 0 50px rgba(245,197,24,.45)}
+.slotcard small{font-size:12px;font-family:'Inter',sans-serif;font-weight:600;color:var(--muted)}
+.probbar{display:flex;height:12px;border-radius:99px;overflow:hidden;margin:10px 0 6px;border:1px solid var(--border)}
+.probbar i{display:block;height:100%}
+.problegend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+
+/* vault */
+.bigrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.tag{display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--acid);color:var(--acid);font-weight:600;letter-spacing:.06em}
+
+/* toast & modal */
+#toast{position:absolute;bottom:104px;left:50%;transform:translateX(-50%);background:#1c1c1c;border:1px solid var(--acid);
+  color:var(--text);font-size:13px;padding:10px 18px;border-radius:14px;display:none;z-index:60;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;z-index:50}
+.overlay.show{display:flex}
+.sheet{background:var(--panel);border-top:1px solid var(--acid);border-radius:24px 24px 0 0;padding:22px 20px 30px;width:100%;max-height:82%;overflow-y:auto}
+.sheet h2{margin-bottom:10px}
+
+/* demo console */
+.console{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;position:sticky;top:28px}
+.console h3{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.console .btn{margin-bottom:8px;padding:10px;font-size:13px}
+.console .k{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #1e1e1e}
+.console .k b{color:var(--text)}
+.console a{color:var(--muted);font-size:11px;font-family:'IBM Plex Mono',monospace}
+@media(max-width:720px){.console{display:none}}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"><span>⛏ LeverUp 矿机</span><span>LV <b id="sb_price">$0.0533</b> · <b id="sb_mon">20,000</b> MON</span></div>
+  <div class="appbody" id="app"></div>
+
+  <div class="tabs">
+    <button data-v="home" class="on"><span class="ic">⛏</span>矿机</button>
+    <button data-v="boost"><span class="ic">🏎</span>加速</button>
+    <button data-v="lotto"><span class="ic">🎰</span>抽卡</button>
+    <button data-v="vault"><span class="ic">🏦</span>金库</button>
+  </div>
+
+  <div id="toast"></div>
+  <div class="overlay" id="sheet_ov"><div class="sheet" id="sheet"></div></div>
+</div>
+
+<div class="console">
+  <h3>演示控制台（非产品）</h3>
+  <button class="btn ghost" id="c_d1">⏩ 快进 1 天</button>
+  <button class="btn ghost" id="c_d7">⏩⏩ 快进 7 天</button>
+  <button class="btn ghost" id="c_chance">🎁 +1 抽卡机会</button>
+  <button class="btn ghost" id="c_reset">↺ 重置演示</button>
+  <div style="margin-top:10px">
+    <div class="k"><span>DAY</span><b id="c_day">0</b></div>
+    <div class="k"><span>油门下限</span><b id="c_floor">1×（宽限期）</b></div>
+    <div class="k"><span>抽卡机会</span><b id="c_ch">0</b></div>
+  </div>
+  <p style="font-size:11px;color:var(--dim);margin-top:12px;line-height:1.7">真实产品里时间自然流逝；此面板仅用于演示状态切换。参数与<a href="/">数值模拟器</a>一致。</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmtLV=v=>{const a=Math.abs(v);if(a>=1e6)return(a/1e6).toFixed(2)+'M';if(a>=1e3)return(a/1e3).toFixed(1)+'K';return a.toFixed(0)};
+const fmtU=v=>'$'+(Math.abs(v)>=1000?(v/1000).toFixed(1)+'K':v.toFixed(2));
+
+/* ---- constants (aligned with simulator defaults) ---- */
+const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
+const TIERS={A:{total:5000,color:'#e8e8e8',mult:'基础'},B:{total:12500,color:'#8ab4ff',mult:'2.5 倍产量'},C:{total:31000,color:'#f5c518',mult:'6.2 倍产量'}};
+const GEARS={P:{v:0,name:'P · 停车挡',desc:'不交易',fee:0},D:{v:15000,name:'D · 日常挡',desc:'周交易 $15K',fee:3},S:{v:150000,name:'S · 狂暴挡',desc:'周交易 $150K',fee:30}};
+const NET_VOL=10000000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
+
+let S;
+function init(){
+  S={day:0,view:'home',mon:20000,gear:'D',miner:null,chances:0,minedTotal:0,
+     vault:0,wallet:0,staked:0,divid:0,feeSpent:0,lottoState:'idle',lottoResult:null,seed:99};
+  render();
+}
+const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
+
+function floorNow(){return S.day>=FLOOR_DAY?0:1}
+function boostOf(gear){
+  const v=GEARS[gear].v, share=v/(NET_VOL+v), fl=floorNow();
+  return fl+(BMAX-fl)*Math.min(1,share/SMAX);
+}
+function tick(days){
+  for(let i=0;i<days;i++){
+    S.day++;
+    if(S.miner&&!S.miner.dead){
+      const b=boostOf(S.gear);
+      const rate=TIERS[S.miner.tier].total/T*b;
+      const e=Math.min(S.miner.rem,rate);
+      S.miner.rem-=e;S.vault+=e;S.minedTotal+=e;
+      S.chances+=GEARS[S.gear].v/7/RTH;
+      S.feeSpent+=GEARS[S.gear].v/7*0.0002;
+      if(S.miner.rem<=0.5){S.miner.dead=true;S.miner.done=true;toast('🎉 挖完了！全部 '+fmtLV(TIERS[S.miner.tier].total)+' LV 已产出')}
+      else if(S.day-S.miner.born>=T){
+        S.miner.dead=true;S.miner.forfeit=S.miner.rem;S.miner.rem=0;
+        toast('⏳ 100 天到期，未挖出的 '+fmtLV(S.miner.forfeit)+' LV 已消失');
+      }
+    }
+    S.divid+=S.staked*VE_APR/365;
+  }
+  render();
+}
+function buy(){
+  if(S.mon<PRICE_MON){toast('MON 不够了');return}
+  S.mon-=PRICE_MON;
+  S.miner={tier:'A',rem:TIERS.A.total,born:S.day,dead:false,forfeit:0,done:false};
+  toast('⛏ 矿机已启动，自动开挖！');
+  S.view='home';render();
+}
+function remint(){
+  if(S.chances<1||!S.miner||S.miner.dead)return;
+  S.chances-=1;S.lottoState='spin';render();
+  setTimeout(()=>{
+    const r=rnd();const cur=S.miner.tier;
+    let res='stay';
+    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);
+    if(cur==='B')opts.push(['A',800]);
+    const tot=opts.reduce((a,o)=>a+o[1],0);
+    if(r>=STAY&&tot>0){
+      let x=(r-STAY)/(1-STAY)*tot;
+      for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}
+    }
+    if(res!=='stay'&&res!==cur){
+      const frac=S.miner.rem/TIERS[cur].total;
+      S.miner.tier=res;S.miner.rem=TIERS[res].total*frac;
+    }
+    S.lottoState='done';S.lottoResult=res;render();
+  },1200);
+}
+function claim(){if(S.vault<1)return;S.wallet+=S.vault;toast('已领取 '+fmtLV(S.vault)+' LV 到钱包');S.vault=0;render()}
+function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池，开始吃分红');S.wallet=0;render()}
+
+/* ---- views ---- */
+function vHome(){
+  if(!S.miner)return `
+    <div class="card hl" style="text-align:center;padding:26px 18px">
+      <div style="font-size:54px" class="pulse">⛏</div>
+      <h1 style="margin:8px 0 6px">一台会挖币的机器</h1>
+      <p class="sub" style="margin-bottom:16px">付 <b style="color:var(--text)">8,000 MON</b>（≈$200），它在 <b style="color:var(--text)">100 天</b>里最多帮你挖 <b style="color:var(--acid)">5,000 LV</b>（按现价 ≈$267）</p>
+      <button class="btn" onclick="buy()">买一台，立刻开挖 →</button>
+      <p style="font-size:11px;color:var(--dim);margin-top:10px">首批限量 800 台 · 已售 623 台</p>
+    </div>
+    <div class="card">
+      <h2>怎么玩？三句话</h2>
+      <div class="step"><div class="ic">🛒</div><div><b>1. 买机器</b><span>付一次钱，机器<i>自动挖 100 天</i>，不用管它也在挖。</span></div></div>
+      <div class="step"><div class="ic">🏎</div><div><b>2. 交易踩油门</b><span>你平时在 LeverUp 交易，机器就挖得快——最高 <i>3 倍速</i>。不交易也行，就是慢。</span></div></div>
+      <div class="step"><div class="ic">⏳</div><div><b>3. 到期结算</b><span>100 天一到机器退役，<i>没挖出来的部分会消失</i>——所以记得踩油门。</span></div></div>
+    </div>
+    <div class="card">
+      <h2>还有个彩蛋 🎰</h2>
+      <p class="sub">交易攒「抽卡机会」，有机会把机器升级成 <b style="color:var(--blue)">B（产量×2.5）</b>或 <b style="color:var(--gold)">C（产量×6.2）</b>——全网 B 只有 120 台、C 只有 20 台，升级后<b style="color:var(--text)">进度不清零</b>。</p>
+    </div>`;
+
+  const m=S.miner,tier=TIERS[m.tier];
+  const prog=1-m.rem/tier.total;
+  const daysLeft=Math.max(0,T-(S.day-m.born));
+  const b=boostOf(S.gear);
+  const perDay=tier.total/T*b;
+  if(m.dead)return `
+    <div class="card ${m.done?'hl':''}" style="text-align:center;padding:26px 18px">
+      <div style="font-size:54px">${m.done?'🏆':'🪦'}</div>
+      <h1 style="margin:8px 0 6px">${m.done?'挖完收工！':'机器退役了'}</h1>
+      <p class="sub">${m.done
+        ?`这台 ${m.tier} 级机器挖出了全部 <b style="color:var(--acid)">${fmtLV(tier.total)} LV</b>`
+        :`挖出 <b style="color:var(--acid)">${fmtLV(tier.total-m.forfeit)} LV</b>，有 <b style="color:var(--red)">${fmtLV(m.forfeit)} LV 没来得及挖，已消失</b>——下台记得多踩油门`}</p>
+      <div style="height:14px"></div>
+      <button class="btn" onclick="buy()">再来一台（8,000 MON）→</button>
+    </div>
+    <div class="card"><div class="rowline"><span>本季累计挖出</span><b class="pos">${fmtLV(S.minedTotal)} LV ≈ ${fmtU(S.minedTotal*PLV)}</b></div>
+    <div class="rowline"><span>去金库看收益</span><b>🏦 →</b></div></div>`;
+
+  return `
+    <div class="card hl">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tierchip ${m.tier}">${m.tier} 级矿机</span>
+        <span class="sub mono">#0001</span>
+      </div>
+      <div class="machine ${b<=0?'stopped':''}"><div class="emoji ${b>0?'pulse':''}">${b>0?'⛏':'😴'}</div></div>
+      <div class="bigrow"><span class="big">${fmtLV(tier.total-m.rem)}</span><span class="sub">/ ${fmtLV(tier.total)} LV</span></div>
+      <div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
+      <div class="rowline"><span>今天的产出</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+perDay.toFixed(1)+' LV ≈ '+fmtU(perDay*PLV):'0（机器停了）'}</b></div>
+      <div class="rowline"><span>当前速度</span><b>${b.toFixed(2)} 倍速 ${b>=2.9?'🔥':b>0?'':'⚠️'}</b></div>
+      <div class="rowline"><span>已换算成钱</span><b class="pos">≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
+      <div class="deadline ${daysLeft<=21?'warn':''}">⏳ 还剩 <b class="mono" style="font-size:16px">&nbsp;${daysLeft}&nbsp;</b> 天${daysLeft<=21?' · 到期没挖完的会消失！':'，到期后没挖完的部分会消失'}</div>
+      ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 机器停了！去踩油门 →</button>':''}
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h2>🎰 抽卡机会 <b class="mono" style="color:var(--acid)">${Math.floor(S.chances)}</b> 次</h2>
+        <p class="sub" style="font-size:12px">升级 B/C 产量翻倍，进度不清零</p></div>
+        <button class="btn mini" ${Math.floor(S.chances)<1?'disabled':''} onclick="go('lotto')">去抽卡</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h2>🏦 待领取 <b class="mono" style="color:var(--acid)">${fmtLV(S.vault)}</b> LV</h2>
+        <p class="sub" style="font-size:12px">≈ ${fmtU(S.vault*PLV)} · 可领取或存着吃分红</p></div>
+        <button class="btn mini ghost" onclick="go('vault')">去金库</button>
+      </div>
+    </div>`;
+}
+
+function vBoost(){
+  const fl=floorNow();
+  return `
+    <div class="card">
+      <h1 style="margin-bottom:4px">🏎 油门</h1>
+      <p class="sub">你在 LeverUp 的<b style="color:var(--text)">交易量</b>就是油门——和其他矿工比，你交易占比越大，挖得越快。</p>
+      <div class="speedo"><div class="v ${boostOf(S.gear)<=0?'zero':boostOf(S.gear)<1.5?'slow':''}">${boostOf(S.gear).toFixed(2)}×</div><div class="l">CURRENT SPEED</div></div>
+      <div class="gears">
+        ${Object.entries(GEARS).map(([k,g])=>`
+          <div class="gear ${S.gear===k?'on':''}" onclick="setGear('${k}')">
+            <div class="g">${k}</div><div class="n">${g.name.split('·')[1]}</div>
+            <div class="d">${g.desc}<br>→ ${boostOf(k).toFixed(2)} 倍速<br>费用约 $${g.fee}/周</div>
+          </div>`).join('')}
+      </div>
+      <p class="sub" style="font-size:12px;margin-top:12px">${fl===1
+        ?`💡 现在是<b style="color:var(--text)">宽限期</b>（前 6 周）：停车挡也有 1 倍速保底。<b style="color:var(--red)">第 42 天起保底取消</b>——不交易机器就完全停转，时间照样流逝。`
+        :`<b style="color:var(--red)">⚠️ 宽限期已结束</b>：停车挡 = 机器完全停转（0 产出），但 100 天倒计时不会停。挂上 D 挡就能继续挖。`}</p>
+    </div>
+    <div class="card">
+      <h2>为什么我的速度会变？</h2>
+      <p class="sub" style="font-size:13px">速度看的是<b style="color:var(--text)">占比</b>：全体矿工这周总交易 ≈ $10M，你占它的 1% 就满速 3 倍。别人卷起来你不动，速度就会掉——这是矿工之间的比赛，场外的人不算。</p>
+      <div class="rowline"><span>顺带一提</span><b>每攒 $1.2M 交易量 = 🎰 +1 次抽卡</b></div>
+    </div>`;
+}
+
+function vLotto(){
+  const can=Math.floor(S.chances)>=1&&S.miner&&!S.miner.dead;
+  const cur=S.miner?S.miner.tier:'A';
+  let cardInner='🎴<small>消耗 1 次机会</small>',cls='';
+  if(S.lottoState==='spin'){cardInner='❓';cls='spin'}
+  if(S.lottoState==='done'){
+    const r=S.lottoResult;
+    if(r==='stay')cardInner=`😅<small>没变，还是 ${cur} 级</small>`;
+    else{cardInner=`${r}<small>升级成功！产量 ${TIERS[r].mult}</small>`;cls=r==='C'?'winC':'win'}
+  }
+  return `
+    <div class="card hl">
+      <h1 style="text-align:center;margin-bottom:2px">🎰 升级抽卡</h1>
+      <p class="sub" style="text-align:center">给矿机抽一次「变身」，<b style="color:var(--text)">进度不清零</b>：<br>挖到 60% 时升级，就从新产量的 60% 继续挖</p>
+      <div class="slotbox">
+        <div class="slotcard ${cls}" style="${S.lottoState==='done'&&S.lottoResult!=='stay'?'color:'+TIERS[S.lottoResult].color:''}">${cardInner}</div>
+        <button class="btn" style="max-width:240px;margin:0 auto" ${can?'':'disabled'} onclick="remint()">
+          ${can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 去交易攒机会'}</button>
+      </div>
+      <div class="probbar">
+        <i style="width:30%;background:#3a3a3a"></i><i style="width:60%;background:var(--blue)"></i><i style="width:10%;background:var(--gold)"></i>
+      </div>
+      <div class="problegend"><span>不变 30%</span><span style="color:var(--blue)">变 B 60%</span><span style="color:var(--gold)">变 C 10%</span></div>
+      <p class="sub" style="font-size:11.5px;margin-top:8px;text-align:center">概率对所有人公开一致 · B 全网限量 120 台、C 限量 20 台，<b style="color:var(--text)">抽完即止</b>（额度越少越难抽到）</p>
+    </div>
+    <div class="card">
+      <div class="rowline"><span>怎么攒机会？</span><b>每 $1.2M 交易量 = 1 次</b></div>
+      <div class="rowline"><span>当前进度</span><b>${(S.chances%1*100).toFixed(0)}% → 下一次</b></div>
+      <div class="rowline"><span>我的机器</span><b>${S.miner?S.miner.tier+' 级 · 已挖 '+((1-S.miner.rem/TIERS[S.miner.tier].total)*100).toFixed(0)+'%':'还没有'}</b></div>
+    </div>`;
+}
+
+function vVault(){
+  return `
+    <div class="card hl">
+      <h1 style="margin-bottom:10px">🏦 金库</h1>
+      <div class="rowline"><span>⛏ 待领取（机器边挖边进）</span><b class="pos">${fmtLV(S.vault)} LV ≈ ${fmtU(S.vault*PLV)}</b></div>
+      <div style="height:10px"></div>
+      <div class="btnrow">
+        <button class="btn ghost" ${S.vault<1?'disabled':''} onclick="claim()">领到钱包</button>
+        <button class="btn" ${S.wallet<1?'disabled':''} onclick="stakeAll()">存入分红池 →</button>
+      </div>
+      <p class="sub" style="font-size:11.5px;margin-top:8px">💡 顺序：先「领到钱包」，再「存入分红池」吃分红；也可以领了直接卖，随你。</p>
+    </div>
+    <div class="card">
+      <h2>💰 分红池（存币生币）</h2>
+      <p class="sub" style="font-size:12.5px">协议把<b style="color:var(--text)">真实交易手续费</b>拿去回购 LV：一半分给存币的人，一半直接销毁。存进来就躺着分。</p>
+      <div style="height:8px"></div>
+      <div class="rowline"><span>钱包余额</span><b>${fmtLV(S.wallet)} LV</b></div>
+      <div class="rowline"><span>已存入</span><b>${fmtLV(S.staked)} LV</b></div>
+      <div class="rowline"><span>当前年化</span><b class="pos">≈ ${(VE_APR*100).toFixed(1)}%（随回购量浮动）</b></div>
+      <div class="rowline"><span>累计分红</span><b class="pos">+${fmtLV(S.divid)} LV ≈ ${fmtU(S.divid*PLV)}</b></div>
+    </div>
+    <div class="card">
+      <h2>📒 我的小账本</h2>
+      <div class="rowline"><span>买机器花掉</span><b class="neg">−${fmtU(S.miner||S.minedTotal>0?PRICE_USD:0)}</b></div>
+      <div class="rowline"><span>交易摩擦成本（估）</span><b class="neg">−${fmtU(S.feeSpent)}</b></div>
+      <div class="rowline"><span>累计挖出 + 分红</span><b class="pos">+${fmtU((S.minedTotal+S.divid)*PLV)}</b></div>
+      <div class="rowline"><span>净收益（按现价）</span><b class="${(S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent>=0?'pos':'neg'}">${fmtU((S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent)}</b></div>
+      <p class="sub" style="font-size:11px;margin-top:6px">LV 价格上涨时，同样的产出更值钱——这里按当前价 $0.0533 计算。</p>
+    </div>`;
+}
+
+/* ---- shell ---- */
+function go(v){S.view=v;if(v!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}
+function setGear(k){S.gear=k;toast(k==='P'?'挂 P 挡：省钱但挖得慢'+(floorNow()===0?'（现在会完全停转！）':''):k==='D'?'挂 D 挡：日常交易顺便挖':'挂 S 挡：全速狂暴 🔥');render()}
+function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._h);el._h=setTimeout(()=>el.style.display='none',2400)}
+
+function render(){
+  $('sb_mon').textContent=S.mon.toLocaleString();
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  $('app').innerHTML={home:vHome,boost:vBoost,lotto:vLotto,vault:vVault}[S.view]();
+  $('c_day').textContent=S.day;
+  $('c_floor').textContent=floorNow()===1?'1×（宽限期，第42天结束）':'0×（不交易=停转）';
+  $('c_ch').textContent=S.chances.toFixed(2);
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+$('c_d1').addEventListener('click',()=>tick(1));
+$('c_d7').addEventListener('click',()=>tick(7));
+$('c_chance').addEventListener('click',()=>{S.chances+=1;render()});
+$('c_reset').addEventListener('click',init);
+init();
+</script>
+</body>
+</html>
