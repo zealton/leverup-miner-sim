@@ -240,11 +240,11 @@ footer a{color:var(--muted)}
 
       <div class="sect">矿机与品质（A 发售 · B/C 仅 remint）</div>
       <div class="tierhead"><span></span><span>单台总产出 LV</span><span>配额（台）</span></div>
-      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="4300" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
-      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="11000" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
-      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="27000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
-      <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）</label><span class="val" id="v_T"></span></div>
-        <input type="range" id="i_T" min="30" max="365" step="5" value="60"></div>
+      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="5000" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
+      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="12500" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="31000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
+      <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）<span class="tip" data-tip="默认 100 天：对齐 Monad 解锁时间节点——挖满一台矿机的周期与解锁预期同频，形成时间锚点叙事。">?</span></label><span class="val" id="v_T"></span></div>
+        <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
 
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
@@ -254,7 +254,7 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
         <input type="range" id="i_floorw" min="0" max="52" step="1" value="6"></div>
       <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="全网平均值：决定全网总交易量（= 台数 × 此值）、remint 机会速度和客损收入。均匀刷量时每台占比 = 1 ÷ 全网台数——矿机越多、大家的 boost 越低（占比竞争）。">?</span></label><span class="val" id="v_vol"></span></div>
-        <input type="range" id="i_vol" min="0" max="500000" step="10000" value="50000"></div>
+        <input type="range" id="i_vol" min="0" max="500000" step="5000" value="25000"></div>
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
         <input type="range" id="i_cuser" min="0" max="0.3" step="0.01" value="0.02"></div>
 
