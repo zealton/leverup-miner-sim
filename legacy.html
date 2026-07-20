@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeverUp 矿机经济模拟器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --panel:#111111; --panel2:#151515; --border:#2a2a2a;
+  --acid:#C7F50D; --acid2:#CCFF00; --red:#FA5000;
+  --text:#e8e8e8; --muted:#7a7a7a; --dim:#4a4a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 20px 80px}
+
+/* header */
+header{border:1px solid var(--border);padding:24px 28px;margin-bottom:16px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;top:0;right:0;width:220px;height:100%;
+  background:repeating-linear-gradient(-55deg,transparent 0 10px,rgba(199,245,13,.05) 10px 11px)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;color:var(--acid);text-transform:uppercase;margin-bottom:8px}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(20px,3.4vw,32px);font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+h1 .thin{color:var(--muted);font-weight:500}
+.sub{color:var(--muted);margin-top:10px;max-width:760px;font-size:13px}
+.sub b{color:var(--text);font-weight:600}
+
+/* chinese mechanism intro */
+.intro{border:1px solid var(--border);background:var(--panel);margin-bottom:16px}
+.intro-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.intro-h .tag{color:var(--acid)}
+.intro-b{padding:18px 20px}
+.intro-lede{font-size:14px;color:var(--text);line-height:1.8;max-width:900px;margin-bottom:14px}
+.intro-lede b{color:var(--acid);font-weight:600}
+.intro-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+@media(max-width:960px){.intro-steps{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.intro-steps{grid-template-columns:1fr}}
+.istep{background:var(--panel2);padding:14px 14px 16px}
+.istep .n{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--acid);margin-bottom:6px}
+.istep .t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.istep .d{font-size:12px;color:var(--muted);line-height:1.7}
+.istep .d b{color:var(--text);font-weight:600}
+.intro-foot{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.8}
+.intro-foot b{color:var(--text)}
+
+/* help tooltips */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none;
+  border:1px solid var(--dim);border-radius:50%;margin-left:5px;vertical-align:1px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;color:var(--muted);
+  cursor:help;user-select:none;text-transform:none;letter-spacing:0}
+.tip:hover,.tip.on{border-color:var(--acid);color:var(--acid)}
+#tipbox{position:fixed;z-index:99;max-width:280px;display:none;pointer-events:none;
+  background:#161616;border:1px solid var(--acid);padding:10px 13px;box-shadow:0 10px 28px rgba(0,0,0,.55);
+  font-family:'Inter',sans-serif;font-size:12px;line-height:1.75;color:var(--text);
+  letter-spacing:0;text-transform:none;text-align:left;white-space:normal;font-weight:400}
+#tipbox b{color:var(--acid);font-weight:600}
+
+/* layout */
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.panel{border:1px solid var(--border);background:var(--panel)}
+.panel-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.panel-h .tag{color:var(--acid)}
+.panel-b{padding:16px}
+
+/* sliders */
+.ctl{margin-bottom:18px}
+.ctl:last-child{margin-bottom:4px}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ctl label{font-size:12px;color:var(--text);font-weight:500}
+.ctl .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid)}
+.ctl .val.neg{color:var(--red)}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--acid);border:none;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid);border:none;cursor:pointer;border-radius:0}
+input[type=range]:focus-visible{outline:1px solid var(--acid);outline-offset:4px}
+.ctl .hint{font-size:11px;color:var(--dim);margin-top:4px}
+.sect{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;
+  margin:22px 0 12px;padding-top:14px;border-top:1px dashed var(--border)}
+.sect:first-child{margin-top:0;padding-top:0;border-top:none}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);padding:16px}
+.stat .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.stat .v{font-family:'Orbitron',sans-serif;font-size:clamp(18px,2.2vw,26px);font-weight:700;color:var(--acid)}
+.stat .v.white{color:var(--text)}
+.stat .u{font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:4px}
+
+/* equilibrium bar — signature element */
+.eq{border:1px solid var(--border);background:var(--panel);padding:20px 24px 26px;margin-bottom:16px}
+.eq-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.eq-title .t{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.eq-state{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.eq-state.exp{color:var(--acid)} .eq-state.con{color:var(--red)} .eq-state.bal{color:var(--text)}
+.eq-track{position:relative;height:46px;background:var(--panel2);border:1px solid var(--border)}
+.eq-zone-profit{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,rgba(199,245,13,.16),rgba(199,245,13,.04))}
+.eq-zone-loss{position:absolute;top:0;height:100%;right:0;background:linear-gradient(90deg,rgba(250,80,0,.03),rgba(250,80,0,.14))}
+.eq-nstar{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--text)}
+.eq-nstar .lbl{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text);white-space:nowrap}
+.eq-now{position:absolute;top:0;bottom:0;width:12px;transform:translateX(-6px);background:var(--acid);transition:left .15s ease}
+.eq-now.over{background:var(--red)}
+.eq-now .lbl{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;white-space:nowrap;color:inherit}
+.eq-legend{display:flex;justify-content:space-between;margin-top:30px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.eq-note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+.eq-note b{color:var(--text)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
+th:first-child,td:first-child{text-align:left}
+td{padding:11px 12px;border-bottom:1px solid #1c1c1c;text-align:right;font-family:'IBM Plex Mono',monospace}
+tr:last-child td{border-bottom:none}
+td.name{font-family:'Inter',sans-serif;font-weight:600;color:var(--text)}
+td.name .d{display:block;font-weight:400;font-size:11px;color:var(--dim);font-family:'Inter',sans-serif}
+.pos{color:var(--acid)} .negv{color:var(--red)} .mut{color:var(--muted)}
+.pill{display:inline-block;font-size:10px;padding:1px 7px;border:1px solid var(--border);color:var(--muted);letter-spacing:.08em}
+
+/* chart */
+.chart-wrap{padding:16px}
+canvas{width:100%;height:320px;display:block}
+.legend{display:flex;gap:18px;flex-wrap:wrap;padding:0 16px 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:16px;height:2px;display:inline-block}
+
+/* solvency + formulas */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:960px){.two{grid-template-columns:1fr}}
+.solv{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:2}
+.solv .row{display:flex;justify-content:space-between;border-bottom:1px dashed #1c1c1c;padding:2px 0}
+.solv .row:last-child{border-bottom:none}
+.solv .big{color:var(--acid);font-weight:600}
+.badge{display:inline-block;border:1px solid var(--acid);color:var(--acid);font-size:10px;letter-spacing:.14em;padding:2px 8px;text-transform:uppercase}
+.formulas{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);line-height:2.1}
+.formulas b{color:var(--acid);font-weight:500}
+.formulas .fm{color:var(--text)}
+footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">LeverUp // 贡献引擎</div>
+  <h1>矿机经济模型 <span class="thin">/ 边界模拟器</span></h1>
+  <p class="sub">下面每一个参数都是公开的。拖动滑块，自己找到那条边界：当舰队规模<b>低于均衡点 N*</b> 时挖矿有利润，高于它则亏损。把系统钉在这条线上的是市场——而不是团队——因为"是否续费加油"是每个矿工每周用自己的钱做出的决策。</p>
+  <p style="margin-top:12px"><a href="/app" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid);text-decoration:none;border:1px solid var(--acid);padding:7px 14px;display:inline-block">⚡ 体验用户流程原型（自动休眠版，无需加油）→</a></p>
+</header>
+
+<section class="intro">
+  <div class="intro-h">这是什么机制？<span class="tag">机制说明 // MECHANISM</span></div>
+  <div class="intro-b">
+    <p class="intro-lede">这是 LeverUp「贡献引擎」矿机模型的<b>公开边界模拟器</b>。核心思想：矿机的收益全部来自协议的<b>真实收入回购</b>（零增发），而"是否续费加油"这个每周决策，让市场自己把矿机总量钉在盈亏平衡线 N* 上——无需团队干预。下面所有参数都是公开的，拖动滑块即可自己验证。</p>
+    <div class="intro-steps">
+      <div class="istep"><div class="n">01 / 买矿机</div><div class="t">机身 + 满油箱</div>
+        <div class="d">一次性买入（如 <b>$200</b>）：机身<b>永久</b>拥有，燃料按周消耗，烧完需续费。</div></div>
+      <div class="istep"><div class="n">02 / 挖收益</div><div class="t">真实收入分池</div>
+        <div class="d">协议每周把真实收入（手续费 + 客户亏损）的一部分（如 <b>30%</b>）回购成奖池，按算力占比分给所有矿机。<b>100% 回购、零增发</b>。</div></div>
+      <div class="istep"><div class="n">03 / 加速</div><div class="t">交易或推荐 → 最高 3×</div>
+        <div class="d">交易或推荐好友可给矿机加速（上限 <b>3×</b>）；完全不活跃的矿机产出会逐周<b>衰减到 0</b>。</div></div>
+      <div class="istep"><div class="n">04 / 加油决策</div><div class="t">市场自动平衡</div>
+        <div class="d">只有当周收益 ≥ 燃料成本，理性矿工才会续费。矿机太多 → 收益摊薄 → 有人退出 → 收益回升。均衡点就是 <b>N*</b>。</div></div>
+      <div class="istep"><div class="n">05 / 反刷量</div><div class="t">刷量必亏</div>
+        <div class="d">自己刷手续费，最多只能拿回所付费用的 <b>30%</b>——结构上必然亏损。推荐是唯一的零成本加速方式（有意为之）。</div></div>
+    </div>
+    <p class="intro-foot"><b>怎么读下面的图：</b>当前矿机数 N 在 N* 左侧（绿色区）= 挖矿有利润、舰队会扩张；在右侧（红色区）= 满速矿机也覆盖不了燃料费、理性矿工停止续费、系统自动收缩。协议端在任何参数下都不会出现 USD 净流出。</p>
+  </div>
+</section>
+
+<div class="grid">
+  <!-- CONTROLS -->
+  <div class="panel">
+    <div class="panel-h">参数 <span class="tag">输入</span></div>
+    <div class="panel-b" id="controls">
+
+      <div class="sect">协议每周收入</div>
+      <div class="ctl"><div class="ctl-top"><label>交易手续费<span class="tip" data-tip="协议每周从真实交易中收到的手续费总额——矿机奖池最主要的资金来源。">?</span></label><span class="val" id="v_fee"></span></div>
+        <input type="range" id="i_fee" min="10000" max="500000" step="5000" value="100000"></div>
+      <div class="ctl"><div class="ctl-top"><label>客户盈亏（协议侧）<span class="tip" data-tip="客户在平台上的净亏损，<b>正值 = 协议赚钱</b>。为负的周，奖池支付 $0，赤字滚存到之后的盈利周再抵扣。">?</span></label><span class="val" id="v_closs"></span></div>
+        <input type="range" id="i_closs" min="-200000" max="500000" step="5000" value="50000">
+        <div class="hint">亏损周奖池支付 $0——赤字滚存到后续周。手续费部分照常分配。</div></div>
+      <div class="ctl"><div class="ctl-top"><label>奖池分成比例<span class="tip" data-tip="协议收入中划入矿机奖池的比例 s（如 30%），其余留存归协议。这个 s 同时也是反刷量的关键：自己刷的手续费最多拿回 s%。">?</span></label><span class="val" id="v_pool"></span></div>
+        <input type="range" id="i_pool" min="10" max="50" step="1" value="30"></div>
+
+      <div class="sect">矿机供给</div>
+      <div class="ctl"><div class="ctl-top"><label>活跃矿机数 N<span class="tip" data-tip="当前全网仍在烧燃料挖矿的矿机总数，即「舰队规模」。拖动它，看盈亏如何随规模变化。">?</span></label><span class="val" id="v_n"></span></div>
+        <input type="range" id="i_n" min="200" max="20000" step="100" value="3600"></div>
+      <div class="ctl"><div class="ctl-top"><label>整机价格（机身 + 满油箱）<span class="tip" data-tip="一次性买入价：包含<b>永久机身</b> + 第一箱燃料。机身不会消失，燃料按周消耗。">?</span></label><span class="val" id="v_price"></span></div>
+        <input type="range" id="i_price" min="100" max="1000" step="10" value="200"></div>
+      <div class="ctl"><div class="ctl-top"><label>油箱续航<span class="tip" data-tip="一箱燃料可以烧多少周。每周燃料成本 = 整机价格 ÷ 油箱周数；烧完必须续费，否则矿机停止产出。">?</span></label><span class="val" id="v_life"></span></div>
+        <input type="range" id="i_life" min="12" max="52" step="2" value="24"></div>
+
+      <div class="sect">舰队活跃度构成<span class="tip" data-tip="「舰队」= 全网所有活跃矿机的总体（英文 fleet 的意象，像一支船队）。这里设定三类玩家各占的比例。">?</span></div>
+      <div class="ctl"><div class="ctl-top"><label>闲置（无活动，衰减至 0）<span class="tip" data-tip="买了矿机但完全不交易也不推荐的用户：宽限 1 周后产出每周 −20 个百分点直至归 0，但燃料照烧。">?</span></label><span class="val" id="v_lazy"></span></div>
+        <input type="range" id="i_lazy" min="0" max="100" step="5" value="30"></div>
+      <div class="ctl"><div class="ctl-top"><label>轻度活跃（小幅加速）<span class="tip" data-tip="偶尔交易、拿到约 1.3× 小幅加速的用户。">?</span></label><span class="val" id="v_light"></span></div>
+        <input type="range" id="i_light" min="0" max="100" step="5" value="40"></div>
+      <div class="ctl"><div class="ctl-top"><label>满速加速（上限 3×）<span class="tip" data-tip="通过大量交易或推荐把加速拉到上限 m 的用户。占比自动 = 100% − 闲置 − 轻度活跃。">?</span></label><span class="val" id="v_full"></span></div>
+        <input type="range" id="i_full" min="0" max="100" step="5" value="30" disabled>
+        <div class="hint">自动 = 100% − 闲置 − 轻度活跃</div></div>
+
+      <div class="sect">加速经济学</div>
+      <div class="ctl"><div class="ctl-top"><label>加速上限 m<span class="tip" data-tip="单台矿机加速倍率的天花板（默认 3×），防止巨鲸把算力无限放大。">?</span></label><span class="val" id="v_m"></span></div>
+        <input type="range" id="i_m" min="2" max="5" step="0.5" value="3"></div>
+      <div class="ctl"><div class="ctl-top"><label>CAP_FEE — 单机拉满所需计费手续费<span class="tip" data-tip="一台矿机要维持满速加速，每周需要计入的手续费金额。刷量玩家得自己掏这笔钱——而最多只能拿回 30%，所以刷量必亏。">?</span></label><span class="val" id="v_cap"></span></div>
+        <input type="range" id="i_cap" min="100" max="2000" step="50" value="500"></div>
+    </div>
+  </div>
+
+  <!-- OUTPUTS -->
+  <div>
+    <div class="stats">
+      <div class="stat"><div class="k">每周奖池 P<span class="tip" data-tip="协议本周用来回购 LV 并分给全网矿机的资金总额：P = 分成比例 ×（手续费 + 客户盈亏正值部分）。<b>100% 来自真实收入，零增发</b>。">?</span></div><div class="v" id="o_pool">—</div><div class="u">USD，回购 → LV</div></div>
+      <div class="stat"><div class="k">均衡点 N*<span class="tip" data-tip="市场自动收敛到的全网矿机数：此时一台满速矿机的周收入恰好等于每周燃料成本。N 低于 N* 挖矿有利润，高于 N* 则亏损。">?</span></div><div class="v white" id="o_nstar">—</div><div class="u">续费盈亏平衡时的矿机数</div></div>
+      <div class="stat"><div class="k">燃料消耗<span class="tip" data-tip="每台矿机每周烧掉的成本 = 整机价格 ÷ 油箱周数。燃料烧完必须续费，否则停止产出。">?</span></div><div class="v white" id="o_fuel">—</div><div class="u">USD / 台 / 周</div></div>
+      <div class="stat"><div class="k">舰队平均倍率 μ̄<span class="tip" data-tip="「舰队」指全网所有活跃矿机的总体。μ̄ 是全网加速倍率的加权平均——闲置、轻度、满速三类矿机按占比加权得出。">?</span></div><div class="v white" id="o_mu">—</div><div class="u">加权有效算力</div></div>
+    </div>
+
+    <div class="eq">
+      <div class="eq-title">
+        <span class="t">舰队规模 vs. 均衡边界<span class="tip" data-tip="横轴是全网矿机数：<b>绿色区</b>（N &lt; N*）矿机有利润、舰队扩张；<b>红色区</b>（N &gt; N*）满速也亏损、矿工停止续费、系统自动收缩。">?</span></span>
+        <span class="eq-state" id="eq_state">—</span>
+      </div>
+      <div class="eq-track" id="eq_track">
+        <div class="eq-zone-profit" id="eq_zp"></div>
+        <div class="eq-zone-loss" id="eq_zl"></div>
+        <div class="eq-nstar" id="eq_ns"><span class="lbl" id="eq_ns_lbl">N*</span></div>
+        <div class="eq-now" id="eq_now"><span class="lbl" id="eq_now_lbl">N</span></div>
+      </div>
+      <div class="eq-legend"><span>0</span><span id="eq_max">—</span></div>
+      <p class="eq-note" id="eq_note"></p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h">各类型玩家单机盈亏 <span class="tag">每周</span></div>
+      <div style="overflow-x:auto">
+      <table id="ptable">
+        <thead><tr>
+          <th>玩家类型</th><th>倍率<span class="tip" data-tip="该类玩家矿机的有效加速倍率：闲置矿机会随时间衰减，满速矿机为上限 m。">?</span></th><th>周收入</th><th>周成本<span class="tip" data-tip="每周燃料成本；刷量玩家还要额外加上自付的 CAP_FEE 手续费。">?</span></th><th>周净收益</th><th>回本周期<span class="tip" data-tip="累计净收益转正（覆盖整机购入价）所需的周数。">?</span></th><th>油箱耗尽时 ROI<span class="tip" data-tip="一箱燃料烧完时：累计净收益 ÷ 整机购入价。100% 表示翻倍回本。">?</span></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">单个油箱周期内累计净盈亏 <span class="tag">USD</span></div>
+      <div class="chart-wrap"><canvas id="chart" width="900" height="320"></canvas></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <div class="panel-h"><span>协议偿付能力<span class="tip" data-tip="验证矿机系统永远不会让协议倒贴钱：奖励只在收入<b>实现之后</b>、从留存收入中支付，任何参数组合下协议每周净额都 ≥ 0。">?</span></span> <span class="badge" id="solv_badge">恒 ≥ 0</span></div>
+        <div class="panel-b solv" id="solv"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">数学公式 <span class="tag">自己验证</span></div>
+        <div class="panel-b formulas">
+          <div><b>奖池</b> <span class="fm">P = s · ( 手续费 + max(0, 客户盈亏 + 滚存) )</span></div>
+          <div><b>收入</b> <span class="fm">R(m) = P · m / (N · μ̄)</span> 单机每周</div>
+          <div><b>燃料</b> <span class="fm">f = 整机价格 / 油箱周数</span></div>
+          <div><b>续费条件</b> <span class="fm">R(m) ≥ f + 0.7 · 自付加速费</span></div>
+          <div><b>均衡</b> <span class="fm">N* = m · P / (μ̄ · f)</span></div>
+          <div><b>反刷量</b> <span class="fm">回收 ≤ s ≤ 所付手续费的 30%</span></div>
+          <div style="margin-top:8px;color:var(--dim)">刷量在结构上必然亏损：你自己付的手续费最多只能买回其中 s%。推荐是唯一的零成本加速——这是有意设计。</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      模型 v1.1 · 机身永久 — 燃料为消耗品 · 排放 100% 由回购提供资金、零增发 ·
+      闲置衰减：宽限 1 周 → 每周 −20 个百分点 → 归 0，任一活跃周即恢复至 100% · 本模拟器假设按最高税率立即领取、未启用释放时间表——耐心池详见文档。
+    </footer>
+  </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmtUSD=v=>{const a=Math.abs(v);let s;if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e3)s='$'+(a/1e3).toFixed(1)+'K';else s='$'+a.toFixed(2);return (v<0?'−':'')+s};
+const fmtN=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v);
+
+// idle decay path over a tank: w1 grace=1.0, then −20pp/week → 0 (w2=0.8 … w6+=0)
+function idlePath(weeks){const q=[];for(let w=1;w<=weeks;w++){q.push(w===1?1.0:Math.max(0,1.0-0.2*(w-1)))}return q}
+
+const state={};
+function read(){
+  state.fee=+$('i_fee').value; state.closs=+$('i_closs').value; state.s=+$('i_pool').value/100;
+  state.N=+$('i_n').value; state.price=+$('i_price').value; state.life=+$('i_life').value;
+  let lazy=+$('i_lazy').value, light=+$('i_light').value;
+  if(lazy+light>100){light=100-lazy;$('i_light').value=light}
+  state.lazy=lazy/100; state.light=light/100; state.full=Math.max(0,1-state.lazy-state.light);
+  $('i_full').value=Math.round(state.full*100);
+  state.m=+$('i_m').value; state.cap=+$('i_cap').value;
+}
+
+function compute(){
+  const P = state.s * (state.fee + Math.max(0,state.closs));
+  const idleAvg = idlePath(state.life).reduce((a,b)=>a+b,0)/state.life;
+  const lightM = 1.3;
+  const mu = state.lazy*idleAvg + state.light*lightM + state.full*state.m;
+  const fuel = state.price/state.life;
+  const nstar = mu>0 ? state.m*P/(mu*fuel) : 0;
+  const yieldPerPoint = mu>0 ? P/(state.N*mu) : 0;
+
+  // personas: [name, desc, weekly multiplier array over tank, weekly extra cost]
+  const idleW = idlePath(state.life);
+  const personas=[
+    {name:'推荐型 KOL',desc:'靠推荐拉满加速 · 零加速成本',color:'#C7F50D',
+     mult:w=>state.m, cost:w=>fuel},
+    {name:'自然交易者',desc:'本来就要交易 · 手续费是沉没成本，加速≈返佣',color:'#8ab4ff',
+     mult:w=>lightM, cost:w=>fuel},
+    {name:'闲置持有者',desc:'买了就忘 · 产出衰减至 0，燃料照烧',color:'#7a7a7a',
+     mult:w=>idleW[w-1], cost:w=>fuel},
+    {name:'刷量玩家',desc:'纯为刷加速自付手续费',color:'#FA5000',
+     mult:w=>state.m, cost:w=>fuel+state.cap} // fuel + CAP_FEE own fee to hold max boost
+  ];
+
+  const rows=personas.map(p=>{
+    // upfront −price buys chassis + first full tank; weekly extra cost = own boost fees only (wash persona)
+    let cum=-state.price, cumArr=[], payback=null;
+    for(let w=1;w<=state.life;w++){
+      const rev=yieldPerPoint*p.mult(w);
+      const extra=(p===personas[3])?state.cap*1.0:0; // wash: own fee outlay
+      const net=rev-extra;
+      cum+=net; cumArr.push(cum);
+      if(payback===null&&cum>=0)payback=w;
+    }
+    const wkRev=yieldPerPoint*p.mult(1);
+    const wkCost=fuel+((p===personas[3])?state.cap:0);
+    return {...p,wkRev,wkCost,wkNet:wkRev-wkCost,cumArr,payback,roi:cumArr[state.life-1]/state.price};
+  });
+
+  // protocol solvency
+  const clossPos=Math.max(0,state.closs);
+  const protoNet=0.7*(state.fee+clossPos)+ (state.closs<0?0:0);
+  return {P,mu,fuel,nstar,yieldPerPoint,rows,protoNet,clossPos,idleAvg};
+}
+
+let chart=$('chart'),ctx=chart.getContext('2d');
+function drawChart(rows,life,price){
+  const dpr=window.devicePixelRatio||1;
+  const W=chart.clientWidth,H=320;
+  chart.width=W*dpr;chart.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const padL=64,padR=16,padT=16,padB=28;
+  let ymin=-price*1.1,ymax=price*0.5;
+  rows.forEach(r=>r.cumArr.forEach(v=>{if(v>ymax)ymax=v;if(v<ymin)ymin=v}));
+  ymax*=1.08; ymin*=1.05;
+  const X=w=>padL+(w/life)*(W-padL-padR);
+  const Y=v=>padT+(1-(v-ymin)/(ymax-ymin))*(H-padT-padB);
+  // grid
+  ctx.font='10px IBM Plex Mono';ctx.fillStyle='#4a4a4a';ctx.strokeStyle='#1c1c1c';ctx.lineWidth=1;
+  const steps=5;
+  for(let i=0;i<=steps;i++){const v=ymin+(ymax-ymin)*i/steps;const y=Y(v);
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+    ctx.fillText(fmtUSD(v),6,y+3);}
+  for(let w=0;w<=life;w+=Math.ceil(life/8)){ctx.fillText(w+'周',X(w)-8,H-8)}
+  // zero line
+  ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-padR,Y(0));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#7a7a7a';ctx.fillText('盈亏平衡线',W-padR-64,Y(0)-6);
+  // lines
+  rows.forEach(r=>{
+    ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();
+    ctx.moveTo(X(0),Y(-price));
+    r.cumArr.forEach((v,i)=>ctx.lineTo(X(i+1),Y(v)));
+    ctx.stroke();
+    if(r.payback){ctx.fillStyle=r.color;ctx.beginPath();ctx.arc(X(r.payback),Y(r.cumArr[r.payback-1]),4,0,7);ctx.fill();}
+  });
+}
+
+function render(){
+  read();
+  const c=compute();
+  $('v_fee').textContent=fmtUSD(state.fee);
+  const cl=$('v_closs');cl.textContent=fmtUSD(state.closs);cl.className='val'+(state.closs<0?' neg':'');
+  $('v_pool').textContent=Math.round(state.s*100)+'%';
+  $('v_n').textContent=fmtN(state.N)+' 台';
+  $('v_price').textContent='$'+state.price;
+  $('v_life').textContent=state.life+' 周';
+  $('v_lazy').textContent=Math.round(state.lazy*100)+'%';
+  $('v_light').textContent=Math.round(state.light*100)+'%';
+  $('v_full').textContent=Math.round(state.full*100)+'%';
+  $('v_m').textContent=state.m+'×';
+  $('v_cap').textContent='$'+state.cap+' /周';
+
+  $('o_pool').textContent=fmtUSD(c.P);
+  $('o_nstar').textContent=fmtN(c.nstar);
+  $('o_fuel').textContent='$'+c.fuel.toFixed(2);
+  $('o_mu').textContent=c.mu.toFixed(2)+'×';
+
+  // equilibrium bar
+  const maxAxis=Math.max(c.nstar*1.6,state.N*1.25,1000);
+  const pctStar=Math.min(98,c.nstar/maxAxis*100), pctNow=Math.min(98,state.N/maxAxis*100);
+  $('eq_zp').style.width=pctStar+'%';
+  $('eq_zl').style.width=(100-pctStar)+'%';
+  $('eq_ns').style.left=pctStar+'%';
+  $('eq_ns_lbl').textContent='N* = '+fmtN(c.nstar);
+  const now=$('eq_now');now.style.left=pctNow+'%';
+  $('eq_now_lbl').textContent='N = '+fmtN(state.N);
+  $('eq_max').textContent=fmtN(maxAxis)+' 台';
+  const ratio=c.nstar>0?state.N/c.nstar:9;
+  const st=$('eq_state');
+  if(ratio<0.9){st.textContent='扩张——挖矿有利润';st.className='eq-state exp';now.classList.remove('over');
+    $('eq_note').innerHTML='舰队规模<b>低于 N*</b>：一台满速矿机的周收入高于其燃料消耗。预期整机需求和续费率会上升，直到差距收敛。早期矿工正在收取"入场早"的租金。';}
+  else if(ratio<=1.1){st.textContent='处于均衡';st.className='eq-state bal';now.classList.remove('over');
+    $('eq_note').innerHTML='舰队规模<b>正处于边界</b>：边际满速矿工在燃料上恰好盈亏平衡。更高加速和推荐驱动的矿工仍然盈利；闲置持有者在补贴他们。这就是市场出清状态。';}
+  else{st.textContent='收缩——退出压力';st.className='eq-state con';now.classList.add('over');
+    $('eq_note').innerHTML='舰队规模<b>高于 N*</b>：连满速矿机都覆盖不了燃料费。理性矿工停止续费，N 下降，留下来的人收益回升。系统自我修正——无需团队干预。';}
+
+  // table
+  const tb=$('ptable').querySelector('tbody');tb.innerHTML='';
+  c.rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const pay=r.payback?('第'+r.payback+'周'):'<span class="mut">永不回本</span>';
+    const roiCls=r.roi>=0?'pos':'negv';
+    const netCls=r.wkNet>=0?'pos':'negv';
+    tr.innerHTML=`<td class="name" style="border-left:2px solid ${r.color};padding-left:10px">${r.name}<span class="d">${r.desc}</span></td>
+      <td>${r.mult(1).toFixed(2)}×</td>
+      <td>${fmtUSD(r.wkRev)}</td>
+      <td>${fmtUSD(r.wkCost)}</td>
+      <td class="${netCls}">${fmtUSD(r.wkNet)}</td>
+      <td>${pay}</td>
+      <td class="${roiCls}">${(r.roi*100).toFixed(0)}%</td>`;
+    tb.appendChild(tr);
+  });
+
+  // legend
+  $('legend').innerHTML=c.rows.map(r=>`<span><i style="background:${r.color}"></i>${r.name}</span>`).join('');
+  drawChart(c.rows,state.life,state.price);
+
+  // solvency
+  const clossPos=Math.max(0,state.closs);
+  $('solv').innerHTML=`
+    <div class="row"><span>留存手续费收入（70%）</span><span>${fmtUSD(0.7*state.fee)}</span></div>
+    <div class="row"><span>留存客户盈亏（正值部分的 70%）</span><span>${fmtUSD(0.7*clossPos)}</span></div>
+    <div class="row"><span>协议亏损周</span><span>${state.closs<0?fmtUSD(state.closs)+' → 记入赤字账本，奖池支付 $0':'—'}</span></div>
+    <div class="row"><span>机身 + 燃料销售</span><span>+ 预付收入，50% → 储备回购</span></div>
+    <div class="row big"><span>协议每周净额</span><span>${fmtUSD(0.7*(state.fee+clossPos))} ${state.closs<0?'（未计金库盈亏）':''}</span></div>
+    <div style="margin-top:10px;color:var(--muted);font-family:Inter,sans-serif;font-size:12px;line-height:1.6">
+    排放在收入<b style="color:var(--text)">实现之后</b>才支付，100% 由回购提供资金。在本页任何参数设置下，矿机系统都不可能让协议在任何一周出现 USD 净流出。</div>`;
+
+  const badge=$('solv_badge');
+  badge.textContent='恒 ≥ 0';badge.style.borderColor='var(--acid)';badge.style.color='var(--acid)';
+}
+
+document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
+window.addEventListener('resize',()=>render());
+render();
+
+// help tooltips: hover on desktop, tap on mobile
+const tipbox=document.createElement('div');tipbox.id='tipbox';document.body.appendChild(tipbox);
+let tipEl=null;
+function showTip(el){
+  if(tipEl)tipEl.classList.remove('on');
+  tipEl=el;tipbox.innerHTML=el.dataset.tip;tipbox.style.display='block';
+  tipbox.style.left='0px';tipbox.style.top='0px';
+  const r=el.getBoundingClientRect(),tw=tipbox.offsetWidth,th=tipbox.offsetHeight;
+  let x=Math.max(8,Math.min(r.left+r.width/2-tw/2,innerWidth-tw-8));
+  let y=r.top-th-10;if(y<8)y=r.bottom+10;
+  tipbox.style.left=x+'px';tipbox.style.top=y+'px';el.classList.add('on');
+}
+function hideTip(){if(tipEl){tipEl.classList.remove('on');tipEl=null}tipbox.style.display='none'}
+document.addEventListener('mouseover',e=>{
+  const t=e.target.closest('.tip');
+  if(t)showTip(t);else if(tipEl)hideTip();
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.tip');
+  if(t){tipEl===t?hideTip():showTip(t)}else hideTip();
+});
+window.addEventListener('scroll',hideTip,{passive:true});
+</script>
+</body>
+</html>
