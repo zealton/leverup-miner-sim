@@ -150,13 +150,13 @@ footer a{color:var(--muted)}
 <header>
   <div class="eyebrow">LeverUp // 矿机模型 V2 // 数值模拟器</div>
   <h1>品质矿机 <span class="thin">/ 排放 · 市值 · 成本 模型</span></h1>
-  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV，交易量映射的 <b>boost（1–3×）只加快释放速度、不改变总量</b>，且每周衰减；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
+  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的交易量占全网交易量的比例</b>，映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
 </header>
 
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
-  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">刷量加速释放</div><div class="d">交易量绑定<b>单台</b>矿机 → boost 1–3×。只缩短周期、不加总量，每周衰减。</div></div>
+  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">占比竞争加速</div><div class="d">boost = 我的交易量 ÷ <b>全网</b>交易量，映射 1–3×。只缩短周期、不加总量；一段时间后下限归 <b>0</b>，不刷量即冻结。</div></div>
   <div class="fstep"><div class="n">04 / REMINT</div><div class="t">品质抽奖</div><div class="d">每 $1M 交易量 = 1 次机会。按<b>剩余配额加权</b>随机，可能保持原品质；配额满则抽不到。</div></div>
   <div class="fstep"><div class="n">05 / 升级</div><div class="t">进度继承</div><div class="d">升级<b>不重置时间</b>：按当前进度比例，剩余时间释放新品质对应的剩余 LV。</div></div>
 </div>
@@ -211,11 +211,11 @@ footer a{color:var(--muted)}
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
         <input type="range" id="i_bmax" min="1.5" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需周交易量<span class="tip" data-tip="交易量 → boost 的映射斜率：boost = 1 + (上限−1) × min(1, 周交易量 ÷ 此值)。">?</span></label><span class="val" id="v_vmax"></span></div>
-        <input type="range" id="i_vmax" min="25000" max="1000000" step="25000" value="100000"></div>
-      <div class="ctl"><div class="ctl-top"><label>Boost 每周衰减</label><span class="val" id="v_decay"></span></div>
-        <input type="range" id="i_decay" min="0.1" max="2" step="0.1" value="0.5"></div>
-      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="全网平均值，决定平均 boost、remint 机会产生速度和客损收入。交易量指定绑定单台矿机。">?</span></label><span class="val" id="v_vol"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需全网占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的交易量占比 ÷ 此值)。例：设 1% 时，你的周交易量达到全网 1% 即拉满。占比每周按当周交易量重算——上周刷的量这周不算，天然防「刷一次躺平」。">?</span></label><span class="val" id="v_smax"></span></div>
+        <input type="range" id="i_smax" min="0.05" max="10" step="0.05" value="1"></div>
+      <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
+        <input type="range" id="i_floorw" min="0" max="52" step="1" value="8"></div>
+      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="全网平均值：决定全网总交易量（= 台数 × 此值）、remint 机会速度和客损收入。均匀刷量时每台占比 = 1 ÷ 全网台数——矿机越多、大家的 boost 越低（占比竞争）。">?</span></label><span class="val" id="v_vol"></span></div>
         <input type="range" id="i_vol" min="0" max="500000" step="10000" value="50000"></div>
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
         <input type="range" id="i_cuser" min="0" max="0.3" step="0.01" value="0.02"></div>
@@ -245,7 +245,7 @@ footer a{color:var(--muted)}
   <div>
     <div class="stats">
       <div class="stat"><div class="k">最大理论排放<span class="tip" data-tip="三档配额全部铸满并释放完的 LV 总量 = ΣL×Q，及其占流通量比例。">?</span></div><div class="v white" id="o_maxemit">—</div><div class="u" id="o_maxemit_u">—</div></div>
-      <div class="stat"><div class="k">平均 Boost / 实际周期</div><div class="v white" id="o_boost">—</div><div class="u" id="o_boost_u">—</div></div>
+      <div class="stat"><div class="k">平均 Boost（占比竞争 · 均匀假设）<span class="tip" data-tip="全员按左侧「平均周刷量」均匀刷量时，每台占比 = 1/台数，映射出的 boost。矿机越多这个值越低；想更高只能卷赢别人。用户回本、APR、各品质表都按此值折算实际寿命。">?</span></div><div class="v white" id="o_boost">—</div><div class="u" id="o_boost_u">—</div></div>
       <div class="stat"><div class="k">排放覆盖率（最差周）<span class="tip" data-tip="每周「新入场资金 ÷ 排放 LV 市值」的最小值。≥1 表示任何一周的抛压都有新钱接住；&lt;1 表示存在失衡周。">?</span></div><div class="v" id="o_cover">—</div><div class="u">入场资金 ÷ 排放市值</div></div>
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
@@ -317,7 +317,7 @@ footer a{color:var(--muted)}
 </div>
 
 <footer>
-  模型假设：LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
+  模型假设：LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为全网交易量占比映射，聚合模型假设全员均匀刷量（个体差异见钱包演练）· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
 </footer>
 </div>
 
@@ -335,19 +335,20 @@ function read(){
   P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
   P.Q={A:+$('i_qa').value,B:+$('i_qb').value,C:+$('i_qc').value};
   P.T=+$('i_T').value;
-  P.bmax=+$('i_bmax').value; P.vmax=+$('i_vmax').value; P.decay=+$('i_decay').value;
+  P.bmax=+$('i_bmax').value; P.smax=+$('i_smax').value/100; P.floorw=+$('i_floorw').value;
   P.vol=+$('i_vol').value; P.cuser=+$('i_cuser').value/100;
   P.rth=+$('i_rth').value; P.stay=+$('i_stay').value/100;
   P.gen=+$('i_gen').value; P.daily=+$('i_daily').value; P.grow=+$('i_grow').value/100;
   P.pnl=+$('i_pnl').value/100; P.hor=+$('i_hor').value;
 }
-function boostOf(volWeekly){return 1+(P.bmax-1)*Math.min(1,volWeekly/P.vmax)}
+function floorAt(w){return w>=P.floorw?0:1}
+function shareBoost(share,fl){return fl+(P.bmax-fl)*Math.min(1,P.smax>0?share/P.smax:1)}
+function uniformBoost(n,fl){return n>0&&P.vol>0?shareBoost(1/n,fl):fl}
 
 /* ---- aggregate weekly simulation (expected values, deterministic) ----
    scale: multiplier applied to per-miner LV amounts (for solving the emission budget) */
 function simulate(scale){
   const L={A:P.L.A*scale,B:P.L.B*scale,C:P.L.C*scale};
-  const b=boostOf(P.vol);
   const cohorts=[]; // {tier,count,rem}
   const circ={A:0,B:0,C:0};
   let soldTotal=0,dead=0;
@@ -387,10 +388,12 @@ function simulate(scale){
         circ.A-=upB+upC;circ.B+=upB;circ.C+=upC;
       }
     }
-    // emission
+    // emission (competitive boost: uniform wash -> everyone's share = 1/active)
+    const activeNow=cohorts.reduce((a,c)=>a+c.count,0);
+    const bW=uniformBoost(activeNow,floorAt(w));
     let emitLV=0;
     cohorts.forEach(c=>{
-      const rate=L[c.tier]/P.T*7*b;
+      const rate=L[c.tier]/P.T*7*bW;
       const e=Math.min(c.rem,rate);
       emitLV+=e*c.count;c.rem-=e;
     });
@@ -485,7 +488,8 @@ function render(){
   $('v_xmon').textContent=P.xmon+' MON';$('v_pmon').textContent='$'+P.pmon.toFixed(3);
   $('v_priceusd').textContent=fmt(P.priceUsd)+' / 台';
   $('v_T').textContent=P.T+' 天';$('v_bmax').textContent=P.bmax+'×';
-  $('v_vmax').textContent=fmt(P.vmax)+'/周';$('v_decay').textContent='−'+P.decay+'/周';
+  $('v_smax').textContent=(P.smax*100).toFixed(2)+'% 全网量';
+  $('v_floorw').textContent=P.floorw===0?'立即 [0,'+P.bmax+'×]':'第 '+P.floorw+' 周起';
   $('v_vol').textContent=fmt(P.vol)+'/周';$('v_cuser').textContent=(P.cuser*100).toFixed(2)+'%';
   $('v_rth').textContent=fmt(P.rth);$('v_stay').textContent=Math.round(P.stay*100)+'%';
   $('v_gen').textContent=fmtI(P.gen)+' 台';$('v_daily').textContent=P.daily+' 台/日';
@@ -494,15 +498,17 @@ function render(){
   $('v_hor').textContent=P.hor+' 周';
   $('w_rth').textContent=fmt(P.rth);
 
-  const b=boostOf(P.vol);
+  const bEarly=uniformBoost(Math.max(1,P.gen),P.floorw>0?1:0);
+  const bLate=uniformBoost(Math.max(1,P.gen),0);
+  const b=bEarly;
   const weeks=simulate(1);
   const cov=coverage(weeks);
   const maxEmit=P.L.A*P.Q.A+P.L.B*P.Q.B+P.L.C*P.Q.C;
 
   $('o_maxemit').textContent=fmtLV(maxEmit)+' LV';
   $('o_maxemit_u').textContent='占流通量 '+(maxEmit/P.circ*100).toFixed(1)+'% · 市值 '+fmt(maxEmit*P.plv);
-  $('o_boost').textContent=b.toFixed(2)+'× / '+Math.round(P.T/b)+' 天';
-  $('o_boost_u').textContent='周刷量 '+fmt(P.vol)+' · 衰减需持续刷';
+  $('o_boost').textContent=b.toFixed(2)+'× → '+bLate.toFixed(2)+'×';
+  $('o_boost_u').textContent='均匀刷量、'+fmtI(P.gen)+' 台分摊 · 下限归 0 前 → 后';
   const oc=$('o_cover');oc.textContent=cov>=99?'∞':cov.toFixed(2)+'×';oc.className='v '+(cov>=1?'':'red');
 
   // user payback (A miner)
@@ -513,7 +519,7 @@ function render(){
   const totalOut=P.L.A*P.plv;
   const payback=dailyYield>0?totalCost/dailyYield:Infinity;
   $('o_payback').textContent=payback===Infinity?'—':Math.round(payback)+' 天';
-  $('o_payback_u').textContent='寿命 '+Math.round(lifeDays)+' 天 · 全周期产出 '+fmt(totalOut);
+  $('o_payback_u').textContent='寿命 '+(isFinite(lifeDays)?Math.round(lifeDays)+' 天':'∞（boost 0）')+' · 全周期产出 '+fmt(totalOut);
 
   // ① emission budget
   const k=solveScale();
@@ -613,10 +619,12 @@ function wStep(){
   if(WS.rem===null){WS.rem=P.L[WS.tier];WS.cost=P.priceUsd}
   WS.week++;
   const v=+$('wi_vol').value;
-  WS.boost=Math.min(P.bmax,Math.max(1,WS.boost-P.decay)+(P.bmax-1)*Math.min(1,v/P.vmax));
+  const netVol=P.gen*P.vol;
+  WS.share=(netVol+v)>0?v/(netVol+v):0;
+  WS.boost=shareBoost(WS.share,floorAt(WS.week));
   const emit=Math.min(WS.rem,P.L[WS.tier]/P.T*7*WS.boost);
   WS.rem-=emit;WS.lv+=emit;WS.cost+=v*P.cuser;WS.chances+=v/P.rth;
-  wLog(`释放 ${fmtLV(emit)} LV（boost ${WS.boost.toFixed(2)}×）｜+${(v/P.rth).toFixed(2)} 次 remint 机会`);
+  wLog(`释放 ${fmtLV(emit)} LV（占全网 ${(WS.share*100).toFixed(2)}% → boost ${WS.boost.toFixed(2)}×${floorAt(WS.week)===0?' · 下限已归 0':''}）｜+${(v/P.rth).toFixed(2)} 次 remint 机会`);
   if(WS.rem<=0.01){WS.dead=true;wLog('⚰️ 矿机耗尽——全部 LV 已释放完毕')}
   renderWallet();
 }
@@ -651,7 +659,8 @@ function renderWallet(reset){
     <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700">${WS.boost.toFixed(2)}×<small style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)"> BOOST</small></div>
     <div class="pbar"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">释放进度 ${(prog*100).toFixed(1)}% · 剩余 ${fmtLV(WS.rem)} / ${fmtLV(total)} LV</div>
-    <div class="krow" style="margin-top:10px"><span>预计剩余时间</span><span>${WS.dead?'—':Math.round(WS.rem/(total/P.T*WS.boost))+' 天（按当前 boost）'}</span></div>
+    <div class="krow" style="margin-top:10px"><span>我的交易量占全网</span><span>${((WS.share||0)*100).toFixed(2)}%</span></div>
+    <div class="krow"><span>预计剩余时间</span><span>${WS.dead?'—':WS.boost>0?Math.round(WS.rem/(total/P.T*WS.boost))+' 天（按当前 boost）':'冻结（boost 0，需刷量）'}</span></div>
     <div class="krow"><span>remint 机会</span><span>${WS.chances.toFixed(2)} 次</span></div>`;
   $('w_cost').textContent=fmt(WS.cost);
   $('w_out').textContent=fmtLV(WS.lv)+' LV ≈ '+fmt(WS.lv*P.plv);
