@@ -106,6 +106,30 @@ h2{font-size:16px;font-weight:700;margin-bottom:4px}
 .probbar i{display:block;height:100%}
 .problegend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
 
+/* tier rarity treatments */
+.card.tierB{border-color:var(--blue);box-shadow:0 0 26px rgba(138,180,255,.16),inset 0 0 50px rgba(138,180,255,.05)}
+.card.tierC{border-color:var(--gold);box-shadow:0 0 36px rgba(245,197,24,.22),inset 0 0 70px rgba(245,197,24,.07);position:relative;overflow:hidden}
+.card.tierC::after{content:"";position:absolute;top:-160%;left:-70%;width:46%;height:420%;transform:rotate(25deg);pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(245,197,24,.14),transparent);animation:sweep 3.2s ease-in-out infinite}
+@keyframes sweep{0%{left:-70%}55%,100%{left:135%}}
+.tierchip.B{box-shadow:0 0 12px rgba(138,180,255,.35)}
+.tierchip.C{box-shadow:0 0 16px rgba(245,197,24,.5)}
+.rarline{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;margin-top:8px;text-transform:uppercase}
+.machine .emoji.szB{font-size:64px;filter:drop-shadow(0 6px 22px rgba(138,180,255,.45))}
+.machine .emoji.szC{font-size:74px;filter:drop-shadow(0 8px 28px rgba(245,197,24,.55))}
+.tiers3{display:flex;gap:10px;margin:12px 0 4px}
+.t3{flex:1;border-radius:16px;padding:12px 6px;text-align:center;border:1.5px solid var(--border);background:var(--panel2);position:relative}
+.t3 .e{font-size:30px;line-height:1.2}
+.t3 .nm{font-family:'Orbitron',sans-serif;font-weight:800;font-size:15px;margin-top:4px}
+.t3 .amt{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);margin-top:3px}
+.t3 .sup{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+.t3.you::before{content:"你在这";position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:9px;background:var(--acid);color:#000;padding:1px 8px;border-radius:99px;font-weight:700}
+.t3.B{border-color:var(--blue);box-shadow:0 0 14px rgba(138,180,255,.18)}
+.t3.B .nm{color:var(--blue)}
+.t3.C{border-color:var(--gold);box-shadow:0 0 20px rgba(245,197,24,.3);background:linear-gradient(180deg,rgba(245,197,24,.08),var(--panel2))}
+.t3.C .nm{color:var(--gold)}
+.arrowup{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:16px;padding:0 0 2px}
+
 /* vault */
 .bigrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
 .tag{display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--acid);color:var(--acid);font-weight:600;letter-spacing:.06em}
@@ -166,7 +190,10 @@ const fmtU=v=>'$'+(Math.abs(v)>=1000?(v/1000).toFixed(1)+'K':v.toFixed(2));
 
 /* ---- constants (aligned with simulator defaults) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
-const TIERS={A:{total:5000,color:'#e8e8e8',mult:'基础'},B:{total:12500,color:'#8ab4ff',mult:'2.5 倍产量'},C:{total:31000,color:'#f5c518',mult:'6.2 倍产量'}};
+const TIERS={
+  A:{total:5000,color:'#e8e8e8',emoji:'⛏',sz:'',rar:'STANDARD',cn:'常规款',mult:'基础产量',supply:'首批 800 台'},
+  B:{total:12500,color:'#8ab4ff',emoji:'🦾',sz:'szB',rar:'RARE',cn:'稀有款',mult:'产量 ×2.5',supply:'全网限量 120 台'},
+  C:{total:31000,color:'#f5c518',emoji:'💎',sz:'szC',rar:'LEGENDARY',cn:'传说款',mult:'产量 ×6.2',supply:'全网仅 20 台'}};
 const GEARS={P:{v:0,name:'P · 停车挡',desc:'不交易',fee:0},D:{v:15000,name:'D · 日常挡',desc:'周交易 $15K',fee:3},S:{v:150000,name:'S · 狂暴挡',desc:'周交易 $150K',fee:30}};
 const NET_VOL=10000000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
 
@@ -277,6 +304,7 @@ function vHome(){
   if(m.dead)return `
     <div class="card ${m.done?'hl':''}" style="text-align:center;padding:26px 18px">
       <div style="font-size:54px">${m.done?'🏆':'🪦'}</div>
+      <div class="rarline" style="color:${tier.color};text-align:center">${TIERS[m.tier].emoji} ${m.tier} 级 · ${tier.cn}</div>
       <h1 style="margin:8px 0 6px">${m.done?'挖完收工！':'机器退役了'}</h1>
       <p class="sub">${m.done
         ?`这台 ${m.tier} 级机器挖出了全部 <b style="color:var(--acid)">${fmtLV(tier.total)} LV</b>`
@@ -288,17 +316,19 @@ function vHome(){
     <div class="rowline"><span>去金库看收益</span><b>🏦 →</b></div></div>`;
 
   return `
-    <div class="card hl">
+    <div class="card hl tier${m.tier}">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span class="tierchip ${m.tier}">${m.tier} 级矿机</span>
+        <span class="tierchip ${m.tier}">${TIERS[m.tier].emoji} ${m.tier} 级 · ${TIERS[m.tier].cn}</span>
         <span class="sub mono">#0001</span>
       </div>
-      <div class="machine ${b<=0?'stopped':''}"><div class="emoji ${b>0?'pulse':''}">${b>0?'⛏':'😴'}</div></div>
+      <div class="rarline" style="color:${tier.color}">${tier.rar} · ${tier.mult} · ${tier.supply}</div>
+      <div class="machine ${b<=0?'stopped':''}"><div class="emoji ${tier.sz} ${b>0?'pulse':''}">${b>0?tier.emoji:'😴'}</div></div>
       <div class="bigrow"><span class="big">${fmtLV(tier.total-m.rem)}</span><span class="sub">/ ${fmtLV(tier.total)} LV</span></div>
       <div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
       <div class="rowline"><span>今天的产出</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+perDay.toFixed(1)+' LV ≈ '+fmtU(perDay*PLV):'0（机器停了）'}</b></div>
       <div class="rowline"><span>当前速度</span><b>${b.toFixed(2)} 倍速 ${b>=2.9?'🔥':b>0?'':'⚠️'}</b></div>
       <div class="rowline"><span>已换算成钱</span><b class="pos">≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
+      ${m.tier!=='A'?`<div class="rowline"><span>比 A 级多产</span><b style="color:${tier.color}">+${fmtLV(tier.total-TIERS.A.total)} LV（同样 100 天）</b></div>`:''}
       <div class="deadline ${daysLeft<=21?'warn':''}">⏳ 还剩 <b class="mono" style="font-size:16px">&nbsp;${daysLeft}&nbsp;</b> 天${daysLeft<=21?' · 到期没挖完的会消失！':'，到期后没挖完的部分会消失'}</div>
       ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 机器停了！去踩油门 →</button>':''}
     </div>
@@ -351,12 +381,17 @@ function vLotto(){
   if(S.lottoState==='done'){
     const r=S.lottoResult;
     if(r==='stay')cardInner=`😅<small>没变，还是 ${cur} 级</small>`;
-    else{cardInner=`${r}<small>升级成功！产量 ${TIERS[r].mult}</small>`;cls=r==='C'?'winC':'win'}
+    else{cardInner=`${TIERS[r].emoji}<small style="color:${TIERS[r].color};font-weight:800">${r} 级 · ${TIERS[r].cn}！</small><small>${TIERS[r].mult} · ${TIERS[r].supply}</small>`;cls=r==='C'?'winC':'win'}
   }
   return `
     <div class="card hl">
       <h1 style="text-align:center;margin-bottom:2px">🎰 升级抽卡</h1>
       <p class="sub" style="text-align:center">给矿机抽一次「变身」，<b style="color:var(--text)">进度不清零</b>：<br>挖到 60% 时升级，就从新产量的 60% 继续挖</p>
+      <div class="tiers3">
+        <div class="t3 ${cur==='A'?'you':''}"><div class="e">⛏</div><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 800 台</div></div>
+        <div class="t3 B ${cur==='B'?'you':''}"><div class="e">🦾</div><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5<br>限量 120 台</div></div>
+        <div class="t3 C ${cur==='C'?'you':''}"><div class="e">💎</div><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2<br>全网仅 20 台</div></div>
+      </div>
       <div class="slotbox">
         <div class="slotcard ${cls}" style="${S.lottoState==='done'&&S.lottoResult!=='stay'?'color:'+TIERS[S.lottoResult].color:''}">${cardInner}</div>
         <button class="btn" style="max-width:240px;margin:0 auto" ${can?'':'disabled'} onclick="remint()">
