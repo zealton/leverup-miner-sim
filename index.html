@@ -182,7 +182,7 @@ footer a{color:var(--muted)}
 <header>
   <div class="eyebrow">LeverUp // 矿机模型 V2 // 数值模拟器</div>
   <h1>品质矿机 <span class="thin">/ 排放 · 市值 · 成本 模型</span></h1>
-  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的绑定交易量 ÷ 全体矿机持有者的绑定交易量</b>（只在矿工之间竞争，非持有者的交易不进分母），映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
+  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的正 PnL ÷ 全体矿工的正 PnL 池</b>（赚钱的人挖得快；亏损周只有下限速度；交易量本身不给 boost，只攒 remint 机会），映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
   <p style="margin-top:12px"><a href="/ui" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid);text-decoration:none;border:1px solid var(--acid);padding:7px 14px;display:inline-block">📱 产品交互原型（傻瓜版 App 界面）→</a></p>
 </header>
 
@@ -195,7 +195,7 @@ footer a{color:var(--muted)}
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
-  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">占比竞争加速</div><div class="d">boost = 我的绑定量 ÷ <b>全体矿工</b>绑定量（矿工内部零和竞争），映射 1–3×。只改速度不加总量；后期下限归 <b>0</b>。</div></div>
+  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">盈利竞速</div><div class="d">boost = 我的正 PnL ÷ <b>全体矿工</b>盈利池，映射 1–3×。亏损周吃下限；后期下限归 <b>0</b>。交易量不给 boost，只攒 remint。</div></div>
   <div class="fstep"><div class="n">04 / REMINT</div><div class="t">品质抽奖</div><div class="d">每 $1M 交易量 = 1 次机会。按<b>剩余配额加权</b>随机，可能保持原品质；配额满则抽不到。</div></div>
   <div class="fstep"><div class="n">05 / 升级</div><div class="t">进度继承</div><div class="d">升级<b>不重置时间</b>：按当前进度比例，剩余时间释放新品质对应的剩余 LV。</div></div>
 </div>
@@ -257,20 +257,22 @@ footer a{color:var(--muted)}
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
         <input type="range" id="i_bmax" min="1.5" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需全网占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的占比 ÷ 此值)。<b>分母只统计绑定到矿机的交易量</b>——是矿工俱乐部内部的零和竞争，纯交易用户不稀释你。占比每周按当周量重算，防「刷一次躺平」。参与者少时人人易拉满（开局冲劲），人多后自动内卷（排放自刹车）。">?</span></label><span class="val" id="v_smax"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需盈利池占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的正 PnL 占比 ÷ 此值)。<b>分母 = 全体矿工当周正 PnL 之和</b>（亏损不计入）——矿工之间比谁更会赚。每周重算；亏损周占比为 0、只吃下限。">?</span></label><span class="val" id="v_smax"></span></div>
         <input type="range" id="i_smax" min="0.05" max="10" step="0.05" value="1"></div>
       <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
         <input type="range" id="i_floorw" min="0" max="52" step="1" value="6"></div>
-      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="矿机持有者的平均值：决定占比分母（= 活跃台数 × 此值）、remint 机会速度和客损收入。矿工越多、平均占比越小、大家的 boost 越低——竞争烈度随参与人数内生变化。">?</span></label><span class="val" id="v_vol"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周交易量<span class="tip" data-tip="矿机持有者的平均交易量：<b>只驱动 remint 机会与客损收入，不影响 boost</b>（boost 看正 PnL 占比）。">?</span></label><span class="val" id="v_vol"></span></div>
         <input type="range" id="i_vol" min="0" max="500000" step="5000" value="25000"></div>
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
         <input type="range" id="i_cuser" min="0" max="0.3" step="0.01" value="0.02"></div>
 
       <div class="sect">用户分层（行为假设）</div>
-      <div class="ctl"><div class="ctl-top"><label>卷王矿机占比<span class="tip" data-tip="刷量最猛的头部用户占全网矿机的比例。他们抢走大部分交易量占比 → 高 boost、快释放、多 remint 机会。">?</span></label><span class="val" id="v_hw"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>盈利大户占比<span class="tip" data-tip="稳定赚钱的头部交易员占全网矿机的比例。他们几乎每周都在正 PnL 池里占大头 → 高 boost、快释放。">?</span></label><span class="val" id="v_hw"></span></div>
         <input type="range" id="i_hw" min="1" max="30" step="1" value="10"></div>
-      <div class="ctl"><div class="ctl-top"><label>卷王刷量占比<span class="tip" data-tip="卷王贡献的交易量占全网总刷量的比例。集中度越高，普通用户被稀释得越狠——这就是「部分人高收益、其他人被稀释」的旋钮。">?</span></label><span class="val" id="v_hy"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>大户正 PnL 占比<span class="tip" data-tip="盈利大户拿走的正 PnL 池份额。集中度越高，普通矿工赢的那周分到的占比越小——盈利能力的马太效应旋钮。">?</span></label><span class="val" id="v_hy"></span></div>
         <input type="range" id="i_hy" min="10" max="90" step="5" value="60"></div>
+      <div class="ctl"><div class="ctl-top"><label>普通矿工周胜率<span class="tip" data-tip="普通活跃矿工任意一周实现正 PnL 的概率。赢的周按占比拿 boost，亏的周只有下限——期望速度 = 胜率 × 赢家速度 + (1−胜率) × 下限。">?</span></label><span class="val" id="v_wr"></span></div>
+        <input type="range" id="i_wr" min="10" max="80" step="5" value="40"></div>
       <div class="ctl"><div class="ctl-top"><label>躺平矿机占比<span class="tip" data-tip="完全不刷量的矿机比例：下限归 0 前按 1× 基速释放，归 0 后<b>冻结</b>——他们让渡的时间价值就是卷王高收益的来源。">?</span></label><span class="val" id="v_idle"></span></div>
         <input type="range" id="i_idle" min="0" max="60" step="5" value="20"></div>
 
@@ -311,7 +313,7 @@ footer a{color:var(--muted)}
   <div>
     <div class="stats">
       <div class="stat"><div class="k">最大理论排放<span class="tip" data-tip="三档配额全部铸满并释放完的 LV 总量 = ΣL×Q，及其占流通量比例。">?</span></div><div class="v white" id="o_maxemit">—</div><div class="u" id="o_maxemit_u">—</div></div>
-      <div class="stat"><div class="k">平均 Boost（占比竞争 · 均匀假设）<span class="tip" data-tip="全员按左侧「平均周刷量」均匀刷量时，每台占比 = 1/台数，映射出的 boost。矿机越多这个值越低；想更高只能卷赢别人。用户回本、APR、各品质表都按此值折算实际寿命。">?</span></div><div class="v white" id="o_boost">—</div><div class="u" id="o_boost_u">—</div></div>
+      <div class="stat"><div class="k">平均 Boost（正 PnL 竞速）<span class="tip" data-tip="按分层假设加权：大户稳定占盈利池大头，普通矿工按周胜率轮流进池，躺平者恒为下限。用户回本、APR、各品质表按「普通矿工期望速度」折算实际寿命。">?</span></div><div class="v white" id="o_boost">—</div><div class="u" id="o_boost_u">—</div></div>
       <div class="stat"><div class="k">排放覆盖率（最差周）<span class="tip" data-tip="每周「新入场资金 ÷ 排放 LV 市值」的最小值。≥1 表示任何一周的抛压都有新钱接住；&lt;1 表示存在失衡周。">?</span></div><div class="v" id="o_cover">—</div><div class="u">入场资金 ÷ 排放市值</div></div>
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
@@ -360,7 +362,7 @@ footer a{color:var(--muted)}
     <div class="panel" style="margin-bottom:16px">
       <div class="panel-h"><span>分层收益 · 谁在补贴谁<span class="tip" data-tip="占比竞争是零和的：单台总产出固定，卷王赢的是<b>释放速度</b>（IRR）和 remint 机会；躺平者在下限归 0 后冻结，让渡的时间价值就是头部的高收益。头部的高年化是给全场看的广告，也是刷量动机的来源。">?</span></span><span class="tag">A 矿机 · 按分层</span></div>
       <div style="overflow-x:auto"><table id="coh_table">
-        <thead><tr><th>分层</th><th>矿机占比</th><th>人均周刷量</th><th>Boost 归0前→后</th><th>实际寿命</th><th>回本 @当前市值</th><th>回本 @目标市值</th><th>ROI @目标</th></tr></thead>
+        <thead><tr><th>分层</th><th>矿机占比</th><th>正 PnL 份额</th><th>Boost 归0前→后</th><th>实际寿命</th><th>回本 @当前市值</th><th>回本 @目标市值</th><th>ROI @目标</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </div>
@@ -386,7 +388,7 @@ footer a{color:var(--muted)}
         <button class="primary" id="w_step" style="flex:1">推进一周 ▶</button>
         <button id="w_remint" disabled>🎲 REMINT</button>
       </div>
-      <div class="hint" style="margin-top:10px">remint 机会：每刷满 <span id="w_rth">$1M</span> 累积 1 次。占比分母 = 背景矿工盘 + 你的量（矿工之间竞争）。抽奖用左侧「保持原品质概率」与当前剩余配额加权。</div>
+      <div class="hint" style="margin-top:10px">remint 机会：每刷满 <span id="w_rth">$1M</span> 累积 1 次。演练近似：按 PnL∝交易量折算占比（分母 = 背景矿工盘 + 你的量）。抽奖用左侧「保持原品质概率」与当前剩余配额加权。</div>
     </div>
     <div class="mcard" id="w_card"></div>
     <div>
@@ -436,7 +438,7 @@ footer a{color:var(--muted)}
 </div>
 
 <footer>
-  模型假设：到期规则可选（默认②固定周期到期作废，负债随批次清零；①冻结延时为永续债务对照）· LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为全网交易量占比映射，聚合模型假设全员均匀刷量（个体差异见钱包演练）· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
+  模型假设：到期规则可选（默认②固定周期到期作废，负债随批次清零；①冻结延时为永续债务对照）· LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为正 PnL 占比映射（交易量只驱动 remint 与客损）；聚合模型按分层胜率取期望；钱包演练与沙盘按 PnL∝交易量近似· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
 </footer>
 </div>
 
@@ -452,7 +454,7 @@ function read(){
   P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
   P.payt=+$('i_payt').value;
   P.expire=$('i_expire').value;
-  P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100;
+  P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100; P.wr=+$('i_wr').value/100;
   if(P.hw+P.idle>0.9){P.idle=Math.max(0,0.9-P.hw);$('i_idle').value=Math.round(P.idle*100)}
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
   P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
@@ -471,9 +473,10 @@ function shareBoost(share,fl){return fl+(P.bmax-fl)*Math.min(1,P.smax>0?share/P.
 function uniformBoost(n,fl){return n>0&&P.vol>0?shareBoost(1/n,fl):fl}
 function cohortAvgBoost(n,fl){
   if(P.vol<=0||n<=0)return fl;
-  const h=P.hw,idle=P.idle,m=Math.max(0.0001,1-h-idle);
-  const sH=h>0?P.hy/(h*n):0, sM=(1-P.hy)/(m*n);
-  return h*shareBoost(sH,fl)+m*shareBoost(sM,fl)+idle*fl;
+  const h=P.hw,idle=P.idle,m=Math.max(0.0001,1-h-idle),wr=P.wr||0.4;
+  const sH=h>0?P.hy/(h*n):0;
+  const sM=wr>0?(1-P.hy)/(m*wr*n):0; // 赢的那周，赢家们分 (1−hy) 的盈利池
+  return h*shareBoost(sH,fl)+m*(wr*shareBoost(sM,fl)+(1-wr)*fl)+idle*fl;
 }
 
 /* ---- aggregate weekly simulation (expected values, deterministic) ----
@@ -673,6 +676,7 @@ function render(){
   $('v_vol').textContent=fmt(P.vol)+'/周';$('v_cuser').textContent=(P.cuser*100).toFixed(2)+'%';
   $('v_expire').textContent=P.expire==='forfeit'?'到期作废':'冻结延时';
   $('v_hw').textContent=Math.round(P.hw*100)+'%';
+  $('v_wr').textContent=Math.round(P.wr*100)+'%';
   $('v_hy').textContent=Math.round(P.hy*100)+'%';
   $('v_idle').textContent=Math.round(P.idle*100)+'%';
   $('v_rth').textContent=fmt(P.rth);$('v_stay').textContent=Math.round(P.stay*100)+'%';
@@ -692,10 +696,12 @@ function render(){
   const bEarly=cohortAvgBoost(N0,fl0);
   const bLate=cohortAvgBoost(N0,0);
   const mFrac=Math.max(0.0001,1-P.hw-P.idle);
-  const volTyp=P.vol>0?P.vol*(1-P.hy)/mFrac:0;
-  const volHW=P.vol>0&&P.hw>0?P.vol*P.hy/P.hw:0;
-  const bTyp=P.vol>0?shareBoost(volTyp/(N0*P.vol),fl0):fl0;
-  const bHW=P.vol>0?shareBoost(volHW/(N0*P.vol),fl0):fl0;
+  const sHW=P.hw>0?P.hy/(P.hw*N0):0;
+  const sTypWin=P.wr>0?(1-P.hy)/(mFrac*P.wr*N0):0;
+  const bHW=P.vol>0?shareBoost(sHW,fl0):fl0;
+  const bTypWin=P.vol>0?shareBoost(sTypWin,fl0):fl0;
+  const bTyp=P.vol>0?P.wr*bTypWin+(1-P.wr)*fl0:fl0;
+  const volTyp=P.vol;
   const b=bTyp;
   const weeks=simulate(1);
   const cov=coverage(weeks);
@@ -704,7 +710,7 @@ function render(){
   $('o_maxemit').textContent=fmtLV(maxEmit)+' LV';
   $('o_maxemit_u').textContent='占流通量 '+(maxEmit/P.circ*100).toFixed(1)+'% · 市值 '+fmt(maxEmit*P.plv);
   $('o_boost').textContent=bEarly.toFixed(2)+'× → '+bLate.toFixed(2)+'×';
-  $('o_boost_u').textContent='分层加权 · 归0前→后 · 卷王 '+bHW.toFixed(2)+'× / 普通 '+bTyp.toFixed(2)+'×';
+  $('o_boost_u').textContent='分层加权 · 归0前→后 · 大户 '+bHW.toFixed(2)+'× / 普通期望 '+bTyp.toFixed(2)+'×';
   const oc=$('o_cover');oc.textContent=cov>=99?'∞':cov.toFixed(2)+'×';oc.className='v '+(cov>=1?'':'red');
 
   // user payback (A miner)
@@ -802,9 +808,9 @@ function render(){
 
   // cohort table
   const cohRows=[
-    {name:'卷王',cls:'pos',frac:P.hw,vol:volHW,bE:bHW,bL:P.vol>0?shareBoost(volHW/(N0*P.vol),0):0},
-    {name:'普通活跃',cls:'w',frac:mFrac,vol:volTyp,bE:bTyp,bL:P.vol>0?shareBoost(volTyp/(N0*P.vol),0):0},
-    {name:'躺平',cls:'negv',frac:P.idle,vol:0,bE:fl0,bL:0}
+    {name:'盈利大户',cls:'pos',frac:P.hw,pnl:'分 '+Math.round(P.hy*100)+'% 盈利池',vol:P.vol,bE:bHW,bL:P.vol>0?shareBoost(sHW,0):0},
+    {name:'普通活跃',cls:'w',frac:mFrac,pnl:'分 '+Math.round((1-P.hy)*100)+'% 池 · 胜率 '+Math.round(P.wr*100)+'%',vol:P.vol,bE:bTyp,bL:P.vol>0?P.wr*shareBoost(sTypWin,0):0},
+    {name:'躺平',cls:'negv',frac:P.idle,pnl:'—',vol:0,bE:fl0,bL:0}
   ];
   const ct=$('coh_table').querySelector('tbody');ct.innerHTML='';
   const frozenPct=Math.min(100,P.floorw*7/P.T*100);
@@ -821,7 +827,7 @@ function render(){
     ct.insertAdjacentHTML('beforeend',`<tr>
       <td class="name"><span class="${r.cls}">${r.name}</span></td>
       <td>${Math.round(r.frac*100)}%</td>
-      <td>${isIdle?'$0':fmt(r.vol)}</td>
+      <td>${r.pnl}</td>
       <td>${r.bE.toFixed(2)}× → ${r.bL.toFixed(2)}×</td>
       <td>${frozen?(P.expire==='forfeit'?P.T+' 天（硬到期）':'∞（冻结）'):isFinite(life)?Math.round(Math.min(life,P.expire==='forfeit'?P.T:life))+' 天':'—'}</td>
       <td>${pbCell(pbN,P.payt)}</td>

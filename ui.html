@@ -160,7 +160,7 @@ h2{font-size:16px;font-weight:700;margin-bottom:4px}
 
   <div class="tabs">
     <button data-v="home" class="on"><span class="ic">⛏</span>矿机</button>
-    <button data-v="boost"><span class="ic">🏎</span>加速</button>
+    <button data-v="boost"><span class="ic">📈</span>战绩</button>
     <button data-v="lotto"><span class="ic">🎰</span>抽卡</button>
     <button data-v="vault"><span class="ic">🏦</span>金库</button>
   </div>
@@ -194,12 +194,17 @@ const TIERS={
   A:{total:5000,color:'#e8e8e8',emoji:'⛏',sz:'',rar:'STANDARD',cn:'常规款',mult:'基础产量',supply:'首批 800 台'},
   B:{total:12500,color:'#8ab4ff',emoji:'🦾',sz:'szB',rar:'RARE',cn:'稀有款',mult:'产量 ×2.5',supply:'全网限量 120 台'},
   C:{total:31000,color:'#f5c518',emoji:'💎',sz:'szC',rar:'LEGENDARY',cn:'传说款',mult:'产量 ×6.2',supply:'全网仅 20 台'}};
-const GEARS={P:{v:0,name:'P · 停车挡',desc:'不交易',fee:0},D:{v:15000,name:'D · 日常挡',desc:'周交易 $15K',fee:3},S:{v:150000,name:'S · 狂暴挡',desc:'周交易 $150K',fee:30}};
+const GEARS={
+  Z:{v:0,pnl:0,name:'没交易',emoji:'🛌',desc:'不开单',fee:0},
+  L:{v:50000,pnl:0,name:'交易但亏',emoji:'😵',desc:'交易 $50K/周',fee:10},
+  W:{v:50000,pnl:2000,name:'小赚',emoji:'🙂',desc:'赚 $2K/周',fee:10},
+  B:{v:200000,pnl:20000,name:'大赚',emoji:'🐳',desc:'赚 $20K/周',fee:40}};
+const PNL_POOL=400000;
 const NET_VOL=10000000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
 
 let S;
 function init(){
-  S={day:0,view:'home',mon:20000,gear:'D',miner:null,chances:0,minedTotal:0,
+  S={day:0,view:'home',mon:20000,gear:'W',miner:null,chances:0,minedTotal:0,
      vault:0,wallet:0,staked:0,divid:0,feeSpent:0,lottoState:'idle',lottoResult:null,seed:99};
   render();
 }
@@ -207,7 +212,7 @@ const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
 
 function floorNow(){return S.day>=FLOOR_DAY?0:1}
 function boostOf(gear){
-  const v=GEARS[gear].v, share=v/(NET_VOL+v), fl=floorNow();
+  const p=GEARS[gear].pnl, share=p>0?p/(PNL_POOL+p):0, fl=floorNow();
   return fl+(BMAX-fl)*Math.min(1,share/SMAX);
 }
 function tick(days){
@@ -288,7 +293,7 @@ function vHome(){
     <div class="card">
       <h2>怎么玩？三句话</h2>
       <div class="step"><div class="ic">🛒</div><div><b>1. 买机器</b><span>付一次钱，机器<i>自动挖 100 天</i>，不用管它也在挖。</span></div></div>
-      <div class="step"><div class="ic">🏎</div><div><b>2. 交易踩油门</b><span>你平时在 LeverUp 交易，机器就挖得快——最高 <i>3 倍速</i>。不交易也行，就是慢。</span></div></div>
+      <div class="step"><div class="ic">📈</div><div><b>2. 赚钱提速</b><span>在 LeverUp 交易：<i>赚钱的周机器挖得快</i>（最高 3 倍速）；交易量则攒抽卡机会——亏了也不白刷。</span></div></div>
       <div class="step"><div class="ic">⏳</div><div><b>3. 到期结算</b><span>100 天一到机器退役，<i>没挖出来的部分会消失</i>——所以记得踩油门。</span></div></div>
     </div>
     <div class="card">
@@ -330,7 +335,7 @@ function vHome(){
       <div class="rowline"><span>已换算成钱</span><b class="pos">≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
       ${m.tier!=='A'?`<div class="rowline"><span>比 A 级多产</span><b style="color:${tier.color}">+${fmtLV(tier.total-TIERS.A.total)} LV（同样 100 天）</b></div>`:''}
       <div class="deadline ${daysLeft<=21?'warn':''}">⏳ 还剩 <b class="mono" style="font-size:16px">&nbsp;${daysLeft}&nbsp;</b> 天${daysLeft<=21?' · 到期没挖完的会消失！':'，到期后没挖完的部分会消失'}</div>
-      ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 机器停了！去踩油门 →</button>':''}
+      ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 本周没盈利，机器停了！→</button>':''}
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -352,24 +357,26 @@ function vBoost(){
   const fl=floorNow();
   return `
     <div class="card">
-      <h1 style="margin-bottom:4px">🏎 油门</h1>
-      <p class="sub">你在 LeverUp 的<b style="color:var(--text)">交易量</b>就是油门——和其他矿工比，你交易占比越大，挖得越快。</p>
+      <h1 style="margin-bottom:4px">📈 战绩 = 速度</h1>
+      <p class="sub"><b style="color:var(--text)">赚钱的人挖得快</b>：你本周的盈利占全体矿工「盈利池」的比例，决定机器速度（最高 3 倍）。亏损的周只有保底速度。</p>
       <div class="speedo"><div class="v ${boostOf(S.gear)<=0?'zero':boostOf(S.gear)<1.5?'slow':''}">${boostOf(S.gear).toFixed(2)}×</div><div class="l">CURRENT SPEED</div></div>
       <div class="gears">
         ${Object.entries(GEARS).map(([k,g])=>`
           <div class="gear ${S.gear===k?'on':''}" onclick="setGear('${k}')">
-            <div class="g">${k}</div><div class="n">${g.name.split('·')[1]}</div>
-            <div class="d">${g.desc}<br>→ ${boostOf(k).toFixed(2)} 倍速<br>费用约 $${g.fee}/周</div>
+            <div class="g">${g.emoji}</div><div class="n">${g.name}</div>
+            <div class="d">${g.desc}<br>→ ${boostOf(k).toFixed(2)} 倍速</div>
           </div>`).join('')}
       </div>
-      <p class="sub" style="font-size:12px;margin-top:12px">${fl===1
-        ?`💡 现在是<b style="color:var(--text)">宽限期</b>（前 6 周）：停车挡也有 1 倍速保底。<b style="color:var(--red)">第 42 天起保底取消</b>——不交易机器就完全停转，时间照样流逝。`
-        :`<b style="color:var(--red)">⚠️ 宽限期已结束</b>：停车挡 = 机器完全停转（0 产出），但 100 天倒计时不会停。挂上 D 挡就能继续挖。`}</p>
+      <p class="sub" style="font-size:11px;margin-top:8px;color:var(--dim)">（演示用四个假设情景；真实产品读取你钱包的每周实际 PnL）</p>
+      <p class="sub" style="font-size:12px;margin-top:8px">${fl===1
+        ?`💡 现在是<b style="color:var(--text)">宽限期</b>（前 6 周）：亏损或不交易也有 1 倍速保底。<b style="color:var(--red)">第 42 天起保底取消</b>——没盈利的周机器停转，时间照样流逝。`
+        :`<b style="color:var(--red)">⚠️ 宽限期已结束</b>：本周没有盈利 = 机器停转（0 产出），但 100 天倒计时不会停。`}</p>
     </div>
     <div class="card">
-      <h2>为什么我的速度会变？</h2>
-      <p class="sub" style="font-size:13px">速度看的是<b style="color:var(--text)">占比</b>：全体矿工这周总交易 ≈ $10M，你占它的 1% 就满速 3 倍。别人卷起来你不动，速度就会掉——这是矿工之间的比赛，场外的人不算。</p>
-      <div class="rowline"><span>顺带一提</span><b>每攒 $1.2M 交易量 = 🎰 +1 次抽卡</b></div>
+      <h2>速度和抽卡是两回事</h2>
+      <div class="rowline"><span>📈 盈利（正 PnL）</span><b>决定速度，占盈利池 1% = 满速</b></div>
+      <div class="rowline"><span>🎰 交易量</span><b>每 $1.2M = +1 次抽卡（赚亏都算）</b></div>
+      <p class="sub" style="font-size:12px;margin-top:8px">所以哪怕这周亏了，交易量也没白刷——抽卡机会照攒。</p>
     </div>`;
 }
 
@@ -443,7 +450,7 @@ function vVault(){
 
 /* ---- shell ---- */
 function go(v){S.view=v;if(v!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}
-function setGear(k){S.gear=k;toast(k==='P'?'挂 P 挡：省钱但挖得慢'+(floorNow()===0?'（现在会完全停转！）':''):k==='D'?'挂 D 挡：日常交易顺便挖':'挂 S 挡：全速狂暴 🔥');render()}
+function setGear(k){S.gear=k;const msgs={Z:'🛌 没交易：'+(floorNow()===0?'机器停转，倒计时照走！':'宽限期内 1 倍速保底'),L:'😵 交易但亏了：'+(floorNow()===0?'没盈利 = 停转，但抽卡机会照攒':'保底 1 倍速，抽卡机会照攒'),W:'🙂 小赚 $2K/周：约 2 倍速',B:'🐳 大赚 $20K/周：满速 3 倍 🔥'};toast(msgs[k]);render()}
 function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._h);el._h=setTimeout(()=>el.style.display='none',2400)}
 
 function render(){
