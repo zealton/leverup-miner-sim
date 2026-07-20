@@ -182,7 +182,7 @@ footer a{color:var(--muted)}
 <header>
   <div class="eyebrow">LeverUp // 矿机模型 V2 // 数值模拟器</div>
   <h1>品质矿机 <span class="thin">/ 排放 · 市值 · 成本 模型</span></h1>
-  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的交易量占全网交易量的比例</b>，映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
+  <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的绑定交易量 ÷ 全体矿机持有者的绑定交易量</b>（只在矿工之间竞争，非持有者的交易不进分母），映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
 </header>
 
 <div class="tabbar">
@@ -194,7 +194,7 @@ footer a{color:var(--muted)}
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
-  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">占比竞争加速</div><div class="d">boost = 我的交易量 ÷ <b>全网</b>交易量，映射 1–3×。只缩短周期、不加总量；一段时间后下限归 <b>0</b>，不刷量即冻结。</div></div>
+  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">占比竞争加速</div><div class="d">boost = 我的绑定量 ÷ <b>全体矿工</b>绑定量（矿工内部零和竞争），映射 1–3×。只改速度不加总量；后期下限归 <b>0</b>。</div></div>
   <div class="fstep"><div class="n">04 / REMINT</div><div class="t">品质抽奖</div><div class="d">每 $1M 交易量 = 1 次机会。按<b>剩余配额加权</b>随机，可能保持原品质；配额满则抽不到。</div></div>
   <div class="fstep"><div class="n">05 / 升级</div><div class="t">进度继承</div><div class="d">升级<b>不重置时间</b>：按当前进度比例，剩余时间释放新品质对应的剩余 LV。</div></div>
 </div>
@@ -256,11 +256,11 @@ footer a{color:var(--muted)}
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
         <input type="range" id="i_bmax" min="1.5" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需全网占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的交易量占比 ÷ 此值)。例：设 1% 时，你的周交易量达到全网 1% 即拉满。占比每周按当周交易量重算——上周刷的量这周不算，天然防「刷一次躺平」。">?</span></label><span class="val" id="v_smax"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需全网占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的占比 ÷ 此值)。<b>分母只统计绑定到矿机的交易量</b>——是矿工俱乐部内部的零和竞争，纯交易用户不稀释你。占比每周按当周量重算，防「刷一次躺平」。参与者少时人人易拉满（开局冲劲），人多后自动内卷（排放自刹车）。">?</span></label><span class="val" id="v_smax"></span></div>
         <input type="range" id="i_smax" min="0.05" max="10" step="0.05" value="1"></div>
       <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
         <input type="range" id="i_floorw" min="0" max="52" step="1" value="6"></div>
-      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="全网平均值：决定全网总交易量（= 台数 × 此值）、remint 机会速度和客损收入。均匀刷量时每台占比 = 1 ÷ 全网台数——矿机越多、大家的 boost 越低（占比竞争）。">?</span></label><span class="val" id="v_vol"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>平均每台矿机周刷量<span class="tip" data-tip="矿机持有者的平均值：决定占比分母（= 活跃台数 × 此值）、remint 机会速度和客损收入。矿工越多、平均占比越小、大家的 boost 越低——竞争烈度随参与人数内生变化。">?</span></label><span class="val" id="v_vol"></span></div>
         <input type="range" id="i_vol" min="0" max="500000" step="5000" value="25000"></div>
       <div class="ctl"><div class="ctl-top"><label>用户刷量成本率<span class="tip" data-tip="用户每刷 $1 交易量自己承担的摩擦成本（手续费+滑点+亏损期望），计入用户回本模型。">?</span></label><span class="val" id="v_cuser"></span></div>
         <input type="range" id="i_cuser" min="0" max="0.3" step="0.01" value="0.02"></div>
@@ -365,7 +365,7 @@ footer a{color:var(--muted)}
         <button class="primary" id="w_step" style="flex:1">推进一周 ▶</button>
         <button id="w_remint" disabled>🎲 REMINT</button>
       </div>
-      <div class="hint" style="margin-top:10px">remint 机会：每刷满 <span id="w_rth">$1M</span> 累积 1 次。抽奖用左侧「保持原品质概率」与当前剩余配额加权。</div>
+      <div class="hint" style="margin-top:10px">remint 机会：每刷满 <span id="w_rth">$1M</span> 累积 1 次。占比分母 = 背景矿工盘 + 你的量（矿工之间竞争）。抽奖用左侧「保持原品质概率」与当前剩余配额加权。</div>
     </div>
     <div class="mcard" id="w_card"></div>
     <div>
