@@ -195,16 +195,16 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>目标 LV 市值<span class="tip" data-tip="愿景市值：用于下方「各品质收益率」表，展示 LV 涨到这个市值时 A/B/C 矿机各自的收益率。">?</span></label><span class="val" id="v_tmc"></span></div>
         <input type="range" id="i_tmc" min="1000000" max="100000000" step="1000000" value="10000000"></div>
       <div class="ctl"><div class="ctl-top"><label>矿机售价 x（MON）</label><span class="val" id="v_xmon"></span></div>
-        <input type="range" id="i_xmon" min="50" max="5000" step="50" value="1000"></div>
+        <input type="range" id="i_xmon" min="50" max="20000" step="50" value="8000"></div>
       <div class="ctl"><div class="ctl-top"><label>MON 价格（USD）</label><span class="val" id="v_pmon"></span></div>
         <input type="range" id="i_pmon" min="0.005" max="0.2" step="0.005" value="0.025">
         <div class="hint">矿机成本 = <span id="v_priceusd" style="color:var(--acid)">—</span></div></div>
 
       <div class="sect">矿机与品质（A 发售 · B/C 仅 remint）</div>
       <div class="tierhead"><span></span><span>单台总产出 LV</span><span>配额（台）</span></div>
-      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="10000" min="100" step="100"><input type="number" id="i_qa" value="8000" min="100" step="100"></div>
-      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="30000" min="100" step="100"><input type="number" id="i_qb" value="1200" min="10" step="10"></div>
-      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="100000" min="100" step="100"><input type="number" id="i_qc" value="200" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="10000" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
+      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="30000" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="100000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
       <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）</label><span class="val" id="v_T"></span></div>
         <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
 
@@ -228,9 +228,9 @@ footer a{color:var(--muted)}
 
       <div class="sect">入场速度（新用户）</div>
       <div class="ctl"><div class="ctl-top"><label>创世批销量（台 A）</label><span class="val" id="v_gen"></span></div>
-        <input type="range" id="i_gen" min="100" max="8000" step="100" value="2000"></div>
+        <input type="range" id="i_gen" min="50" max="2000" step="50" value="400"></div>
       <div class="ctl"><div class="ctl-top"><label>后续日均销量（台/日）</label><span class="val" id="v_daily"></span></div>
-        <input type="range" id="i_daily" min="0" max="300" step="5" value="30"></div>
+        <input type="range" id="i_daily" min="0" max="100" step="1" value="5"></div>
       <div class="ctl"><div class="ctl-top"><label>销量周增速</label><span class="val" id="v_grow"></span></div>
         <input type="range" id="i_grow" min="-30" max="50" step="5" value="10">
         <div class="hint">卖完 A 配额自动停售（后续批次 = 调大配额再看）</div></div>
