@@ -140,6 +140,35 @@ button:disabled{opacity:.35;cursor:not-allowed}
   letter-spacing:0;text-transform:none;text-align:left;white-space:normal;font-weight:400}
 #tipbox b{color:var(--acid);font-weight:600}
 
+/* tabs */
+.tabbar{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
+.tabbar button{flex:1;background:var(--panel);border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;
+  font-size:12px;letter-spacing:.14em;padding:12px;cursor:pointer;text-transform:uppercase}
+.tabbar button.on{background:var(--panel2);color:var(--acid);box-shadow:inset 0 -2px 0 var(--acid)}
+.tabbar button:hover{color:var(--acid)}
+
+/* sandbox */
+.sbgrid{display:grid;grid-template-columns:400px 1fr;gap:16px}
+@media(max-width:1000px){.sbgrid{grid-template-columns:1fr}}
+.sb-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+.sb-row input,.sb-row select{background:var(--panel2);border:1px solid var(--border);color:var(--acid);
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:4px 6px;outline:none}
+.sb-row input{width:84px}
+.sb-row select{color:var(--text)}
+.sb-row input:focus,.sb-row select:focus{border-color:var(--acid)}
+.sb-row .del{cursor:pointer;border:1px solid var(--border);color:var(--red);padding:2px 8px;background:none;font-size:11px}
+.sb-row .del:hover{border-color:var(--red)}
+.ucard{border:1px solid var(--border);background:var(--panel2);padding:12px;margin-bottom:12px}
+.ucard-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ucard-h .nm{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.ucard-h .nm i{width:10px;height:10px;display:inline-block}
+.alist{margin-bottom:10px}
+.alist .sb-row{border-bottom:1px dashed #1c1c1c;padding-bottom:5px}
+.alist .sb-row .desc{flex:1;color:var(--text)}
+.sblog{max-height:260px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;color:var(--muted)}
+.sblog div{border-bottom:1px dashed #1c1c1c;padding:2px 0}
+.sblog b{color:var(--acid)}
+
 footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8}
 footer a{color:var(--muted)}
 </style>
@@ -153,6 +182,12 @@ footer a{color:var(--muted)}
   <p class="sub">新设定：矿机是<b>消耗品</b>，分 A / B / C 三档品质（<b>只发售 A</b>，B / C 仅能通过 remint 抽取，总量固定）；每台矿机线性释放固定总量的 LV；<b>boost = 我的交易量占全网交易量的比例</b>，映射到 1–3×，只加快释放、不改变总量，且开局一段时间后映射下限从 1 降为 <b>0</b>（完全不刷量 = 停止释放）；钱包每刷 100 万美元交易量获得一次 remint 机会。左侧所有参数可调，页面顶部三张卡片实时回答：<b>① LV 排放该控制在什么范围　② 什么市值下收益「实在 / 爆炸」　③ 协议的成本与损益</b>。</p>
 </header>
 
+<div class="tabbar">
+  <button class="on" data-tab="tab_overview">模型总览</button>
+  <button data-tab="tab_sandbox">生命周期沙盘 · 多用户博弈</button>
+</div>
+
+<div id="tab_overview">
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
@@ -312,6 +347,43 @@ footer a{color:var(--muted)}
       <div class="krow"><span>累计产出 LV / 市值</span><span id="w_out">—</span></div>
       <div class="krow"><span>回本进度</span><span id="w_roi">—</span></div>
       <div class="wlog" id="w_log" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab_overview -->
+
+<div id="tab_sandbox" style="display:none">
+  <div class="sbgrid">
+    <div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-h"><span>LV 市值时间表<span class="tip" data-tip="按周设置市值检查点，周与周之间线性插值，首点之前与末点之后保持水平。用户收入按「当周排放的 LV × 当周价格」即时变现计算。">?</span></span><button data-act="mc_add" style="padding:4px 12px">＋ 检查点</button></div>
+        <div class="panel-b" id="sb_mc"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-h"><span>模拟用户<span class="tip" data-tip="每个用户是一条独立的动作时间线。boost 按「该用户当周刷量 ÷（背景盘 + 全部用户刷量）」的占比竞争计算，绑定该用户最早存活的矿机；多个用户互相稀释对方的占比——这就是博弈。">?</span></span><button class="primary" data-act="u_add" style="padding:4px 12px">＋ 新增用户</button></div>
+        <div class="panel-b" id="sb_users"></div>
+      </div>
+      <div class="hint" style="padding:0 4px">共享「模型总览」Tab 的全部参数（矿机价格、A/B/C 产出与配额、周期、boost 映射、下限归 0 时间、remint 门槛与概率、刷量成本率、客损率）。背景盘 = 创世批台数 × 平均周刷量，参与占比分母但不消耗 remint 配额。</div>
+    </div>
+    <div>
+      <div class="stats" id="sb_stats" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-h">累计净现金流（用户 vs 协议）<span class="tag">USD</span></div>
+        <div style="padding:16px 16px 0"><canvas id="sb_chart" height="240"></canvas></div>
+        <div class="legend" id="sb_legend"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-h">生命周期收支明细 <span class="tag">全周期</span></div>
+        <div style="overflow-x:auto"><table id="sb_table">
+          <thead><tr><th>主体</th><th>矿机</th><th>购机支出</th><th>刷量成本</th><th>LV 收入</th><th>净现金流</th><th>ROI</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">事件流水 <span class="tag">按周</span></div>
+        <div class="panel-b sblog" id="sb_log"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -705,6 +777,227 @@ document.addEventListener('click',e=>{const t=e.target.closest('.tip');if(t){tip
 window.addEventListener('scroll',hideTip,{passive:true});
 
 read();wInit();render();
+</script>
+<script>
+/* ================= lifecycle sandbox ================= */
+const UCOLORS=['#C7F50D','#8ab4ff','#f5c518','#fa7de0','#7dfad1','#FA5000','#b48aff'];
+let SB={
+  mc:[{w:0,mc:4800000},{w:12,mc:10000000}],
+  users:[
+    {id:1,name:'用户 U1',actions:[{t:'buy',w:0,n:1},{t:'wash',w1:0,w2:8,v:250000},{t:'remint',w:4}]},
+    {id:2,name:'用户 U2',actions:[{t:'buy',w:2,n:2},{t:'wash',w1:2,w2:10,v:100000}]}
+  ],
+  nextUid:3
+};
+const sbEl=id=>document.getElementById(id);
+function ucolor(i){return UCOLORS[i%UCOLORS.length]}
+
+/* ---- editors ---- */
+function sbRenderEditors(){
+  // MC checkpoints
+  sbEl('sb_mc').innerHTML=SB.mc.map((c,i)=>`
+    <div class="sb-row">第 <input type="number" data-mc="${i}" data-f="w" value="${c.w}" min="0" step="1" style="width:60px"> 周
+      市值 $<input type="number" data-mc="${i}" data-f="mc" value="${c.mc}" step="100000" style="width:110px">
+      <span style="color:var(--dim)">${fmt(c.mc)}</span>
+      <button class="del" data-act="mc_del" data-i="${i}">✕</button></div>`).join('')
+    ||'<div class="hint">无检查点 = 恒定当前市值</div>';
+  // users
+  sbEl('sb_users').innerHTML=SB.users.map((u,ui)=>{
+    const rows=u.actions.map((a,ai)=>{
+      let d='';
+      if(a.t==='buy')d=`W${a.w} 买入 ${a.n} 台 A 矿机`;
+      if(a.t==='wash')d=`W${a.w1}–W${a.w2} 每周刷量 ${fmt(a.v)}`;
+      if(a.t==='remint')d=`W${a.w} 使用 1 次 remint`;
+      return `<div class="sb-row"><span class="desc">${d}</span><button class="del" data-act="a_del" data-u="${ui}" data-i="${ai}">✕</button></div>`;
+    }).join('');
+    return `<div class="ucard">
+      <div class="ucard-h"><span class="nm"><i style="background:${ucolor(ui)}"></i>${u.name}</span>
+        <button class="del" data-act="u_del" data-u="${ui}">删除用户</button></div>
+      <div class="alist">${rows||'<div class="hint">暂无动作</div>'}</div>
+      <div class="sb-row">
+        <select data-sel="${ui}">
+          <option value="buy">买矿机</option><option value="wash">刷量(区间)</option><option value="remint">Remint</option>
+        </select>
+        <span id="sb_form_${ui}"></span>
+        <button data-act="a_add" data-u="${ui}" style="padding:3px 10px">＋添加</button>
+      </div>
+    </div>`;
+  }).join('');
+  SB.users.forEach((u,ui)=>sbRenderForm(ui));
+}
+function sbRenderForm(ui){
+  const sel=document.querySelector(`select[data-sel="${ui}"]`);
+  const t=sel?sel.value:'buy';
+  const box=sbEl('sb_form_'+ui);if(!box)return;
+  if(t==='buy')box.innerHTML=`周 <input type="number" id="f_${ui}_w" value="0" min="0" style="width:56px"> 台数 <input type="number" id="f_${ui}_n" value="1" min="1" style="width:56px">`;
+  else if(t==='wash')box.innerHTML=`起 <input type="number" id="f_${ui}_w1" value="0" min="0" style="width:56px"> 止 <input type="number" id="f_${ui}_w2" value="8" min="0" style="width:56px"> 周量 <input type="number" id="f_${ui}_v" value="100000" step="10000" style="width:90px">`;
+  else box.innerHTML=`周 <input type="number" id="f_${ui}_w" value="4" min="0" style="width:56px">`;
+}
+
+/* ---- simulation ---- */
+function sbPrice(w){
+  const pts=[...SB.mc].sort((a,b)=>a.w-b.w);
+  if(!pts.length)return P.mc/P.circ;
+  if(w<=pts[0].w)return pts[0].mc/P.circ;
+  for(let i=0;i<pts.length-1;i++){
+    if(w<=pts[i+1].w){
+      const f=(w-pts[i].w)/Math.max(1,pts[i+1].w-pts[i].w);
+      return (pts[i].mc+(pts[i+1].mc-pts[i].mc)*f)/P.circ;
+    }
+  }
+  return pts[pts.length-1].mc/P.circ;
+}
+function sbRun(){
+  read();
+  const log=[];
+  let maxW=P.hor;
+  SB.users.forEach(u=>u.actions.forEach(a=>{maxW=Math.max(maxW,(a.w??0)+1,(a.w2??0)+2)}));
+  SB.mc.forEach(c=>maxW=Math.max(maxW,c.w+1));
+  const H=Math.min(104,maxW);
+  const st=SB.users.map((u,ui)=>({u,ui,miners:[],buyCost:0,washCost:0,income:0,chances:0,series:[],nextMid:1}));
+  let qB=P.Q.B,qC=P.Q.C;
+  let protoRev=0,protoCost=0;const protoSeries=[];
+  let seed=777;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+  let floorLogged=false;
+  for(let w=0;w<H;w++){
+    const plv=sbPrice(w),fl=floorAt(w);
+    if(fl===0&&!floorLogged){log.push(`<span style="color:var(--red)">W${w} · 全网 boost 下限归 0——不刷量的矿机开始冻结</span>`);floorLogged=true}
+    // buys
+    st.forEach(x=>{
+      x.u.actions.filter(a=>a.t==='buy'&&a.w===w).forEach(a=>{
+        for(let i=0;i<a.n;i++)x.miners.push({id:x.nextMid++,tier:'A',rem:P.L.A,frozen:false,dead:false});
+        x.buyCost+=a.n*P.priceUsd;protoRev+=a.n*P.priceUsd;
+        log.push(`W${w} · <i style="color:${ucolor(x.ui)}">${x.u.name}</i> 买入 ${a.n} 台 A（−${fmt(a.n*P.priceUsd)}）`);
+      });
+    });
+    // volumes this week
+    const vols=st.map(x=>x.u.actions.filter(a=>a.t==='wash'&&w>=a.w1&&w<=a.w2).reduce((s,a)=>s+a.v,0));
+    const bgVol=P.gen*P.vol;
+    const totVol=bgVol+vols.reduce((a,b)=>a+b,0);
+    // remints (before emission)
+    st.forEach((x,i)=>{
+      x.u.actions.filter(a=>a.t==='remint'&&a.w===w).forEach(()=>{
+        const target=x.miners.find(m=>!m.dead);
+        if(!target){log.push(`W${w} · ${x.u.name} remint 失败：无存活矿机`);return}
+        if(x.chances<1){log.push(`W${w} · ${x.u.name} remint 跳过：机会不足（${x.chances.toFixed(2)}）`);return}
+        x.chances-=1;
+        const opts=[];
+        if(target.tier!=='A')opts.push({t:'A',q:Math.max(1,P.Q.A)});
+        if(target.tier!=='B'&&qB>0)opts.push({t:'B',q:qB});
+        if(target.tier!=='C'&&qC>0)opts.push({t:'C',q:qC});
+        const tot=opts.reduce((s,o)=>s+o.q,0);
+        const r=rnd();
+        if(r<P.stay||tot===0){log.push(`W${w} · ${x.u.name} 🎲 remint：矿机#${target.id} 保持 ${target.tier}`);return}
+        let z=(r-P.stay)/(1-P.stay)*tot,nt=opts[0].t;
+        for(const o of opts){if(z<o.q){nt=o.t;break}z-=o.q}
+        const frac=target.rem/P.L[target.tier];
+        target.rem=P.L[nt]*frac;
+        if(nt==='B')qB--;if(nt==='C')qC--;
+        log.push(`W${w} · ${x.u.name} 🎲 remint <b>成功：#${target.id} ${target.tier}→${nt}</b>（进度继承 ${(100-frac*100).toFixed(0)}%，剩余 ${fmtLV(target.rem)} LV）`);
+        target.tier=nt;
+      });
+    });
+    // wash costs + chances + emission
+    st.forEach((x,i)=>{
+      const v=vols[i];
+      if(v>0){x.washCost+=v*P.cuser;x.chances+=v/P.rth;protoRev+=v*P.pnl}
+      const bound=x.miners.find(m=>!m.dead);
+      x.miners.forEach(m=>{
+        if(m.dead)return;
+        const share=(m===bound&&totVol>0)?v/totVol:0;
+        const bb=shareBoost(share,fl);
+        m.frozen=bb<=0;
+        const e=Math.min(m.rem,P.L[m.tier]/P.T*7*bb);
+        if(e>0){m.rem-=e;x.income+=e*plv;protoCost+=e*plv}
+        if(m.rem<=0.01&&!m.dead){m.dead=true;log.push(`W${w} · ${x.u.name} 矿机#${m.id}（${m.tier}）耗尽，累计释放完毕`)}
+      });
+      x.series.push(x.income-x.buyCost-x.washCost);
+    });
+    protoSeries.push(protoRev-protoCost);
+  }
+  return {st,protoSeries,log,H,qB,qC};
+}
+
+/* ---- render results ---- */
+function sbResults(R){
+  const totalUserNet=R.st.reduce((s,x)=>s+x.income-x.buyCost-x.washCost,0);
+  const pNet=R.protoSeries[R.protoSeries.length-1]||0;
+  sbEl('sb_stats').innerHTML=`
+    <div class="stat"><div class="k">模拟时长</div><div class="v white">${R.H} 周</div><div class="u">市值 ${fmt(sbPrice(0)*P.circ)} → ${fmt(sbPrice(R.H-1)*P.circ)}</div></div>
+    <div class="stat"><div class="k">用户合计净现金流</div><div class="v ${totalUserNet>=0?'':'red'}">${(totalUserNet>=0?'+':'')+fmt(totalUserNet)}</div><div class="u">即时变现口径</div></div>
+    <div class="stat"><div class="k">协议净现金流</div><div class="v ${pNet>=0?'':'red'}">${(pNet>=0?'+':'')+fmt(pNet)}</div><div class="u">销售+客损 − 排放市值</div></div>`;
+  // table
+  const tb=sbEl('sb_table').querySelector('tbody');tb.innerHTML='';
+  R.st.forEach((x,ui)=>{
+    const net=x.income-x.buyCost-x.washCost;
+    const cost=x.buyCost+x.washCost;
+    const ms=x.miners.map(m=>`${m.tier}${m.dead?'†':m.frozen?'❄':''}`).join(' ')||'—';
+    tb.insertAdjacentHTML('beforeend',`<tr>
+      <td class="name" style="border-left:2px solid ${ucolor(ui)};padding-left:10px">${x.u.name}</td>
+      <td>${ms}</td><td>${fmt(x.buyCost)}</td><td>${fmt(x.washCost)}</td>
+      <td class="pos">${fmt(x.income)}</td>
+      <td class="${net>=0?'pos':'negv'}">${(net>=0?'+':'')+fmt(net)}</td>
+      <td class="${net>=0?'pos':'negv'}">${cost>0?(net/cost*100).toFixed(0)+'%':'—'}</td></tr>`);
+  });
+  const pRev=R.st.reduce((s,x)=>s+x.buyCost,0);
+  const pFinal=R.protoSeries[R.H-1]||0;
+  tb.insertAdjacentHTML('beforeend',`<tr>
+    <td class="name" style="border-left:2px solid var(--text);padding-left:10px">协议（对沙盘用户）</td>
+    <td>剩余配额 B:${R.qB} C:${R.qC}</td><td colspan="2">收入 = 购机 ${fmt(pRev)} + 客损</td>
+    <td class="negv">支出 = 排放市值</td>
+    <td class="${pFinal>=0?'pos':'negv'}">${(pFinal>=0?'+':'')+fmt(pFinal)}</td><td>—</td></tr>`);
+  // chart
+  const c=sbEl('sb_chart'),[ctx,W,Hc]=setup(c,240);
+  const padL=64;
+  const all=[...R.protoSeries,...R.st.flatMap(x=>x.series),0];
+  let ymax=Math.max(...all)*1.12+1,ymin=Math.min(...all)*1.12-1;
+  const X=i=>padL+i/Math.max(1,R.H-1)*(W-padL-10);
+  const Y=v=>16+(1-(v-ymin)/(ymax-ymin))*(Hc-40);
+  grid(ctx,W,Hc,padL,ymin,ymax,fmt);
+  ctx.fillStyle='#4a4a4a';for(let i=0;i<R.H;i+=Math.ceil(R.H/12))ctx.fillText('W'+i,X(i)-8,Hc-8);
+  ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-10,Y(0));ctx.stroke();ctx.setLineDash([]);
+  R.st.forEach((x,ui)=>line(ctx,x.series.map((v,i)=>[X(i),Y(v)]),ucolor(ui),2));
+  ctx.setLineDash([6,4]);line(ctx,R.protoSeries.map((v,i)=>[X(i),Y(v)]),'#e8e8e8',1.6);ctx.setLineDash([]);
+  sbEl('sb_legend').innerHTML=R.st.map((x,ui)=>`<span><i style="background:${ucolor(ui)}"></i>${x.u.name}</span>`).join('')+'<span><i style="background:#e8e8e8"></i>协议（虚线）</span>';
+  // log
+  sbEl('sb_log').innerHTML=R.log.map(l=>`<div>${l}</div>`).join('')||'<div class="hint">暂无事件</div>';
+}
+function sbRender(){sbRenderEditors();sbResults(sbRun())}
+
+/* ---- events ---- */
+document.getElementById('tab_sandbox').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const act=b.dataset.act;
+  if(act==='mc_add')SB.mc.push({w:SB.mc.length?Math.max(...SB.mc.map(c=>c.w))+4:0,mc:P.mc});
+  if(act==='mc_del')SB.mc.splice(+b.dataset.i,1);
+  if(act==='u_add'){SB.users.push({id:SB.nextUid,name:'用户 U'+SB.nextUid,actions:[]});SB.nextUid++}
+  if(act==='u_del')SB.users.splice(+b.dataset.u,1);
+  if(act==='a_del')SB.users[+b.dataset.u].actions.splice(+b.dataset.i,1);
+  if(act==='a_add'){
+    const ui=+b.dataset.u,t=document.querySelector(`select[data-sel="${ui}"]`).value;
+    const gv=id=>{const el=document.getElementById(id);return el?+el.value:0};
+    if(t==='buy')SB.users[ui].actions.push({t:'buy',w:gv(`f_${ui}_w`),n:Math.max(1,gv(`f_${ui}_n`))});
+    if(t==='wash'){const vv=gv(`f_${ui}_v`);if(vv>0)SB.users[ui].actions.push({t:'wash',w1:gv(`f_${ui}_w1`),w2:Math.max(gv(`f_${ui}_w1`),gv(`f_${ui}_w2`)),v:vv})}
+    if(t==='remint')SB.users[ui].actions.push({t:'remint',w:gv(`f_${ui}_w`)});
+    SB.users[ui].actions.sort((a,b2)=>(a.w??a.w1)-(b2.w??b2.w1));
+  }
+  sbRender();
+});
+document.getElementById('tab_sandbox').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.mc!==undefined&&t.dataset.f){SB.mc[+t.dataset.mc][t.dataset.f]=+t.value||0;sbResults(sbRun())}
+});
+document.getElementById('tab_sandbox').addEventListener('change',e=>{
+  if(e.target.matches('select[data-sel]'))sbRenderForm(+e.target.dataset.sel);
+});
+document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabbar button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('tab_overview').style.display=b.dataset.tab==='tab_overview'?'':'none';
+  document.getElementById('tab_sandbox').style.display=b.dataset.tab==='tab_sandbox'?'':'none';
+  if(b.dataset.tab==='tab_sandbox')sbRender();
+  else render();
+}));
 </script>
 </body>
 </html>
