@@ -192,6 +192,8 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>LV 流通量</label><span class="val" id="v_circ"></span></div>
         <input type="range" id="i_circ" min="50000000" max="1000000000" step="50000000" value="200000000">
         <div class="hint">LV 单价 = <span id="v_plv" style="color:var(--acid)">—</span></div></div>
+      <div class="ctl"><div class="ctl-top"><label>目标 LV 市值<span class="tip" data-tip="愿景市值：用于下方「各品质收益率」表，展示 LV 涨到这个市值时 A/B/C 矿机各自的收益率。">?</span></label><span class="val" id="v_tmc"></span></div>
+        <input type="range" id="i_tmc" min="1000000" max="100000000" step="1000000" value="10000000"></div>
       <div class="ctl"><div class="ctl-top"><label>矿机售价 x（MON）</label><span class="val" id="v_xmon"></span></div>
         <input type="range" id="i_xmon" min="50" max="5000" step="50" value="1000"></div>
       <div class="ctl"><div class="ctl-top"><label>MON 价格（USD）</label><span class="val" id="v_pmon"></span></div>
@@ -266,6 +268,14 @@ footer a{color:var(--muted)}
       <div class="legend"><span><i style="background:#C7F50D"></i>累计收入（销售+客损）</span><span><i style="background:#FA5000"></i>累计排放成本</span><span><i style="background:#e8e8e8"></i>累计净损益</span></div>
     </div>
 
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h"><span>各品质收益率对比<span class="tip" data-tip="B/C 无法直接购买，其「期望获得成本」= 矿机售价 + 抽中该品质所需 remint 次数期望 × 每次机会的刷量成本（门槛 × 刷量成本率）。抽中概率按初始配额加权并扣除保持原品质概率。收益率未计入抽奖期间矿机本身的产出，属保守口径。">?</span></span><span class="tag" id="tier_tag">目标市值</span></div>
+      <div style="overflow-x:auto"><table id="tier_table">
+        <thead><tr><th>品质</th><th>单台产出</th><th>期望获得成本</th><th>抽中概率/次</th><th>ROI @当前市值</th><th>ROI @目标市值</th><th>日收益 @目标</th><th>回本 @目标</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
     <div class="panel">
       <div class="panel-h">市值 → 用户收益体感（A 矿机 · 当前平均 boost）<span class="tag">敏感性</span></div>
       <div style="overflow-x:auto"><table id="mc_table">
@@ -313,6 +323,7 @@ const fmtI=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v
 const P={};
 function read(){
   P.mc=+$('i_mc').value; P.circ=+$('i_circ').value; P.plv=P.mc/P.circ;
+  P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
   P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
   P.Q={A:+$('i_qa').value,B:+$('i_qb').value,C:+$('i_qc').value};
@@ -519,6 +530,37 @@ function render(){
   const bepLv=last.cumCost>0?P.plv*last.cumRev/last.cumCost:0;
   $('a3_v').innerHTML=`${P.hor} 周净损益 <b style="color:${net>=0?'var(--acid)':'var(--red)'}">${fmt(net)}</b>`;
   $('a3_d').innerHTML=`收入 ${fmt(last.cumRev)}（销售 ${fmt(totSold*P.priceUsd)} + 客损 ${fmt(last.cumRev-totSold*P.priceUsd)}）− 排放成本 ${fmt(last.cumCost)}（${fmtLV(weeks.reduce((a,x)=>a+x.emitLV,0))} LV × $${P.plv.toFixed(5)}）。平均每卖 1 台净 <b>${fmt(perMiner)}</b>。盈亏平衡 LV 价 ≈ <b>$${bepLv.toFixed(5)}</b>（市值 ${fmt(bepLv*P.circ)}）。`;
+
+  // per-tier yield table at target MC
+  $('v_tmc').textContent=fmt(P.tmc);
+  $('tier_tag').textContent='目标市值 '+fmt(P.tmc)+' · LV $'+P.tplv.toFixed(5);
+  const washPerChance=P.rth*P.cuser;
+  const qsum=P.Q.B+P.Q.C;
+  const pB=qsum>0?(1-P.stay)*P.Q.B/qsum:0, pC=qsum>0?(1-P.stay)*P.Q.C/qsum:0;
+  const tiers=[
+    {t:'A',cls:'w',cost:P.priceUsd,p:1,pTxt:'直接购买'},
+    {t:'B',cls:'bl',cost:pB>0?P.priceUsd+washPerChance/pB:Infinity,p:pB,pTxt:(pB*100).toFixed(1)+'%'},
+    {t:'C',cls:'gold',cost:pC>0?P.priceUsd+washPerChance/pC:Infinity,p:pC,pTxt:(pC*100).toFixed(1)+'%'}
+  ];
+  const tt=$('tier_table').querySelector('tbody');tt.innerHTML='';
+  tiers.forEach(x=>{
+    const L=P.L[x.t];
+    const roiNow=x.cost>0&&x.cost!==Infinity?(L*P.plv-x.cost)/x.cost:NaN;
+    const roiTgt=x.cost>0&&x.cost!==Infinity?(L*P.tplv-x.cost)/x.cost:NaN;
+    const dyT=L/P.T*b*P.tplv;
+    const pbT=x.cost!==Infinity&&dyT>0?x.cost/dyT:Infinity;
+    const roiCell=r=>isNaN(r)?'<span class="negv">不可得</span>':`<span class="${r>=0?'pos':'negv'}">${r>=10?(r+1).toFixed(1)+'×':(r*100).toFixed(0)+'%'}</span>`;
+    tt.insertAdjacentHTML('beforeend',`<tr>
+      <td class="name"><span class="${x.cls}" style="font-family:Orbitron,sans-serif;font-weight:700">${x.t}</span> 品质</td>
+      <td>${fmtLV(L)} LV</td>
+      <td>${x.cost===Infinity?'—':fmt(x.cost)}</td>
+      <td>${x.pTxt}</td>
+      <td>${roiCell(roiNow)}</td>
+      <td>${roiCell(roiTgt)}</td>
+      <td>${x.cost===Infinity?'—':fmt(dyT)+'/天'}</td>
+      <td class="${pbT<=P.T/b?'pos':'negv'}">${pbT===Infinity?'—':Math.round(pbT)+' 天'}</td>
+    </tr>`);
+  });
 
   // mc sensitivity table
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
