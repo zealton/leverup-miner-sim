@@ -247,6 +247,11 @@ footer a{color:var(--muted)}
       <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="31000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
       <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）<span class="tip" data-tip="默认 100 天：对齐 Monad 解锁时间节点——挖满一台矿机的周期与解锁预期同频，形成时间锚点叙事。">?</span></label><span class="val" id="v_T"></span></div>
         <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
+      <div class="ctl"><div class="ctl-top"><label>到期规则<span class="tip" data-tip="<b>② 到期作废</b>：矿机寿命固定（从购买起 100 天），boost&lt;1 的时段按比例少产，到期时未释放的 LV 作废——协议负债有硬截止日，赛季化运营，可以开新玩法。<b>① 冻结延时</b>：boost 低只是拉长时间（0 = 无限冻结），所有 LV 迟早要付——永续债务、长期运维。">?</span></label><span class="val" id="v_expire"></span></div>
+        <select id="i_expire" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--acid);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px;outline:none">
+          <option value="forfeit" selected>② 固定周期到期 · 未释放作废（推荐）</option>
+          <option value="freeze">① 时间拉长 · 冻结不作废（永续债务）</option>
+        </select></div>
 
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
@@ -410,7 +415,7 @@ footer a{color:var(--muted)}
 </div>
 
 <footer>
-  模型假设：LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为全网交易量占比映射，聚合模型假设全员均匀刷量（个体差异见钱包演练）· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
+  模型假设：到期规则可选（默认②固定周期到期作废，负债随批次清零；①冻结延时为永续债务对照）· LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为全网交易量占比映射，聚合模型假设全员均匀刷量（个体差异见钱包演练）· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
 </footer>
 </div>
 
@@ -425,6 +430,7 @@ function read(){
   P.mc=+$('i_mc').value; P.circ=+$('i_circ').value; P.plv=P.mc/P.circ;
   P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
   P.payt=+$('i_payt').value;
+  P.expire=$('i_expire').value;
   P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100;
   if(P.hw+P.idle>0.9){P.idle=Math.max(0,0.9-P.hw);$('i_idle').value=Math.round(P.idle*100)}
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
@@ -451,9 +457,9 @@ function cohortAvgBoost(n,fl){
    scale: multiplier applied to per-miner LV amounts (for solving the emission budget) */
 function simulate(scale){
   const L={A:P.L.A*scale,B:P.L.B*scale,C:P.L.C*scale};
-  const cohorts=[]; // {tier,count,rem}
+  const cohorts=[]; // {tier,count,rem,born}
   const circ={A:0,B:0,C:0};
-  let soldTotal=0,dead=0;
+  let soldTotal=0,dead=0,forfeitLV=0;
   const weeks=[];
   let cumRev=0,cumCost=0,cumUin=0,cumUout=0;
   for(let w=0;w<P.hor;w++){
@@ -462,7 +468,7 @@ function simulate(scale){
     const rate=P.daily*Math.pow(1+P.grow,w);
     const want=(w===0?P.gen:0)+rate*7;
     sold=Math.max(0,Math.min(want,P.Q.A-soldTotal));
-    if(sold>0){cohorts.push({tier:'A',count:sold,rem:L.A});circ.A+=sold;soldTotal+=sold}
+    if(sold>0){cohorts.push({tier:'A',count:sold,rem:L.A,born:w});circ.A+=sold;soldTotal+=sold}
     // remint upgrades (A -> B/C), expected counts, quota-capped
     const active=cohorts.reduce((a,c)=>a+c.count,0);
     const volume=active*P.vol;
@@ -482,8 +488,8 @@ function simulate(scale){
           const f=Math.min(1,totUp/eligibleA);
           const mvB=c.count*f*(upB/totUp), mvC=c.count*f*(upC/totUp);
           const prog=c.rem/L.A; // remaining fraction preserved
-          if(mvB>0.001)newcs.push({tier:'B',count:mvB,rem:L.B*prog});
-          if(mvC>0.001)newcs.push({tier:'C',count:mvC,rem:L.C*prog});
+          if(mvB>0.001)newcs.push({tier:'B',count:mvB,rem:L.B*prog,born:c.born});
+          if(mvC>0.001)newcs.push({tier:'C',count:mvC,rem:L.C*prog,born:c.born});
           c.count-=mvB+mvC;
         });
         cohorts.push(...newcs);
@@ -500,12 +506,19 @@ function simulate(scale){
       emitLV+=e*c.count;c.rem-=e;
     });
     for(let i=cohorts.length-1;i>=0;i--)if(cohorts[i].rem<=0.0001){dead+=cohorts[i].count;cohorts.splice(i,1)}
+    if(P.expire==='forfeit'){
+      const maxAge=P.T/7;
+      for(let i=cohorts.length-1;i>=0;i--){
+        const c=cohorts[i];
+        if(w-c.born+1>=maxAge){forfeitLV+=c.rem*c.count;dead+=c.count;cohorts.splice(i,1)}
+      }
+    }
     const counts={A:0,B:0,C:0};cohorts.forEach(c=>counts[c.tier]+=c.count);
     const inflow=sold*P.priceUsd+volume*P.pnl;
     const emitUsd=emitLV*P.plv;
     cumRev+=inflow;cumCost+=emitUsd;
     cumUin+=sold*P.priceUsd+volume*P.cuser;cumUout+=emitUsd;
-    weeks.push({w,sold,inflow,emitLV,emitUsd,counts:{...counts},dead,cumRev,cumCost,volume,cumUin,cumUout});
+    weeks.push({w,sold,inflow,emitLV,emitUsd,counts:{...counts},dead,cumRev,cumCost,volume,cumUin,cumUout,forfeitLV});
   }
   return weeks;
 }
@@ -635,6 +648,7 @@ function render(){
   $('v_smax').textContent=(P.smax*100).toFixed(2)+'% 全网量';
   $('v_floorw').textContent=P.floorw===0?'立即 [0,'+P.bmax+'×]':'第 '+P.floorw+' 周起';
   $('v_vol').textContent=fmt(P.vol)+'/周';$('v_cuser').textContent=(P.cuser*100).toFixed(2)+'%';
+  $('v_expire').textContent=P.expire==='forfeit'?'到期作废':'冻结延时';
   $('v_hw').textContent=Math.round(P.hw*100)+'%';
   $('v_hy').textContent=Math.round(P.hy*100)+'%';
   $('v_idle').textContent=Math.round(P.idle*100)+'%';
@@ -704,7 +718,7 @@ function render(){
   const perMiner=totSold>0?(last.cumRev-last.cumCost)/totSold:0;
   const bepLv=last.cumCost>0?P.plv*last.cumRev/last.cumCost:0;
   $('a3_v').innerHTML=`${P.hor} 周净损益 <b style="color:${net>=0?'var(--acid)':'var(--red)'}">${fmt(net)}</b>`;
-  $('a3_d').innerHTML=`收入 ${fmt(last.cumRev)}（销售 ${fmt(totSold*P.priceUsd)} + 客损 ${fmt(last.cumRev-totSold*P.priceUsd)}）− 排放成本 ${fmt(last.cumCost)}（${fmtLV(weeks.reduce((a,x)=>a+x.emitLV,0))} LV × $${P.plv.toFixed(5)}）。平均每卖 1 台净 <b>${fmt(perMiner)}</b>。盈亏平衡 LV 价 ≈ <b>$${bepLv.toFixed(5)}</b>（市值 ${fmt(bepLv*P.circ)}）。`;
+  $('a3_d').innerHTML=`收入 ${fmt(last.cumRev)}（销售 ${fmt(totSold*P.priceUsd)} + 客损 ${fmt(last.cumRev-totSold*P.priceUsd)}）− 排放成本 ${fmt(last.cumCost)}（${fmtLV(weeks.reduce((a,x)=>a+x.emitLV,0))} LV × $${P.plv.toFixed(5)}）。平均每卖 1 台净 <b>${fmt(perMiner)}</b>。盈亏平衡 LV 价 ≈ <b>$${bepLv.toFixed(5)}</b>（市值 ${fmt(bepLv*P.circ)}）。${last.forfeitLV>0?`<b style="color:var(--acid)">到期作废 ${fmtLV(last.forfeitLV)} LV（≈${fmt(last.forfeitLV*P.plv)}，负债已随批次清零）</b>。`:P.expire==='freeze'?'<b style="color:var(--red)">冻结模式：未释放 LV 是永续负债</b>。':''}`;
 
   // per-tier yield table at target MC
   $('v_tmc').textContent=fmt(P.tmc);
@@ -775,13 +789,13 @@ function render(){
     const pbN=pbAt(P.plv),pbT=pbAt(P.tplv);
     const frozen=isIdle&&P.floorw*7<P.T;
     const roiT=frozen?(P.L.A*(frozenPct/100)*P.tplv-cost)/cost:(P.L.A*P.tplv-cost)/cost;
-    const pbCell=(v,lim)=>frozen?`<span class="negv">❄ 冻结于 ${frozenPct.toFixed(0)}%</span>`:v===Infinity?'—':`<span class="${v<=lim?'pos':'negv'}">${Math.round(v)} 天</span>`;
+    const pbCell=(v,lim)=>frozen?(P.expire==='forfeit'?`<span class="negv">☠ 到期作废 ${(100-frozenPct).toFixed(0)}%</span>`:`<span class="negv">❄ 冻结于 ${frozenPct.toFixed(0)}%</span>`):v===Infinity?'—':`<span class="${v<=lim?'pos':'negv'}">${Math.round(v)} 天</span>`;
     ct.insertAdjacentHTML('beforeend',`<tr>
       <td class="name"><span class="${r.cls}">${r.name}</span></td>
       <td>${Math.round(r.frac*100)}%</td>
       <td>${isIdle?'$0':fmt(r.vol)}</td>
       <td>${r.bE.toFixed(2)}× → ${r.bL.toFixed(2)}×</td>
-      <td>${frozen?'释放不完（冻结）':isFinite(life)?Math.round(life)+' 天':'—'}</td>
+      <td>${frozen?(P.expire==='forfeit'?P.T+' 天（硬到期）':'∞（冻结）'):isFinite(life)?Math.round(Math.min(life,P.expire==='forfeit'?P.T:life))+' 天':'—'}</td>
       <td>${pbCell(pbN,P.payt)}</td>
       <td>${pbCell(pbT,P.payt)}</td>
       <td class="${roiT>=0?'pos':'negv'}">${(roiT*100).toFixed(0)}%</td>
@@ -818,6 +832,7 @@ function wStep(){
   WS.rem-=emit;WS.lv+=emit;WS.cost+=v*P.cuser;WS.chances+=v/P.rth;
   wLog(`释放 ${fmtLV(emit)} LV（占全网 ${(WS.share*100).toFixed(2)}% → boost ${WS.boost.toFixed(2)}×${floorAt(WS.week)===0?' · 下限已归 0':''}）｜+${(v/P.rth).toFixed(2)} 次 remint 机会`);
   if(WS.rem<=0.01){WS.dead=true;wLog('⚰️ 矿机耗尽——全部 LV 已释放完毕')}
+  else if(P.expire==='forfeit'&&WS.week*7>=P.T){WS.dead=true;wLog(`⏳ ${P.T} 天到期：未释放的 <b style="color:var(--red)">${fmtLV(WS.rem)} LV 作废</b>（协议无债务）`);WS.rem=0}
   renderWallet();
 }
 function wRemint(){
@@ -852,7 +867,8 @@ function renderWallet(reset){
     <div class="pbar"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">释放进度 ${(prog*100).toFixed(1)}% · 剩余 ${fmtLV(WS.rem)} / ${fmtLV(total)} LV</div>
     <div class="krow" style="margin-top:10px"><span>我的交易量占全网</span><span>${((WS.share||0)*100).toFixed(2)}%</span></div>
-    <div class="krow"><span>预计剩余时间</span><span>${WS.dead?'—':WS.boost>0?Math.round(WS.rem/(total/P.T*WS.boost))+' 天（按当前 boost）':'冻结（boost 0，需刷量）'}</span></div>
+    <div class="krow"><span>预计剩余时间</span><span>${WS.dead?'—':WS.boost>0?Math.round(WS.rem/(total/P.T*WS.boost))+' 天（按当前 boost）':P.expire==='forfeit'?'0 产出 · 时间照走':'冻结（boost 0，需刷量）'}</span></div>
+    ${P.expire==='forfeit'&&!WS.dead?`<div class="krow"><span>到期倒计时</span><span class="${P.T-WS.week*7<=21?'negv':''}">${Math.max(0,P.T-WS.week*7)} 天后未释放部分作废</span></div>`:''}
     <div class="krow"><span>remint 机会</span><span>${WS.chances.toFixed(2)} 次</span></div>`;
   $('w_cost').textContent=fmt(WS.cost);
   $('w_out').textContent=fmtLV(WS.lv)+' LV ≈ '+fmt(WS.lv*P.plv);
@@ -877,6 +893,7 @@ document.querySelectorAll('input[type=range]').forEach(r=>{
 });
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
 document.querySelectorAll('.tierrow input[type=number]').forEach(el=>el.addEventListener('input',render));
+$('i_expire').addEventListener('change',render);
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
 $('w_reset').addEventListener('click',()=>{read();wInit()});
@@ -985,7 +1002,7 @@ function sbRun(){
     // buys
     st.forEach(x=>{
       x.u.actions.filter(a=>a.t==='buy'&&a.w===w).forEach(a=>{
-        for(let i=0;i<a.n;i++)x.miners.push({id:x.nextMid++,tier:'A',rem:P.L.A,frozen:false,dead:false});
+        for(let i=0;i<a.n;i++)x.miners.push({id:x.nextMid++,tier:'A',rem:P.L.A,born:w,frozen:false,dead:false});
         x.buyCost+=a.n*P.priceUsd;protoRev+=a.n*P.priceUsd;
         log.push(`W${w} · <i style="color:${ucolor(x.ui)}">${x.u.name}</i> 买入 ${a.n} 台 A（−${fmt(a.n*P.priceUsd)}）`);
       });
@@ -1030,6 +1047,7 @@ function sbRun(){
         const e=Math.min(m.rem,P.L[m.tier]/P.T*7*bb);
         if(e>0){m.rem-=e;x.income+=e*plv;protoCost+=e*plv}
         if(m.rem<=0.01&&!m.dead){m.dead=true;log.push(`W${w} · ${x.u.name} 矿机#${m.id}（${m.tier}）耗尽，累计释放完毕`)}
+        else if(P.expire==='forfeit'&&!m.dead&&(w-m.born+1)*7>=P.T){m.dead=true;log.push(`W${w} · ${x.u.name} 矿机#${m.id}（${m.tier}）<span style="color:var(--red)">${P.T} 天到期，未释放 ${fmtLV(m.rem)} LV 作废</span>`);m.rem=0}
       });
       x.series.push(x.income-x.buyCost-x.washCost);
     });
