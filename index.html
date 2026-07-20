@@ -291,6 +291,18 @@ footer a{color:var(--muted)}
         <input type="range" id="i_pnl" min="-0.10" max="0.20" step="0.01" value="0.02"></div>
       <div class="ctl"><div class="ctl-top"><label>模拟时长</label><span class="val" id="v_hor"></span></div>
         <input type="range" id="i_hor" min="12" max="52" step="2" value="26"></div>
+
+      <div class="sect">ve(3,3) 层</div>
+      <div class="ctl"><div class="ctl-top"><label>周真实 fee 收入（全平台）<span class="tip" data-tip="perp 平台全部交易（含非矿工）产生的真实手续费。这是回购资金的主要来源——也是整个飞轮唯一的外部输血口。">?</span></label><span class="val" id="v_feer"></span></div>
+        <input type="range" id="i_feer" min="0" max="300000" step="5000" value="30000"></div>
+      <div class="ctl"><div class="ctl-top"><label>营收回购比例<span class="tip" data-tip="协议营收（矿机销售 + 客损 + 真实 fee）中用于回购 LV 的比例。回购 = 直接买盘。">?</span></label><span class="val" id="v_bb"></span></div>
+        <input type="range" id="i_bb" min="0" max="100" step="5" value="50"></div>
+      <div class="ctl"><div class="ctl-top"><label>回购分配：质押者 / 销毁<span class="tip" data-tip="回购的 LV 中分给 ve 质押者的比例，其余销毁（通缩）。分质押者的部分 = ve 的真实收益。">?</span></label><span class="val" id="v_veshare"></span></div>
+        <input type="range" id="i_veshare" min="0" max="100" step="5" value="50"></div>
+      <div class="ctl"><div class="ctl-top"><label>矿工产出质押率<span class="tip" data-tip="矿机挖出的 LV 中直接进入 ve 锁仓的比例——这部分不构成卖压。ve APR 越高，这个值越大，排放的自我吸收越强。">?</span></label><span class="val" id="v_stake"></span></div>
+        <input type="range" id="i_stake" min="0" max="80" step="5" value="30"></div>
+      <div class="ctl"><div class="ctl-top"><label>当前 ve 锁仓量<span class="tip" data-tip="全网已锁仓的 LV 存量，用于计算质押 APR = 年化分配量 ÷ 锁仓量。">?</span></label><span class="val" id="v_velock"></span></div>
+        <input type="range" id="i_velock" min="1000000" max="200000000" step="1000000" value="20000000"></div>
     </div>
   </div>
 
@@ -326,6 +338,14 @@ footer a{color:var(--muted)}
       <div class="panel-h">协议累计损益 <span class="tag">USD</span></div>
       <div style="padding:16px 16px 0"><canvas id="c_pnl" height="200"></canvas></div>
       <div class="legend"><span><i style="background:#C7F50D"></i>累计收入（销售+客损）</span><span><i style="background:#FA5000"></i>累计排放成本</span><span><i style="background:#e8e8e8"></i>累计净损益</span></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h"><span>ve(3,3) 现金流 · 排放对冲<span class="tip" data-tip="矿机排放的 LV 只有 (1−质押率) 构成卖压；协议营收 × 回购比例形成买盘。净流量为正 = 结构性买盘 &gt; 卖压，市值有支撑；为负 = 排放净砸盘。">?</span></span><span class="tag">周均</span></div>
+      <div class="panel-b">
+        <div class="kv" id="ve_kv"></div>
+        <p class="hint" id="ve_note" style="margin-top:10px"></p>
+      </div>
     </div>
 
     <div class="panel" style="margin-bottom:16px">
@@ -440,6 +460,8 @@ function read(){
   P.bmax=+$('i_bmax').value; P.smax=+$('i_smax').value/100; P.floorw=+$('i_floorw').value;
   P.vol=+$('i_vol').value; P.cuser=+$('i_cuser').value/100;
   P.rth=+$('i_rth').value; P.stay=+$('i_stay').value/100;
+  P.feeReal=+$('i_feer').value; P.bb=+$('i_bb').value/100; P.veShare=+$('i_veshare').value/100;
+  P.stake=+$('i_stake').value/100; P.veLock=+$('i_velock').value;
   P.gen=+$('i_gen').value; P.daily=+$('i_daily').value; P.grow=+$('i_grow').value/100;
   P.pnl=+$('i_pnl').value/100; P.hor=+$('i_hor').value;
 }
@@ -653,6 +675,11 @@ function render(){
   $('v_hy').textContent=Math.round(P.hy*100)+'%';
   $('v_idle').textContent=Math.round(P.idle*100)+'%';
   $('v_rth').textContent=fmt(P.rth);$('v_stay').textContent=Math.round(P.stay*100)+'%';
+  $('v_feer').textContent=fmt(P.feeReal)+'/周';
+  $('v_bb').textContent=Math.round(P.bb*100)+'%';
+  $('v_veshare').textContent=Math.round(P.veShare*100)+'% / '+Math.round((1-P.veShare)*100)+'%';
+  $('v_stake').textContent=Math.round(P.stake*100)+'%';
+  $('v_velock').textContent=fmtLV(P.veLock)+' LV';
   $('v_gen').textContent=fmtI(P.gen)+' 台';$('v_daily').textContent=P.daily+' 台/日';
   $('v_grow').textContent=(P.grow>=0?'+':'')+Math.round(P.grow*100)+'%/周';
   const pv=$('v_pnl');pv.textContent=(P.pnl>=0?'+':'')+(P.pnl*100).toFixed(2)+'%';pv.className='val'+(P.pnl<0?' neg':'');
@@ -801,6 +828,30 @@ function render(){
       <td class="${roiT>=0?'pos':'negv'}">${(roiT*100).toFixed(0)}%</td>
     </tr>`);
   });
+
+  // ve(3,3) cashflow
+  const wkInflow=last.cumRev/P.hor;
+  const wkFee=P.feeReal;
+  const wkBuybackUsd=(wkInflow+wkFee)*P.bb;
+  const wkBuyLV=P.plv>0?wkBuybackUsd/P.plv:0;
+  const wkEmit=weeks.reduce((a,x)=>a+x.emitLV,0)/P.hor;
+  const wkSellLV=wkEmit*(1-P.stake);
+  const wkNetLV=wkBuyLV-wkSellLV;
+  const wkBurn=wkBuyLV*(1-P.veShare);
+  const wkToVe=wkBuyLV*P.veShare;
+  const veApr=P.veLock>0?wkToVe*52/P.veLock:0;
+  const wkRetain=wkInflow+wkFee-wkBuybackUsd;
+  $('ve_kv').innerHTML=`
+    <div class="row"><span>周协议营收（销售+客损+真实 fee）</span><span>${fmt(wkInflow+wkFee)}</span></div>
+    <div class="row"><span>├ 回购预算（${Math.round(P.bb*100)}%）</span><span>${fmt(wkBuybackUsd)} ≈ ${fmtLV(wkBuyLV)} LV</span></div>
+    <div class="row"><span>│ &nbsp;├ 分 ve 质押者</span><span>${fmtLV(wkToVe)} LV/周 → <b style="color:var(--acid)">质押 APR ${(veApr*100).toFixed(1)}%</b></span></div>
+    <div class="row"><span>│ &nbsp;└ 销毁（通缩）</span><span>${fmtLV(wkBurn)} LV/周 ≈ ${fmt(wkBurn*P.plv)}</span></div>
+    <div class="row"><span>└ 协议净留存（回购后）</span><span class="${wkRetain>=0?'':'negv'}">${fmt(wkRetain)}/周</span></div>
+    <div class="row"><span>矿机周排放 ${fmtLV(wkEmit)} LV × (1−质押率 ${Math.round(P.stake*100)}%)</span><span>卖压 ${fmtLV(wkSellLV)} LV/周</span></div>
+    <div class="row hl"><span>净流量（回购买盘 − 排放卖压）</span><span style="color:${wkNetLV>=0?'var(--acid)':'var(--red)'}">${wkNetLV>=0?'+':''}${fmtLV(wkNetLV)} LV/周 ≈ ${fmt(wkNetLV*P.plv)}</span></div>`;
+  $('ve_note').innerHTML=wkNetLV>=0
+    ?`结构性<b style="color:var(--text)">净买盘</b>：排放被质押吸收 + 回购对冲后，二级市场每周净吸筹 ${fmt(wkNetLV*P.plv)}——这就是「持续拉高价格」的机械基础。注意：回购资金中真实 fee 占 ${((wkFee*P.bb)/Math.max(1,wkBuybackUsd)*100).toFixed(0)}%，这部分才是外部输血；来自矿机销售/客损的部分是内循环。`
+    :`结构性<b style="color:var(--red)">净卖压</b>：回购买盘接不住排放，价格支撑只能靠外部投机盘。降低排放（L 值）、提高质押率（拉高 ve APR）或提高真实 fee 是三个出口。`;
 
   // mc sensitivity table
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
