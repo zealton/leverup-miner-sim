@@ -39,7 +39,7 @@ h1 .thin{color:var(--muted);font-weight:500}
 @media(max-width:960px){.answers{grid-template-columns:1fr}}
 .ans{border:1px solid var(--acid);background:var(--panel);padding:16px 18px}
 .ans .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--acid);text-transform:uppercase;margin-bottom:10px}
-.ans .v{font-family:'Orbitron',sans-serif;font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--text);line-height:1.35}
+.ans .v{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:clamp(16px,1.8vw,22px);font-weight:750;color:var(--text);line-height:1.35;letter-spacing:-.01em}
 .ans .v b{color:var(--acid)}
 .ans .d{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7}
 .ans .d b{color:var(--text)}
@@ -59,7 +59,7 @@ h1 .thin{color:var(--muted);font-weight:500}
 .ctl{margin-bottom:15px}
 .ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;gap:8px}
 .ctl label{font-size:12px;color:var(--text);font-weight:500}
-.ctl .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--acid);white-space:nowrap}
+.ctl .val{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:600;font-size:12px;color:var(--acid);white-space:nowrap}
 .ctl .val.neg{color:var(--red)}
 input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:var(--border);outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--acid);border:none;cursor:pointer}
@@ -68,7 +68,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid
 .sliderrow{display:flex;gap:8px;align-items:center}
 .sliderrow input[type=range]{flex:1}
 .numin{width:92px;flex:none;background:var(--panel2);border:1px solid var(--border);color:var(--acid);
-  font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 7px;outline:none}
+  font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:11.5px;padding:4px 7px;outline:none}
 .numin:focus{border-color:var(--acid)}
 .numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .numin[type=number]{-moz-appearance:textfield;appearance:textfield}
@@ -79,7 +79,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid
 .tierrow .tn{font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px}
 .tierrow .tn.a{color:var(--text)} .tierrow .tn.b{color:var(--blue)} .tierrow .tn.c{color:var(--gold)}
 .tierrow input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--acid);
-  font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 8px;outline:none}
+  font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;padding:5px 8px;outline:none}
 .tierrow input[type=number]:focus{border-color:var(--acid)}
 .tierhead{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
 
@@ -88,9 +88,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid
 @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:var(--panel);padding:14px 16px}
 .stat .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
-.stat .v{font-family:'Orbitron',sans-serif;font-size:clamp(16px,2vw,22px);font-weight:700;color:var(--acid)}
+.stat .v{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:clamp(16px,2vw,22px);font-weight:750;color:var(--acid);letter-spacing:-.01em}
 .stat .v.white{color:var(--text)} .stat .v.red{color:var(--red)}
-.stat .u{font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:4px}
+.stat .u{font-size:11px;color:var(--dim);font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;margin-top:4px}
 canvas{width:100%;display:block}
 .legend{display:flex;gap:16px;flex-wrap:wrap;padding:10px 16px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -100,7 +100,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
   text-align:right;padding:9px 12px;border-bottom:1px solid var(--border);font-weight:500}
 th:first-child,td:first-child{text-align:left}
-td{padding:9px 12px;border-bottom:1px solid #1c1c1c;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--muted)}
+td{padding:9px 12px;border-bottom:1px solid #1c1c1c;text-align:right;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;color:var(--muted)}
 tr:last-child td{border-bottom:none}
 td.name{font-family:'Inter',sans-serif;font-weight:600;color:var(--text)}
 .pos{color:var(--acid)} .negv{color:var(--red)} .w{color:var(--text)} .gold{color:var(--gold)} .bl{color:var(--blue)}
@@ -116,7 +116,7 @@ td.name{font-family:'Inter',sans-serif;font-weight:600;color:var(--text)}
 .badge.dead{color:var(--red);border-color:var(--red)}
 .pbar{height:8px;background:var(--panel);border:1px solid var(--border);position:relative;margin:8px 0 4px}
 .pbar i{position:absolute;top:0;left:0;bottom:0;background:var(--acid)}
-.krow{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);padding:3px 0;border-bottom:1px dashed #1c1c1c}
+.krow{display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px dashed #1c1c1c}
 .krow:last-child{border-bottom:none}
 .krow span:last-child{color:var(--text)}
 button{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;
@@ -125,7 +125,7 @@ button:hover{border-color:var(--acid);color:var(--acid)}
 button.primary{background:var(--acid);border-color:var(--acid);color:#0a0a0a;font-weight:600}
 button.primary:hover{background:var(--acid2)}
 button:disabled{opacity:.35;cursor:not-allowed}
-.wlog{max-height:220px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;color:var(--muted)}
+.wlog{max-height:220px;overflow-y:auto;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.9;color:var(--muted)}
 .wlog div{border-bottom:1px dashed #1c1c1c;padding:2px 0}
 
 /* tooltips */
@@ -153,9 +153,9 @@ button:disabled{opacity:.35;cursor:not-allowed}
 /* sandbox */
 .sbgrid{display:grid;grid-template-columns:400px 1fr;gap:16px}
 @media(max-width:1000px){.sbgrid{grid-template-columns:1fr}}
-.sb-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+.sb-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted)}
 .sb-row input,.sb-row select{background:var(--panel2);border:1px solid var(--border);color:var(--acid);
-  font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:4px 6px;outline:none}
+  font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:11.5px;padding:4px 6px;outline:none}
 .sb-row input{width:84px}
 .sb-row select{color:var(--text)}
 .sb-row input:focus,.sb-row select:focus{border-color:var(--acid)}
@@ -168,7 +168,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .alist{margin-bottom:10px}
 .alist .sb-row{border-bottom:1px dashed #1c1c1c;padding-bottom:5px}
 .alist .sb-row .desc{flex:1;color:var(--text)}
-.sblog{max-height:260px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;color:var(--muted)}
+.sblog{max-height:260px;overflow-y:auto;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.9;color:var(--muted)}
 .sblog div{border-bottom:1px dashed #1c1c1c;padding:2px 0}
 .sblog b{color:var(--acid)}
 
@@ -444,9 +444,9 @@ footer a{color:var(--muted)}
 
 <script>
 const $=id=>document.getElementById(id);
-const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e9)s='$'+(a/1e9).toFixed(2)+'B';else if(a>=1e6)s='$'+(a/1e6).toFixed(2)+'M';else if(a>=1e4)s='$'+(a/1e3).toFixed(1)+'K';else if(a>=1e3)s='$'+a.toFixed(0);else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
-const fmtLV=v=>{const a=Math.abs(v);if(a>=1e9)return(a/1e9).toFixed(2)+'B';if(a>=1e6)return(a/1e6).toFixed(2)+'M';if(a>=1e3)return(a/1e3).toFixed(1)+'K';return a.toFixed(0)};
-const fmtI=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':''+Math.round(v);
+const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e9)s='$'+(a/1e9).toFixed(2)+'B';else if(a>=1000)s='$'+Math.round(a).toLocaleString('en-US');else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
+const fmtLV=v=>{const a=Math.abs(v);if(a>=1e9)return(a/1e9).toFixed(2)+'B';return Math.round(a).toLocaleString('en-US')};
+const fmtI=v=>Math.round(v).toLocaleString('en-US');
 
 const P={};
 function read(){
@@ -568,7 +568,7 @@ function solveScale(){
 function line(ctx,pts,color,wd){ctx.strokeStyle=color;ctx.lineWidth=wd||2;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke()}
 function setup(c,h){const dpr=window.devicePixelRatio||1,W=c.clientWidth;c.width=W*dpr;c.height=h*dpr;const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,h);return[ctx,W,h]}
 function grid(ctx,W,H,padL,ymin,ymax,fmtFn){
-  ctx.font='10px IBM Plex Mono';ctx.fillStyle='#4a4a4a';ctx.strokeStyle='#1c1c1c';ctx.lineWidth=1;
+  ctx.font='10px Inter';ctx.fillStyle='#4a4a4a';ctx.strokeStyle='#1c1c1c';ctx.lineWidth=1;
   for(let i=0;i<=4;i++){const v=ymin+(ymax-ymin)*i/4;const y=H-24-(v-ymin)/(ymax-ymin)*(H-40);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-8,y);ctx.stroke();ctx.fillText(fmtFn(v),4,y+3)}
 }
@@ -590,7 +590,7 @@ function chartMove(e){
   const idx=Math.max(0,Math.min(M.n-1,Math.round(t*(M.n-1))));
   const px=r.left+M.padL+idx/Math.max(1,M.n-1)*span;
   chartGuide.style.cssText=`display:block;position:fixed;left:${px}px;top:${r.top+8}px;height:${r.height-34}px;width:1px;background:rgba(232,232,232,.35);z-index:98;pointer-events:none`;
-  const rows=M.series.map(sr=>`<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:var(--muted)"><i style="display:inline-block;width:8px;height:8px;background:${sr.color};margin-right:6px"></i>${sr.label}</span><b style="font-family:'IBM Plex Mono',monospace">${sr.fmt(sr.vals[idx])}</b></div>`).join('');
+  const rows=M.series.map(sr=>`<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:var(--muted)"><i style="display:inline-block;width:8px;height:8px;background:${sr.color};margin-right:6px"></i>${sr.label}</span><b style="font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:650">${sr.fmt(sr.vals[idx])}</b></div>`).join('');
   chartTip.innerHTML=`<div style="font-family:'IBM Plex Mono',monospace;color:var(--acid);margin-bottom:3px">${M.xl(idx)}</div>${rows}`;
   chartTip.style.display='block';
   const tw=chartTip.offsetWidth,th=chartTip.offsetHeight;
@@ -921,9 +921,9 @@ function renderWallet(reset){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span style="font-family:'IBM Plex Mono',monospace;font-weight:600">矿机 #001 · 第 ${WS.week} 周</span>
       <span class="badge ${cls}">${WS.dead?'已耗尽':WS.tier+' 品质'}</span></div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700">${WS.boost.toFixed(2)}×<small style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)"> BOOST</small></div>
+    <div style="font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:26px;font-weight:750">${WS.boost.toFixed(2)}×<small style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)"> BOOST</small></div>
     <div class="pbar"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">释放进度 ${(prog*100).toFixed(1)}% · 剩余 ${fmtLV(WS.rem)} / ${fmtLV(total)} LV</div>
+    <div style="font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--muted)">释放进度 ${(prog*100).toFixed(1)}% · 剩余 ${fmtLV(WS.rem)} / ${fmtLV(total)} LV</div>
     <div class="krow" style="margin-top:10px"><span>我的交易量占全网</span><span>${((WS.share||0)*100).toFixed(2)}%</span></div>
     <div class="krow"><span>预计剩余时间</span><span>${WS.dead?'—':WS.boost>0?Math.round(WS.rem/(total/P.T*WS.boost))+' 天（按当前 boost）':P.expire==='forfeit'?'0 产出 · 时间照走':'冻结（boost 0，需刷量）'}</span></div>
     ${P.expire==='forfeit'&&!WS.dead?`<div class="krow"><span>到期倒计时</span><span class="${P.T-WS.week*7<=21?'negv':''}">${Math.max(0,P.T-WS.week*7)} 天后未释放部分作废</span></div>`:''}
