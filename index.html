@@ -293,7 +293,7 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>Remint 门槛（交易量/次）</label><span class="val" id="v_rth"></span></div>
         <input type="range" id="i_rth" min="100000" max="5000000" step="100000" value="1200000"></div>
       <div class="ctl"><div class="ctl-top"><label>保持原品质概率<span class="tip" data-tip="remint 有概率不改变品质（消耗机会）。其余概率按目标品质剩余配额加权分配——配额越稀有越难抽到。<b>C 为顶级品质，不可 remint</b>（不消耗机会）。">?</span></label><span class="val" id="v_stay"></span></div>
-        <input type="range" id="i_stay" min="0" max="80" step="5" value="50"></div>
+        <input type="range" id="i_stay" min="0" max="80" step="5" value="65"></div>
 
       <div class="sect">发售与入场（第一期：先售罄后开挖）</div>
       <div class="ctl"><div class="ctl-top"><label>期初售出（台 A，开挖前）<span class="tip" data-tip="第一期流程：先把首批卖完（或卖到某个数量），然后统一开挖。这批销售收入是期初资金池；开挖后的每周新入场只剩客损（真实 fee 的回购见 ve 模块）。">?</span></label><span class="val" id="v_gen"></span></div>

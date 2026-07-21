@@ -241,7 +241,7 @@ const GEARS={
   L:{v:50000,pnl:0,name:'交易但亏',desc:'量 $50,000/周'},
   W:{v:50000,pnl:2000,name:'小赚',desc:'PnL +$2,000/周'},
   B:{v:200000,pnl:20000,name:'大赚',desc:'PnL +$20,000/周'}};
-const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.50, QB=75, QC=12, VE_APR=0.469;
+const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.65, QB=75, QC=12, VE_APR=0.469;
 
 let S;
 function init(){
@@ -413,8 +413,8 @@ function vLotto(){
       </div>
       <div class="slot ${cls}">${inner}</div>
       <button class="btn" ${can?'':'disabled'} onclick="remint()">${isTop?'已是顶级 C · 无需抽卡':can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 交易攒机会'}</button>
-      <div class="probbar"><i style="width:50%;background:#3a3d3a"></i><i style="width:43%;background:var(--blue)"></i><i style="width:7%;background:var(--gold)"></i></div>
-      <div class="problegend"><span>不变 50%</span><span style="color:var(--blue)">变 B 43.1%</span><span style="color:var(--gold)">变 C 6.9%</span></div>
+      <div class="probbar"><i style="width:65%;background:#3a3d3a"></i><i style="width:30.2%;background:var(--blue)"></i><i style="width:4.8%;background:var(--gold)"></i></div>
+      <div class="problegend"><span>不变 65%</span><span style="color:var(--blue)">变 B 30.2%</span><span style="color:var(--gold)">变 C 4.8%</span></div>
       <div class="divider"></div>
       <div class="row"><span>怎么攒机会</span><b>每 $1,200,000 交易量 = 1 次</b></div>
       <div class="row"><span>下一次进度</span><b>${(S.chances%1*100).toFixed(0)}%</b></div>
