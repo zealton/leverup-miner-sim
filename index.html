@@ -235,6 +235,8 @@ footer a{color:var(--muted)}
         <input type="range" id="i_tmc" min="1000000" max="100000000" step="1000000" value="10000000"></div>
       <div class="ctl"><div class="ctl-top"><label>目标回本天数<span class="tip" data-tip="设计目标：希望 A 矿机多少天回本（含刷量成本）。答案卡 ② 会反解出达成它的两条路径——需要的市值，或当前市值下需要的单台产出——并检查后者是否超出排放预算。">?</span></label><span class="val" id="v_payt"></span></div>
         <input type="range" id="i_payt" min="3" max="90" step="1" value="14"></div>
+      <div class="ctl"><div class="ctl-top"><label>LV 流动性深度（池内报价侧）<span class="tip" data-tip="AMM 池里 MON/USD 报价侧的储备规模（美元计）。决定拉盘的价格冲击：把价格拉到 r 倍需要净买入 ≈ 深度 × (√r − 1)。深度越浅拉盘越便宜，但也越容易被砸。">?</span></label><span class="val" id="v_depth"></span></div>
+        <input type="range" id="i_depth" min="20000" max="2000000" step="10000" value="150000"></div>
       <div class="ctl"><div class="ctl-top"><label>矿机售价 x（MON）</label><span class="val" id="v_xmon"></span></div>
         <input type="range" id="i_xmon" min="50" max="20000" step="50" value="8000"></div>
       <div class="ctl"><div class="ctl-top"><label>MON 价格（USD）</label><span class="val" id="v_pmon"></span></div>
@@ -352,6 +354,17 @@ footer a{color:var(--muted)}
     </div>
 
     <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h"><span>拉盘成本 ⇄ 回本联动<span class="tip" data-tip="AMM 恒定乘积模型：把价格从当前拉到 r 倍，需净买入 ≈ 深度 × (√r − 1)，同时金库顺带回收一批 LV。<b>假设无 LV 持有者抛压、无新增流动性</b>；矿机排放的结构性卖压见上方 ve 模块。下表展示价格每站上一档、各分层矿机回本天数如何递减——若不护盘价格回落，反向读表即可。">?</span></span><span class="tag" id="pump_tag">→ 目标市值</span></div>
+      <div class="panel-b">
+        <div class="kv" id="pump_kv"></div>
+      </div>
+      <div style="overflow-x:auto"><table id="pump_table">
+        <thead><tr><th>市值台阶</th><th>累计买入成本</th><th>LV 价格</th><th>盈利大户回本</th><th>普通活跃回本</th><th>躺平回本</th><th>≤30 天回本</th><th>寿命内回本</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
       <div class="panel-h"><span>各品质收益率对比<span class="tip" data-tip="B/C 无法直接购买，其「期望获得成本」= 矿机售价 + 抽中该品质所需 remint 次数期望 × 每次机会的刷量成本（门槛 × 刷量成本率）。抽中概率按初始配额加权并扣除保持原品质概率。收益率未计入抽奖期间矿机本身的产出，属保守口径。">?</span></span><span class="tag" id="tier_tag">目标市值</span></div>
       <div style="overflow-x:auto"><table id="tier_table">
         <thead><tr><th>品质</th><th>单台产出</th><th>期望获得成本</th><th>抽中概率/次</th><th>ROI @当前市值</th><th>ROI @目标市值</th><th>APR @目标<span class="tip" data-tip="单周期收益率 × (365 ÷ 实际寿命)。单利年化，不复投。">?</span></th><th>APY @目标<span class="tip" data-tip="(1 + 周期收益率)^(365 ÷ 实际寿命) − 1。假设每个周期结束把全部产出复投买新矿机（且始终买得到、参数不变）的复利年化，仅作量级参考。">?</span></th><th>日收益 @目标</th><th>回本 @目标</th></tr></thead>
@@ -455,6 +468,7 @@ function read(){
   P.mc=+$('i_mc').value; P.circ=+$('i_circ').value; P.plv=P.mc/P.circ;
   P.tmc=+$('i_tmc').value; P.tplv=P.tmc/P.circ;
   P.payt=+$('i_payt').value;
+  P.depth=+$('i_depth').value;
   P.expire=$('i_expire').value;
   P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100; P.wr=+$('i_wr').value/100;
   if(P.hw+P.idle>0.9){P.idle=Math.max(0,0.9-P.hw);$('i_idle').value=Math.round(P.idle*100)}
@@ -861,6 +875,46 @@ function render(){
   $('ve_note').innerHTML=wkNetLV>=0
     ?`结构性<b style="color:var(--text)">净买盘</b>：排放被质押吸收 + 回购对冲后，二级市场每周净吸筹 ${fmt(wkNetLV*P.plv)}——这就是「持续拉高价格」的机械基础。注意：回购资金中真实 fee 占 ${((wkFee*P.bb)/Math.max(1,wkBuybackUsd)*100).toFixed(0)}%，这部分才是外部输血；来自矿机销售/客损的部分是内循环。`
     :`结构性<b style="color:var(--red)">净卖压</b>：回购买盘接不住排放，价格支撑只能靠外部投机盘。降低排放（L 值）、提高质押率（拉高 ve APR）或提高真实 fee 是三个出口。`;
+
+  // pump cost <-> payback linkage
+  $('v_depth').textContent=fmt(P.depth);
+  const rP=P.tmc/P.mc;
+  const pumpCostFor=m=>m>P.mc?P.depth*(Math.sqrt(m/P.mc)-1):0;
+  const pumpCost=pumpCostFor(P.tmc);
+  const pumpMON=P.pmon>0?pumpCost/P.pmon:0;
+  const lvGot=rP>1?(P.depth/P.plv)*(1-1/Math.sqrt(rP)):0;
+  $('pump_tag').textContent='假设无持有者抛压';
+  $('pump_kv').innerHTML=`
+    <div class="row"><span>当前市值 → 目标市值</span><span>${fmt(P.mc)} → ${fmt(P.tmc)}（${rP.toFixed(2)}×）</span></div>
+    <div class="row hl"><span>需要净买入（拉盘成本）</span><span>${rP>1?fmt(pumpCost)+' ≈ '+fmtI(pumpMON)+' MON':'目标 ≤ 当前，无需买入'}</span></div>
+    <div class="row"><span>金库顺带回收</span><span>${rP>1?fmtLV(lvGot)+' LV（到目标价值 '+fmt(lvGot*P.tplv)+'）':'—'}</span></div>
+    <div class="row"><span>对照：矿机销售可用资金</span><span>${fmt(totSold*P.priceUsd)}（首批 ${fmtI(totSold)} 台 × ${fmt(P.priceUsd)}）${rP>1&&totSold*P.priceUsd>0?'，覆盖拉盘的 '+(totSold*P.priceUsd/pumpCost*100).toFixed(0)+'%':''}</span></div>`;
+  // ladder: current -> target in 5 steps; per-cohort payback at each level
+  const hwN=Math.round(P.hw*P.Q.A), mN=Math.round(mFrac*P.Q.A), idleN=Math.max(0,P.Q.A-hwN-mN);
+  const relIdle=Math.min(1,P.floorw*7/P.T);
+  const idleWin=P.floorw*7;
+  const pt=$('pump_table').querySelector('tbody');pt.innerHTML='';
+  const stepsArr=rP>1?[0,0.25,0.5,0.75,1].map(f=>P.mc+(P.tmc-P.mc)*f):[P.mc];
+  stepsArr.forEach((m,si)=>{
+    const plvm=m/P.circ;
+    const pb=(bE,vol)=>{const dy=P.L.A/P.T*bE*plvm;if(dy<=0)return Infinity;const life=P.T/bE;return (P.priceUsd+vol/7*Math.min(life,P.T)*P.cuser)/dy};
+    const pbH=pb(bHW,P.vol), pbM=pb(bTyp,P.vol);
+    const pbI=plvm>0?P.priceUsd/(P.L.A/P.T*1*plvm):Infinity;
+    const idleOk=pbI<=idleWin&&P.L.A*relIdle*plvm>=P.priceUsd;
+    const okLife=(pbH<=P.T?hwN:0)+(pbM<=P.T?mN:0)+(idleOk?idleN:0);
+    const ok30=(pbH<=30?hwN:0)+(pbM<=30?mN:0)+(idleOk&&pbI<=30?idleN:0);
+    const cell=(v,lim)=>v===Infinity?'<span class="negv">✗</span>':`<span class="${v<=lim?'pos':''}">${Math.round(v)} 天</span>`;
+    pt.insertAdjacentHTML('beforeend',`<tr${si===stepsArr.length-1&&rP>1?' style="background:rgba(204,255,0,.05)"':''}>
+      <td class="name">${fmt(m)}${si===0?' ←当前':si===stepsArr.length-1&&rP>1?' 🎯目标':''}</td>
+      <td>${fmt(pumpCostFor(m))}</td>
+      <td>$${plvm.toFixed(5)}</td>
+      <td>${cell(pbH,30)}<span style="color:var(--dim)"> ·${hwN}台</span></td>
+      <td>${cell(pbM,P.T)}<span style="color:var(--dim)"> ·${mN}台</span></td>
+      <td>${idleOk?cell(pbI,idleWin):'<span class="negv">✗</span>'}<span style="color:var(--dim)"> ·${idleN}台</span></td>
+      <td class="${ok30>0?'pos':''}">${fmtI(ok30)} 台</td>
+      <td class="${okLife>0?'pos':''}">${fmtI(okLife)} 台</td>
+    </tr>`);
+  });
 
   // mc sensitivity table
   const tb=$('mc_table').querySelector('tbody');tb.innerHTML='';
