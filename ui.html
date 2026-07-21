@@ -3,177 +3,177 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LeverUp 矿机 · 产品交互原型</title>
+<title>LeverUp Miner · 产品交互原型</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#111111; --panel:#121212; --panel2:#1a1a1a; --chip:#1c1c1c; --border:#2a2a2a; --hair:#1f1f1f;
-  --acid:#CCFF00; --olive:#171b14; --olive2:#262b12; --red:#f0592a; --blue:#8ab4ff; --gold:#f5c518;
-  --text:#eeeeee; --muted:#7c8080; --dim:#4a4d4d;
+  --green:#C7F50D; --green-dk:#0a0b0a;
+  --bg:#111111; --panel:#121212; --block:#212621; --olive:#171b14; --chip:#1c1f1a;
+  --border:#2a2a2a; --hair:#1f1f1f;
+  --txt:#eeeeee; --soft:#c9cec4; --mut:#9ba294; --mut2:#6f766a;
+  --red:#f0592a; --blue:#8ab4ff; --gold:#f5c518;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;font-variant-numeric:tabular-nums}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;font-variant-numeric:tabular-nums}
+button{font-family:inherit}
 
-/* ===== top nav (LeverUp design) ===== */
-.topnav{position:sticky;top:0;z-index:40;display:flex;align-items:stretch;gap:8px;height:56px;padding:0 16px 0 20px;
+/* ================= top nav ================= */
+.topnav{position:sticky;top:0;z-index:40;display:flex;align-items:stretch;height:52px;padding:0 12px 0 16px;
   background:#0c0c0c;border-bottom:1px solid var(--border)}
-.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;white-space:nowrap;margin-right:10px}
-.logo .bars{display:flex;align-items:flex-end;gap:2px;height:16px}
-.logo .bars i{width:4px;background:var(--acid);border-radius:1px}
-.logo .bars i:nth-child(1){height:7px}.logo .bars i:nth-child(2){height:11px}.logo .bars i:nth-child(3){height:16px}
-.logo span b{color:var(--acid)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;white-space:nowrap;margin-right:14px}
+.logo .bars{display:flex;align-items:flex-end;gap:2px;height:15px}
+.logo .bars i{width:4px;background:var(--green)}
+.logo .bars i:nth-child(1){height:7px}.logo .bars i:nth-child(2){height:11px}.logo .bars i:nth-child(3){height:15px}
+.logo span b{color:var(--green)}
 .navitems{display:flex;align-items:stretch;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
 .navitems::-webkit-scrollbar{display:none}
-.nv{background:none;border:none;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;
-  padding:0 16px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.nv:hover{color:var(--text)}
-.nv.on{color:var(--acid);background:var(--olive);box-shadow:inset 0 2px 0 var(--acid)}
-.nv .new{font-size:9px;background:var(--red);color:#fff;padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:.04em}
+.nv{background:none;border:none;color:var(--mut);font-size:13.5px;font-weight:700;
+  padding:0 14px;cursor:pointer;white-space:nowrap;display:flex;align-items:center}
+.nv:hover{color:var(--soft)}
+.nv.on{color:var(--green);background:var(--olive);box-shadow:inset 0 2px 0 var(--green)}
+.nv .new{font-size:9px;background:var(--red);color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;margin-left:6px}
 .navright{display:flex;align-items:center;gap:8px;white-space:nowrap}
-.chip{font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--border);padding:6px 10px;border-radius:4px}
-.chip b{color:var(--text);font-weight:600}
-.wallet{font-size:12px;font-weight:700;background:var(--acid);color:#000;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-family:inherit}
-.wallet:hover{background:#d9ff33}
-@media(max-width:900px){.navitems .nv:not(.on){display:none}.topnav{gap:6px;padding:0 12px}}
+.chip{font-size:11.5px;color:var(--mut);background:var(--panel);border:1px solid var(--border);padding:6px 10px;border-radius:2px}
+.chip b{color:var(--txt);font-weight:600}
+.wallet{font-size:12px;font-weight:600;background:var(--green);color:var(--green-dk);border:none;padding:0 14px;height:32px;align-self:center;border-radius:2px;cursor:pointer}
+.wallet:hover{filter:brightness(1.08)}
+@media(max-width:900px){.navitems .nv:not(.on){display:none}}
 
-/* ===== shell ===== */
-.shell{max-width:1360px;margin:0 auto;padding:16px 16px 96px}
-@media(min-width:1024px){.shell{padding-bottom:32px}}
-.desk{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
-@media(max-width:1359px){.desk{grid-template-columns:repeat(2,1fr)}}
-.dcol{min-width:0}
+/* ================= layout ================= */
+.shell{max-width:1200px;margin:0 auto;padding:14px 14px 90px}
+@media(min-width:1024px){
+  .shell{padding-bottom:28px;display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+  .tabs{display:none}
+}
+.main{min-width:0}
+.rail{min-width:0}
 
-/* ===== bottom tabs (mobile) ===== */
-.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(12,12,12,.97);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:8px 6px 16px;z-index:30}
+/* bottom tabs (mobile) */
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(12,12,12,.97);backdrop-filter:blur(10px);border-top:1px solid var(--border);z-index:30}
+.tabs button{flex:1;background:none;border:none;color:var(--mut2);font-size:12px;font-weight:700;cursor:pointer;padding:13px 0 16px}
+.tabs button.on{color:var(--green);box-shadow:inset 0 2px 0 var(--green);background:var(--olive)}
 @media(min-width:1024px){.tabs{display:none}}
-.tabs button{flex:1;background:none;border:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;border-radius:4px}
-.tabs button .ic{font-size:19px;line-height:1}
-.tabs button.on{color:var(--acid);background:var(--olive)}
 
-/* ===== panels ===== */
-.card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px}
-.card.hl{border-color:#3a4413;background:linear-gradient(180deg,rgba(204,255,0,.05),transparent 45%),var(--panel)}
-h1{font-size:17px;font-weight:800;letter-spacing:-.01em}
-h2{font-size:14.5px;font-weight:700;margin-bottom:4px}
-.sub{color:var(--muted);font-size:12.5px}
-.big{font-size:32px;font-weight:800;color:var(--acid);line-height:1.1;letter-spacing:-.02em}
-.mono{font-weight:600}
-
-/* steps */
-.step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--hair)}
-.step:last-child{border-bottom:none}
-.step .ic{font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--border);border-radius:4px;flex:none}
-.step b{display:block;font-size:13.5px}
-.step span{font-size:12px;color:var(--muted);line-height:1.55;display:block;margin-top:2px}
-.step span i{color:var(--acid);font-style:normal;font-weight:600}
+/* ================= panels & primitives ================= */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:12px}
+.panel-pad{padding:16px}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--hair)}
+.ph .t{font-size:14px;font-weight:700;color:var(--soft)}
+.ph .r{font-size:11.5px;color:var(--mut2)}
+.lbl{font-size:11.5px;font-weight:500;color:var(--mut2);margin-bottom:6px;letter-spacing:.02em}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--hair)}
+.row:last-child{border-bottom:none}
+.row b{color:var(--txt);font-weight:600;text-align:right}
+.row b.pos{color:var(--green)} .row b.neg{color:var(--red)}
+.block{background:var(--block);border-radius:4px;padding:12px}
+.divider{height:1px;background:var(--hair);margin:12px 0}
 
 /* buttons */
-.btn{display:block;width:100%;padding:13px;border-radius:4px;border:none;cursor:pointer;text-align:center;
-  font-family:inherit;font-size:14px;font-weight:700;background:var(--acid);color:#000;transition:background .12s}
-.btn:hover{background:#d9ff33}
+.btn{display:block;width:100%;height:44px;border-radius:2px;border:none;cursor:pointer;text-align:center;
+  font-size:13px;font-weight:700;background:var(--green);color:var(--green-dk)}
+.btn:hover{filter:brightness(1.07)}
 .btn:active{transform:translateY(1px)}
-.btn.ghost{background:var(--chip);color:var(--text);border:1px solid var(--border)}
-.btn.ghost:hover{background:#242424}
-.btn.mini{width:auto;display:inline-block;padding:8px 14px;font-size:12px;border-radius:4px}
-.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:var(--chip);color:var(--soft);border:1px solid var(--border)}
+.btn.ghost:hover{background:#242822}
+.btn:disabled{opacity:.35;cursor:not-allowed;filter:none}
 .btnrow{display:flex;gap:8px}
 .btnrow .btn{flex:1}
 
-/* miner card */
-.tierchip{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12px;
-  padding:4px 10px;border-radius:4px;border:1px solid;letter-spacing:.02em}
-.tierchip.A{color:#dfe3e3;border-color:#3a3d3d;background:var(--chip)}
+/* segmented (Long/Short style) */
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--chip);border-radius:2px;padding:2px}
+.seg button{height:52px;border:none;border-radius:2px;background:transparent;color:var(--mut);cursor:pointer;
+  font-size:11.5px;font-weight:600;line-height:1.35}
+.seg button small{display:block;font-size:10px;font-weight:500;color:var(--mut2)}
+.seg button.on{background:var(--green);color:var(--green-dk)}
+.seg button.on small{color:rgba(10,11,10,.65)}
+
+/* rail tabs (Market/Limit style) */
+.railtabs{display:flex;gap:22px;padding:0 16px;border-bottom:1px solid var(--hair)}
+.railtabs button{background:none;border:none;color:var(--mut);font-size:15px;font-weight:700;cursor:pointer;
+  padding:13px 0 11px;box-shadow:inset 0 -2px 0 transparent}
+.railtabs button.on{color:var(--txt);box-shadow:inset 0 -2px 0 var(--green)}
+
+/* tier identity */
+.tierchip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;padding:4px 10px;border-radius:2px;border:1px solid}
+.tierchip.A{color:var(--soft);border-color:#3a3d3a;background:var(--chip)}
 .tierchip.B{color:var(--blue);border-color:#2c3c5c;background:#141a26}
 .tierchip.C{color:var(--gold);border-color:#5c4a10;background:#26200a}
-.machine{position:relative;text-align:center;padding:4px 0 0}
-.machine .emoji{font-size:52px}
-.machine.stopped .emoji{filter:grayscale(1) opacity(.5)}
-.pulse{animation:pp 1.8s ease-in-out infinite}
-@keyframes pp{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-.pbar{height:10px;background:var(--chip);border:1px solid var(--border);border-radius:3px;overflow:hidden;position:relative;margin:10px 0 6px}
-.pbar i{position:absolute;top:0;left:0;bottom:0;background:var(--acid);border-radius:2px;transition:width .5s}
-.pbar.warn i{background:var(--red)}
-.rowline{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--hair)}
-.rowline:last-child{border-bottom:none}
-.rowline b{color:var(--text);font-weight:600;text-align:right}
-.rowline b.pos{color:var(--acid)} .rowline b.neg{color:var(--red)}
-.deadline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:9px;border-radius:4px;
-  background:var(--panel2);border:1px solid var(--border);font-size:12.5px;color:var(--muted)}
-.deadline.warn{background:#2a140b;border-color:#5c2c14;color:var(--red);font-weight:600}
+.tbadge{width:64px;height:64px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;border:1px solid var(--border);background:var(--block)}
+.tbadge .lt{font-size:26px;font-weight:800;line-height:1}
+.tbadge .mn{font-size:8px;letter-spacing:.18em;color:var(--mut2);font-weight:700;margin-top:3px}
+.tbadge.A .lt{color:var(--soft)}
+.tbadge.B{border-color:#2c3c5c;background:#141a26}.tbadge.B .lt{color:var(--blue)}
+.tbadge.C{border-color:#5c4a10;background:#26200a}.tbadge.C .lt{color:var(--gold)}
+.panel.tierB{border-color:#2c3c5c}
+.panel.tierC{border-color:#5c4a10;position:relative;overflow:hidden}
+.panel.tierC::after{content:"";position:absolute;top:-160%;left:-70%;width:44%;height:420%;transform:rotate(25deg);pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(245,197,24,.07),transparent);animation:sweep 3.8s ease-in-out infinite}
+@keyframes sweep{0%{left:-70%}55%,100%{left:135%}}
 
-/* result scenarios (segmented chips) */
-.gears{display:flex;gap:8px;margin-top:12px}
-.gear{flex:1;background:var(--chip);border:1px solid var(--border);border-radius:4px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .12s}
-.gear:hover{background:#242424}
-.gear.on{border-color:#4a5618;background:var(--olive2)}
-.gear .g{font-size:19px}
-.gear .n{font-size:11.5px;font-weight:700;margin-top:3px}
-.gear.on .n{color:var(--acid)}
-.gear .d{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
-.speedo{text-align:center;margin:8px 0 2px}
-.speedo .v{font-size:38px;font-weight:800;color:var(--acid);letter-spacing:-.02em}
-.speedo .v.slow{color:var(--muted)} .speedo .v.zero{color:var(--red)}
-.speedo .l{font-size:10px;color:var(--dim);letter-spacing:.18em;font-weight:600}
+/* progress */
+.bignum{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--green);line-height:1.15}
+.bignum small{font-size:13px;color:var(--mut2);font-weight:500;letter-spacing:0}
+.pbar{height:6px;background:var(--chip);border-radius:2px;overflow:hidden;position:relative;margin:10px 0 4px}
+.pbar i{position:absolute;top:0;left:0;bottom:0;background:var(--green);transition:width .5s}
+.pbar.warn i{background:var(--red)}
+.deadline{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:2px;
+  background:var(--block);font-size:12px;color:var(--mut)}
+.deadline b{color:var(--txt);font-weight:700}
+.deadline.warn{background:#241109;border-left:2px solid var(--red);color:#e8a58f}
+.deadline.warn b{color:var(--red)}
+.statusdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px}
+.statusdot.off{background:var(--red)}
+
+/* speed readout */
+.speed{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.speed .v{font-size:34px;font-weight:800;letter-spacing:-.02em;color:var(--green)}
+.speed .v.slow{color:var(--mut)} .speed .v.zero{color:var(--red)}
 
 /* lottery */
-.slotbox{text-align:center;padding:8px 0}
-.slotcard{width:140px;height:176px;margin:0 auto 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:900;font-size:40px;transition:all .3s}
-.slotcard.spin{animation:sp .12s linear infinite}
-@keyframes sp{0%{transform:rotateX(0)}100%{transform:rotateX(360deg)}}
-.slotcard.win{border-color:var(--acid);box-shadow:0 0 24px rgba(204,255,0,.25)}
-.slotcard.winC{border-color:var(--gold);box-shadow:0 0 30px rgba(245,197,24,.35)}
-.slotcard small{font-size:11.5px;font-weight:600;color:var(--muted)}
-.probbar{display:flex;height:8px;border-radius:3px;overflow:hidden;margin:10px 0 6px;border:1px solid var(--border)}
-.probbar i{display:block;height:100%}
-.problegend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
-
-/* tier rarity */
-.card.tierB{border-color:#2c3c5c;box-shadow:inset 0 0 40px rgba(138,180,255,.04)}
-.card.tierC{border-color:#5c4a10;box-shadow:inset 0 0 50px rgba(245,197,24,.05);position:relative;overflow:hidden}
-.card.tierC::after{content:"";position:absolute;top:-160%;left:-70%;width:46%;height:420%;transform:rotate(25deg);pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(245,197,24,.09),transparent);animation:sweep 3.6s ease-in-out infinite}
-@keyframes sweep{0%{left:-70%}55%,100%{left:135%}}
-.rarline{font-size:10.5px;letter-spacing:.1em;margin-top:8px;text-transform:uppercase;font-weight:700}
-.machine .emoji.szB{font-size:58px}
-.machine .emoji.szC{font-size:64px;filter:drop-shadow(0 6px 20px rgba(245,197,24,.35))}
-.tiers3{display:flex;gap:8px;margin:12px 0 4px}
-.t3{flex:1;border-radius:4px;padding:10px 6px;text-align:center;border:1px solid var(--border);background:var(--panel2);position:relative}
-.t3 .e{font-size:26px;line-height:1.2}
-.t3 .nm{font-weight:800;font-size:14px;margin-top:3px}
-.t3 .amt{font-size:11px;font-weight:600;color:var(--text);margin-top:2px}
-.t3 .sup{font-size:9.5px;color:var(--muted);margin-top:2px;line-height:1.4}
-.t3.you::before{content:"你在这";position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:9px;background:var(--acid);color:#000;padding:1px 7px;border-radius:3px;font-weight:700}
+.ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.t3{border-radius:2px;padding:10px 8px;text-align:center;border:1px solid var(--border);background:var(--chip);position:relative}
+.t3 .nm{font-weight:800;font-size:17px}
+.t3 .amt{font-size:11px;font-weight:600;color:var(--txt);margin-top:2px}
+.t3 .sup{font-size:9.5px;color:var(--mut2);margin-top:2px;line-height:1.45}
+.t3.you{border-color:var(--green)}
+.t3.you::before{content:"当前";position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:9px;background:var(--green);color:var(--green-dk);padding:0 7px;border-radius:2px;font-weight:700}
 .t3.B{border-color:#2c3c5c}.t3.B .nm{color:var(--blue)}
-.t3.C{border-color:#5c4a10;background:linear-gradient(180deg,rgba(245,197,24,.06),var(--panel2))}
-.t3.C .nm{color:var(--gold)}
+.t3.C{border-color:#5c4a10;background:#1c180a}.t3.C .nm{color:var(--gold)}
+.slot{width:132px;height:150px;margin:14px auto;border-radius:4px;border:1px solid var(--border);background:var(--block);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .3s}
+.slot .big{font-size:40px;font-weight:800}
+.slot small{font-size:11px;color:var(--mut);font-weight:500;padding:0 8px;text-align:center}
+.slot.spin{animation:sp .12s linear infinite}
+@keyframes sp{0%{transform:rotateX(0)}100%{transform:rotateX(360deg)}}
+.slot.win{border-color:var(--green);box-shadow:0 0 20px rgba(199,245,13,.2)}
+.slot.winC{border-color:var(--gold);box-shadow:0 0 24px rgba(245,197,24,.3)}
+.probbar{display:flex;height:6px;border-radius:2px;overflow:hidden;margin:12px 0 6px;background:var(--chip)}
+.probbar i{display:block;height:100%}
+.problegend{display:flex;justify-content:space-between;font-size:11px;color:var(--mut2)}
 
-/* vault */
-.bigrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
-.tag{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:3px;border:1px solid var(--acid);color:var(--acid);font-weight:700;letter-spacing:.04em}
+/* steps (onboarding) */
+.steps .row span:first-child{color:var(--mut2);font-weight:600;white-space:nowrap}
+.warnbox{border-left:2px solid var(--red);background:#1a100b;border-radius:2px;padding:12px 14px;margin-bottom:12px}
+.warnbox .t{color:var(--red);font-weight:700;font-size:12.5px;margin-bottom:6px}
+.warnbox p{font-size:12px;color:#d9b3a5;line-height:1.7}
+.warnbox p b{color:#f0c9bb}
 
-/* toast & sheet */
-#toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--chip);border:1px solid var(--border);
-  color:var(--text);font-size:12.5px;font-weight:500;padding:10px 16px;border-radius:4px;display:none;z-index:60;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.6)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;z-index:50}
-.overlay.show{display:flex}
-.overlay .sheet{max-width:520px}
-.sheet{background:var(--panel);border-top:2px solid var(--acid);border-radius:8px 8px 0 0;padding:20px 18px 28px;width:100%;max-height:82%;overflow-y:auto}
-.sheet h2{margin-bottom:10px}
-
-/* demo console */
-.console{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px;
-  position:fixed;right:14px;top:66px;z-index:45;display:none;box-shadow:0 16px 50px rgba(0,0,0,.6)}
+/* toast / console */
+#toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#1c1f1a;border:1px solid var(--border);
+  color:var(--soft);font-size:12.5px;font-weight:500;padding:10px 16px;border-radius:2px;display:none;z-index:60;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.console{width:224px;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:14px;
+  position:fixed;right:12px;top:64px;z-index:45;display:none;box-shadow:0 16px 50px rgba(0,0,0,.6)}
 .console.open{display:block}
-@media(min-width:1520px){.console{display:block}#con_toggle{display:none}}
-#con_toggle{position:fixed;right:14px;top:62px;z-index:46;width:38px;height:38px;border-radius:4px;
-  background:var(--chip);border:1px solid var(--border);color:var(--text);font-size:16px;cursor:pointer}
-.console h3{font-size:10.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;font-weight:700}
-.console .btn{margin-bottom:8px;padding:9px;font-size:12px}
-.console .k{font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--hair)}
-.console .k b{color:var(--text);font-weight:600}
-.console a{color:var(--muted);font-size:11px}
+@media(min-width:1460px){.console{display:block}#con_toggle{display:none}}
+#con_toggle{position:fixed;right:12px;top:60px;z-index:46;width:44px;height:32px;border-radius:2px;
+  background:var(--chip);border:1px solid var(--border);color:var(--mut);font-size:10px;font-weight:700;cursor:pointer}
+.console h3{font-size:10.5px;letter-spacing:.14em;color:var(--mut2);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.console .btn{margin-bottom:8px;height:34px;font-size:12px}
+.console .k{font-size:11.5px;color:var(--mut);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--hair)}
+.console .k b{color:var(--txt);font-weight:600}
+.console p{font-size:10.5px;color:var(--mut2);margin-top:10px;line-height:1.65}
+.console a{color:var(--mut)}
 </style>
 </head>
 <body>
@@ -181,12 +181,12 @@ h2{font-size:14.5px;font-weight:700;margin-bottom:4px}
 <nav class="topnav">
   <div class="logo"><span class="bars"><i></i><i></i><i></i></span><span>Lever <b>Up</b></span></div>
   <div class="navitems">
-    <button class="nv">📊 Trade</button>
-    <button class="nv">💵 LVUSD</button>
-    <button class="nv">🟣 LVMON</button>
-    <button class="nv">🎁 LV Airdrop</button>
-    <button class="nv">🏆 Competition</button>
-    <button class="nv on">⛏ Miner <span class="new">NEW</span></button>
+    <button class="nv">Trade</button>
+    <button class="nv">LVUSD</button>
+    <button class="nv">LVMON</button>
+    <button class="nv">LV Airdrop</button>
+    <button class="nv">Competition</button>
+    <button class="nv on">Miner <span class="new">NEW</span></button>
   </div>
   <div class="navright">
     <span class="chip">LV <b id="sb_price">$0.0533</b></span>
@@ -195,31 +195,32 @@ h2{font-size:14.5px;font-weight:700;margin-bottom:4px}
   </div>
 </nav>
 
-<main class="shell"><div id="app"></div></main>
+<div class="shell">
+  <div class="main" id="main"></div>
+  <div class="rail" id="rail"></div>
+</div>
 
 <div class="tabs">
-  <button data-v="home" class="on"><span class="ic">⛏</span>矿机</button>
-  <button data-v="boost"><span class="ic">📈</span>战绩</button>
-  <button data-v="lotto"><span class="ic">🎰</span>抽卡</button>
-  <button data-v="vault"><span class="ic">🏦</span>金库</button>
+  <button data-v="home" class="on">矿机</button>
+  <button data-v="boost">战绩</button>
+  <button data-v="lotto">抽卡</button>
+  <button data-v="vault">金库</button>
 </div>
 
 <div id="toast"></div>
-<div class="overlay" id="sheet_ov"><div class="sheet" id="sheet"></div></div>
-
-<button id="con_toggle" title="演示控制台">🎛</button>
+<button id="con_toggle" title="演示控制台">DEMO</button>
 <div class="console" id="console">
   <h3>演示控制台（非产品）</h3>
-  <button class="btn ghost" id="c_d1">⏩ 快进 1 天</button>
-  <button class="btn ghost" id="c_d7">⏩⏩ 快进 7 天</button>
-  <button class="btn ghost" id="c_chance">🎁 +1 抽卡机会</button>
-  <button class="btn ghost" id="c_reset">↺ 重置演示</button>
+  <button class="btn ghost" id="c_d1">快进 1 天</button>
+  <button class="btn ghost" id="c_d7">快进 7 天</button>
+  <button class="btn ghost" id="c_chance">+1 抽卡机会</button>
+  <button class="btn ghost" id="c_reset">重置演示</button>
   <div style="margin-top:10px">
     <div class="k"><span>DAY</span><b id="c_day">0</b></div>
-    <div class="k"><span>油门下限</span><b id="c_floor">1×（宽限期）</b></div>
+    <div class="k"><span>速度下限</span><b id="c_floor">1×</b></div>
     <div class="k"><span>抽卡机会</span><b id="c_ch">0</b></div>
   </div>
-  <p style="font-size:11px;color:var(--dim);margin-top:12px;line-height:1.7">真实产品里时间自然流逝；此面板仅用于演示状态切换。参数与<a href="/">数值模拟器</a>一致。</p>
+  <p>真实产品里时间自然流逝；此面板仅用于演示状态切换。参数与<a href="/">数值模拟器</a>一致。</p>
 </div>
 
 <script>
@@ -228,48 +229,40 @@ const fmtLV=v=>{const a=Math.abs(v);return a>=100?Math.round(a).toLocaleString('
 const fmtU=v=>{const a=Math.abs(v);const t=a>=1000?Math.round(a).toLocaleString('en-US'):a.toFixed(2);return(v<0?'−$':'$')+t};
 const fmtDec=v=>v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
 
-/* ---- constants (aligned with simulator defaults) ---- */
+/* ---- constants (aligned with simulator) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
 const TIERS={
-  A:{total:5000,color:'#e8e8e8',emoji:'⛏',sz:'',rar:'STANDARD',cn:'常规款',mult:'基础产量',supply:'首批 800 台'},
-  B:{total:12500,color:'#8ab4ff',emoji:'🦾',sz:'szB',rar:'RARE',cn:'稀有款',mult:'产量 ×2.5',supply:'全网限量 120 台'},
-  C:{total:31000,color:'#f5c518',emoji:'💎',sz:'szC',rar:'LEGENDARY',cn:'传说款',mult:'产量 ×6.2',supply:'全网仅 20 台'}};
+  A:{total:5000,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 800 台'},
+  B:{total:12500,color:'var(--blue)',cn:'稀有',mult:'产量 ×2.5',supply:'全网限量 120 台'},
+  C:{total:31000,color:'var(--gold)',cn:'传说',mult:'产量 ×6.2',supply:'全网仅 20 台'}};
 const GEARS={
-  Z:{v:0,pnl:0,name:'没交易',emoji:'🛌',desc:'不开单',fee:0},
-  L:{v:50000,pnl:0,name:'交易但亏',emoji:'😵',desc:'交易 $50,000/周',fee:10},
-  W:{v:50000,pnl:2000,name:'小赚',emoji:'🙂',desc:'赚 $2,000/周',fee:10},
-  B:{v:200000,pnl:20000,name:'大赚',emoji:'🐳',desc:'赚 $20,000/周',fee:40}};
-const PNL_POOL=400000;
-const NET_VOL=10000000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
+  Z:{v:0,pnl:0,name:'没交易',desc:'不开单'},
+  L:{v:50000,pnl:0,name:'交易但亏',desc:'量 $50,000/周'},
+  W:{v:50000,pnl:2000,name:'小赚',desc:'PnL +$2,000/周'},
+  B:{v:200000,pnl:20000,name:'大赚',desc:'PnL +$20,000/周'}};
+const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
 
 let S;
 function init(){
-  S={day:0,view:'home',mon:20000,gear:'W',miner:null,chances:0,minedTotal:0,
+  S={day:0,view:'home',rail:'boost',mon:20000,gear:'W',miner:null,chances:0,minedTotal:0,
      vault:0,wallet:0,staked:0,divid:0,feeSpent:0,lottoState:'idle',lottoResult:null,seed:99};
   render();
 }
 const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
-
 function floorNow(){return S.day>=FLOOR_DAY?0:1}
-function boostOf(gear){
-  const p=GEARS[gear].pnl, share=p>0?p/(PNL_POOL+p):0, fl=floorNow();
-  return fl+(BMAX-fl)*Math.min(1,share/SMAX);
-}
+function boostOf(g){const p=GEARS[g].pnl,sh=p>0?p/(PNL_POOL+p):0,fl=floorNow();return fl+(BMAX-fl)*Math.min(1,sh/SMAX)}
 function tick(days){
   for(let i=0;i<days;i++){
     S.day++;
     if(S.miner&&!S.miner.dead){
       const b=boostOf(S.gear);
-      const rate=TIERS[S.miner.tier].total/T*b;
-      const e=Math.min(S.miner.rem,rate);
+      const e=Math.min(S.miner.rem,TIERS[S.miner.tier].total/T*b);
       S.miner.rem-=e;S.vault+=e;S.minedTotal+=e;
       S.chances+=GEARS[S.gear].v/7/RTH;
       S.feeSpent+=GEARS[S.gear].v/7*0.0002;
-      if(S.miner.rem<=0.5){S.miner.dead=true;S.miner.done=true;toast('🎉 挖完了！全部 '+fmtLV(TIERS[S.miner.tier].total)+' LV 已产出')}
-      else if(S.day-S.miner.born>=T){
-        S.miner.dead=true;S.miner.forfeit=S.miner.rem;S.miner.rem=0;
-        toast('⏳ 100 天到期，未挖出的 '+fmtLV(S.miner.forfeit)+' LV 已消失');
-      }
+      if(S.miner.rem<=0.5){S.miner.dead=true;S.miner.done=true;toast('挖完了：全部 '+fmtLV(TIERS[S.miner.tier].total)+' LV 已产出')}
+      else if(S.day-S.miner.born>=T){S.miner.dead=true;S.miner.forfeit=S.miner.rem;S.miner.rem=0;
+        toast(T+' 天到期：未挖出的 '+fmtLV(S.miner.forfeit)+' LV 已作废')}
     }
     S.divid+=S.staked*VE_APR/365;
   }
@@ -277,12 +270,11 @@ function tick(days){
 }
 function checkTx(){
   if(S.miner)return;
-  if(S.mon<PRICE_MON){toast('钱包里 MON 不足 8,000');return}
-  toast('🔍 正在链上检测你的转账…');
-  setTimeout(()=>{
-    S.mon-=PRICE_MON;
+  if(S.mon<PRICE_MON){toast('钱包 MON 不足 8,000');return}
+  toast('正在链上检测你的转账…');
+  setTimeout(()=>{S.mon-=PRICE_MON;
     S.miner={tier:'A',rem:TIERS.A.total,born:S.day,dead:false,forfeit:0,done:false};
-    toast('✅ 检测到 8,000 MON！矿机已绑定，自动开挖');
+    toast('检测到 8,000 MON — 矿机已绑定，自动开挖');
     S.view='home';render();
   },1400);
 }
@@ -290,55 +282,48 @@ function remint(){
   if(S.chances<1||!S.miner||S.miner.dead)return;
   S.chances-=1;S.lottoState='spin';render();
   setTimeout(()=>{
-    const r=rnd();const cur=S.miner.tier;
-    let res='stay';
-    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);
-    if(cur==='B')opts.push(['A',800]);
+    const r=rnd(),cur=S.miner.tier;let res='stay';
+    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',800]);
     const tot=opts.reduce((a,o)=>a+o[1],0);
-    if(r>=STAY&&tot>0){
-      let x=(r-STAY)/(1-STAY)*tot;
-      for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}
-    }
-    if(res!=='stay'&&res!==cur){
-      const frac=S.miner.rem/TIERS[cur].total;
-      S.miner.tier=res;S.miner.rem=TIERS[res].total*frac;
-    }
+    if(r>=STAY&&tot>0){let x=(r-STAY)/(1-STAY)*tot;for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}}
+    if(res!=='stay'&&res!==cur){const frac=S.miner.rem/TIERS[cur].total;S.miner.tier=res;S.miner.rem=TIERS[res].total*frac}
     S.lottoState='done';S.lottoResult=res;render();
   },1200);
 }
 function claim(){if(S.vault<1)return;S.wallet+=S.vault;toast('已领取 '+fmtLV(S.vault)+' LV 到钱包');S.vault=0;render()}
-function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池，开始吃分红');S.wallet=0;render()}
+function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池');S.wallet=0;render()}
+function setGear(k){S.gear=k;const m={Z:floorNow()===0?'没交易：机器停转，倒计时照走':'没交易：宽限期内 1 倍速保底',
+  L:floorNow()===0?'本周亏损：无盈利 = 停转；交易量仍在攒抽卡':'本周亏损：保底 1 倍速；交易量照攒抽卡',
+  W:'小赚 $2,000/周 — 约 2 倍速',B:'大赚 $20,000/周 — 满速 3 倍'};toast(m[k]);render()}
+function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._h);el._h=setTimeout(()=>el.style.display='none',2400)}
+function go(v){S.view=v;if(v!=='home')S.rail=v;if(v!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}
 
-/* ---- views ---- */
-function vHome(compact){
+/* ================= views ================= */
+function vMiner(){
   if(!S.miner)return `
-    <div class="card hl" style="text-align:center;padding:26px 18px">
-      <div style="font-size:54px" class="pulse">🕳️</div>
-      <h1 style="margin:8px 0 6px">首批矿机 · 神秘发售</h1>
-      <p class="sub" style="margin-bottom:14px">这个 App 里<b style="color:var(--text)">没有购买按钮</b>。<br>发售地址只藏在官方推特的那条推文里。</p>
-      <div style="text-align:left;background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:14px">
-        <div class="rowline"><span>🐦 第一步</span><b>找到 @LeverUpFi 置顶推文</b></div>
-        <div class="rowline"><span>💸 第二步</span><b>转 恰好 8,000 MON 到推文地址</b></div>
-        <div class="rowline"><span>⛏ 第三步</span><b>矿机自动出现在这里</b></div>
+    <div class="panel">
+      <div class="ph"><span class="t">Miner · 首批发售</span><span class="r">已认领 623 / 800</span></div>
+      <div class="panel-pad">
+        <div class="lbl">MYSTERY SALE</div>
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:6px">首批矿机 · 神秘发售</h2>
+        <p style="font-size:12.5px;color:var(--mut);margin-bottom:14px">本页没有购买按钮。发售地址只出现在官方推特的那条推文里。</p>
+        <div class="block steps" style="margin-bottom:14px">
+          <div class="row"><span>第一步</span><b>找到 @LeverUpFi 置顶推文</b></div>
+          <div class="row"><span>第二步</span><b>转 恰好 8,000 MON 至推文地址</b></div>
+          <div class="row"><span>第三步</span><b>矿机自动出现在本页（绑定转账钱包）</b></div>
+        </div>
+        <button class="btn ghost" onclick="checkTx()">我已转账 · 检测到账</button>
+        <div class="divider"></div>
+        <div class="row"><span>单台规格</span><b>100 天内最多 5,000 LV（≈ ${fmtU(5000*PLV)}）</b></div>
+        <div class="row"><span>加速规则</span><b>周盈利占比 → 最高 3 倍速</b></div>
+        <div class="row"><span>到期规则</span><b>100 天硬到期，未挖出部分作废</b></div>
       </div>
-      <button class="btn ghost" onclick="checkTx()">我已转账 · 检测到账 🔍</button>
-      <p style="font-size:11px;color:var(--dim);margin-top:10px">已被认领 <b style="color:var(--acid)">623 / 800</b> · 一台价值 ≈ 100 天最多 5,000 LV</p>
     </div>
-    <div class="card" style="border-color:#5a2a10">
-      <h2 style="color:var(--red)">⚠️ 防伪三条</h2>
-      <div class="step"><div class="ic">1️⃣</div><div><span style="font-size:13px">地址<i>只认官方账号置顶推文</i>——评论区、私信里的地址全是假的。</span></div></div>
-      <div class="step"><div class="ic">2️⃣</div><div><span style="font-size:13px">金额必须<i>恰好 8,000 MON</i>：多转、少转、售罄后转，都会自动原路退回。</span></div></div>
-      <div class="step"><div class="ic">3️⃣</div><div><span style="font-size:13px">全程<i>不需要授权任何合约</i>——就是一笔普通转账，转完矿机绑定到你的转账钱包。</span></div></div>
-    </div>
-    <div class="card">
-      <h2>怎么玩？三句话</h2>
-      <div class="step"><div class="ic">🛒</div><div><b>1. 买机器</b><span>付一次钱，机器<i>自动挖 100 天</i>，不用管它也在挖。</span></div></div>
-      <div class="step"><div class="ic">📈</div><div><b>2. 赚钱提速</b><span>在 LeverUp 交易：<i>赚钱的周机器挖得快</i>（最高 3 倍速）；交易量则攒抽卡机会——亏了也不白刷。</span></div></div>
-      <div class="step"><div class="ic">⏳</div><div><b>3. 到期结算</b><span>100 天一到机器退役，<i>没挖出来的部分会消失</i>——所以记得踩油门。</span></div></div>
-    </div>
-    <div class="card">
-      <h2>还有个彩蛋 🎰</h2>
-      <p class="sub">交易攒「抽卡机会」，有机会把机器升级成 <b style="color:var(--blue)">B（产量×2.5）</b>或 <b style="color:var(--gold)">C（产量×6.2）</b>——全网 B 只有 120 台、C 只有 20 台，升级后<b style="color:var(--text)">进度不清零</b>。</p>
+    <div class="warnbox">
+      <div class="t">防伪提示</div>
+      <p>1. 地址<b>只认官方账号置顶推文</b>——评论区与私信里的地址均为假冒。<br>
+      2. 金额必须<b>恰好 8,000 MON</b>：多转、少转、售罄后转均自动原路退回。<br>
+      3. 全程<b>不需要授权任何合约</b>，只是一笔普通转账。</p>
     </div>`;
 
   const m=S.miner,tier=TIERS[m.tier];
@@ -347,170 +332,149 @@ function vHome(compact){
   const b=boostOf(S.gear);
   const perDay=tier.total/T*b;
   if(m.dead)return `
-    <div class="card ${m.done?'hl':''}" style="text-align:center;padding:26px 18px">
-      <div style="font-size:54px">${m.done?'🏆':'🪦'}</div>
-      <div class="rarline" style="color:${tier.color};text-align:center">${TIERS[m.tier].emoji} ${m.tier} 级 · ${tier.cn}</div>
-      <h1 style="margin:8px 0 6px">${m.done?'挖完收工！':'机器退役了'}</h1>
-      <p class="sub">${m.done
-        ?`这台 ${m.tier} 级机器挖出了全部 <b style="color:var(--acid)">${fmtLV(tier.total)} LV</b>`
-        :`挖出 <b style="color:var(--acid)">${fmtLV(tier.total-m.forfeit)} LV</b>，有 <b style="color:var(--red)">${fmtLV(m.forfeit)} LV 没来得及挖，已消失</b>——下台记得多踩油门`}</p>
-      <div style="height:14px"></div>
-      <button class="btn ghost" onclick="toast('🐦 下一批发售时间与地址只会在推特公布')">蹲下一批 · 关注 @LeverUpFi</button>
-    </div>
-    <div class="card"><div class="rowline"><span>本季累计挖出</span><b class="pos">${fmtLV(S.minedTotal)} LV ≈ ${fmtU(S.minedTotal*PLV)}</b></div>
-    <div class="rowline"><span>去金库看收益</span><b>🏦 →</b></div></div>`;
+    <div class="panel">
+      <div class="ph"><span class="t">Miner #0001</span><span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span></div>
+      <div class="panel-pad">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:6px">${m.done?'挖完收工':'机器已到期退役'}</h2>
+        <p style="font-size:12.5px;color:var(--mut);margin-bottom:12px">${m.done
+          ?`这台 ${m.tier} 级机器产出了全部 ${fmtLV(tier.total)} LV。`
+          :`共挖出 ${fmtLV(tier.total-m.forfeit)} LV；<b style="color:var(--red)">${fmtLV(m.forfeit)} LV 未挖出，已作废</b>。下一台请保持盈利在线。`}</p>
+        <div class="row"><span>本季累计挖出</span><b class="pos">${fmtLV(S.minedTotal)} LV ≈ ${fmtU(S.minedTotal*PLV)}</b></div>
+        <div class="divider"></div>
+        <button class="btn ghost" onclick="toast('下一批发售时间与地址只在推特公布')">蹲下一批 · 关注 @LeverUpFi</button>
+      </div>
+    </div>`;
 
   return `
-    <div class="card hl tier${m.tier}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span class="tierchip ${m.tier}">${TIERS[m.tier].emoji} ${m.tier} 级 · ${TIERS[m.tier].cn}</span>
-        <span class="sub mono">#0001</span>
+    <div class="panel tier${m.tier}">
+      <div class="ph">
+        <span class="t"><span class="statusdot ${b>0?'':'off'}"></span>Miner #0001 · ${b>0?'运行中':'已停转'}</span>
+        <span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span>
       </div>
-      <div class="rarline" style="color:${tier.color}">${tier.rar} · ${tier.mult} · ${tier.supply}</div>
-      <div class="machine ${b<=0?'stopped':''}"><div class="emoji ${tier.sz} ${b>0?'pulse':''}">${b>0?tier.emoji:'😴'}</div></div>
-      <div class="bigrow"><span class="big">${fmtLV(tier.total-m.rem)}</span><span class="sub">/ ${fmtLV(tier.total)} LV</span></div>
-      <div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
-      <div class="rowline"><span>今天的产出</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+fmtDec(perDay)+' LV ≈ '+fmtU(perDay*PLV):'0（机器停了）'}</b></div>
-      <div class="rowline"><span>当前速度</span><b>${b.toFixed(2)} 倍速 ${b>=2.9?'🔥':b>0?'':'⚠️'}</b></div>
-      <div class="rowline"><span>已换算成钱</span><b class="pos">≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
-      ${m.tier!=='A'?`<div class="rowline"><span>比 A 级多产</span><b style="color:${tier.color}">+${fmtLV(tier.total-TIERS.A.total)} LV（同样 100 天）</b></div>`:''}
-      <div class="deadline ${daysLeft<=21?'warn':''}">⏳ 还剩 <b class="mono" style="font-size:16px">&nbsp;${daysLeft}&nbsp;</b> 天${daysLeft<=21?' · 到期没挖完的会消失！':'，到期后没挖完的部分会消失'}</div>
-      ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 本周没盈利，机器停了！→</button>':''}
-    </div>
-    ${compact?'':`<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><h2>🎰 抽卡机会 <b class="mono" style="color:var(--acid)">${Math.floor(S.chances)}</b> 次</h2>
-        <p class="sub" style="font-size:12px">升级 B/C 产量翻倍，进度不清零</p></div>
-        <button class="btn mini" ${Math.floor(S.chances)<1?'disabled':''} onclick="go('lotto')">去抽卡</button>
+      <div class="panel-pad">
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+          <div class="tbadge ${m.tier}"><span class="lt">${m.tier}</span><span class="mn">MINER</span></div>
+          <div style="flex:1;min-width:0">
+            <div class="lbl">${tier.mult} · ${tier.supply}</div>
+            <div class="bignum">${fmtLV(tier.total-m.rem)} <small>/ ${fmtLV(tier.total)} LV</small></div>
+            <div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut2)"><span>进度 ${(prog*100).toFixed(1)}%</span><span>剩余 ${fmtLV(m.rem)} LV</span></div>
+          </div>
+        </div>
+        <div class="row"><span>今日产出</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+fmtDec(perDay)+' LV ≈ '+fmtU(perDay*PLV):'0 — 本周无盈利，机器停转'}</b></div>
+        <div class="row"><span>当前速度</span><b>${b.toFixed(2)}×</b></div>
+        <div class="row"><span>累计产出价值（现价）</span><b>≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
+        ${m.tier!=='A'?`<div class="row"><span>对比 A 级多产</span><b style="color:${tier.color}">+${fmtLV(tier.total-TIERS.A.total)} LV</b></div>`:''}
+        <div class="deadline ${daysLeft<=21?'warn':''}">到期倒计时 <b>${daysLeft} 天</b><span style="margin-left:auto">${daysLeft<=21?'到期未挖出的部分将作废':'到期后未挖出的部分作废'}</span></div>
       </div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><h2>🏦 待领取 <b class="mono" style="color:var(--acid)">${fmtLV(S.vault)}</b> LV</h2>
-        <p class="sub" style="font-size:12px">≈ ${fmtU(S.vault*PLV)} · 可领取或存着吃分红</p></div>
-        <button class="btn mini ghost" onclick="go('vault')">去金库</button>
-      </div>
-    </div>`}`;
+    </div>`;
 }
 
 function vBoost(){
-  const fl=floorNow();
+  const fl=floorNow(),b=boostOf(S.gear);
   return `
-    <div class="card">
-      <h1 style="margin-bottom:4px">📈 战绩 = 速度</h1>
-      <p class="sub"><b style="color:var(--text)">赚钱的人挖得快</b>：你本周的盈利占全体矿工「盈利池」的比例，决定机器速度（最高 3 倍）。亏损的周只有保底速度。</p>
-      <div class="speedo"><div class="v ${boostOf(S.gear)<=0?'zero':boostOf(S.gear)<1.5?'slow':''}">${boostOf(S.gear).toFixed(2)}×</div><div class="l">CURRENT SPEED</div></div>
-      <div class="gears">
+    <div class="panel-pad">
+      <div class="lbl">WEEKLY RESULT → SPEED</div>
+      <div class="speed"><span class="v ${b<=0?'zero':b<1.5?'slow':''}">${b.toFixed(2)}×</span>
+        <span style="font-size:11.5px;color:var(--mut2)">盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
+      <p style="font-size:12px;color:var(--mut);margin-bottom:10px">你本周的<b style="color:var(--soft)">盈利（正 PnL）</b>占全体矿工盈利池的比例，决定机器速度；亏损周只有保底。</p>
+      <div class="seg">
         ${Object.entries(GEARS).map(([k,g])=>`
-          <div class="gear ${S.gear===k?'on':''}" onclick="setGear('${k}')">
-            <div class="g">${g.emoji}</div><div class="n">${g.name}</div>
-            <div class="d">${g.desc}<br>→ ${boostOf(k).toFixed(2)} 倍速</div>
-          </div>`).join('')}
+          <button class="${S.gear===k?'on':''}" onclick="setGear('${k}')">${g.name}<small>${boostOf(k).toFixed(2)}×</small></button>`).join('')}
       </div>
-      <p class="sub" style="font-size:11px;margin-top:8px;color:var(--dim)">（演示用四个假设情景；真实产品读取你钱包的每周实际 PnL）</p>
-      <p class="sub" style="font-size:12px;margin-top:8px">${fl===1
-        ?`💡 现在是<b style="color:var(--text)">宽限期</b>（前 6 周）：亏损或不交易也有 1 倍速保底。<b style="color:var(--red)">第 42 天起保底取消</b>——没盈利的周机器停转，时间照样流逝。`
-        :`<b style="color:var(--red)">⚠️ 宽限期已结束</b>：本周没有盈利 = 机器停转（0 产出），但 100 天倒计时不会停。`}</p>
-    </div>
-    <div class="card">
-      <h2>速度和抽卡是两回事</h2>
-      <div class="rowline"><span>📈 盈利（正 PnL）</span><b>决定速度，占盈利池 1% = 满速</b></div>
-      <div class="rowline"><span>🎰 交易量</span><b>每 $1.2M = +1 次抽卡（赚亏都算）</b></div>
-      <p class="sub" style="font-size:12px;margin-top:8px">所以哪怕这周亏了，交易量也没白刷——抽卡机会照攒。</p>
+      <p style="font-size:10.5px;color:var(--mut2);margin-top:8px">演示用四个假设情景；真实产品读取钱包每周实际 PnL 与交易量。</p>
+      <div class="divider"></div>
+      ${fl===1
+        ?`<div class="row"><span>宽限期（前 6 周）</span><b>亏损或不交易也有 1× 保底</b></div>
+           <div class="row"><span>第 42 天起</span><b class="neg">保底取消 — 无盈利周机器停转</b></div>`
+        :`<div class="row"><span>宽限期已结束</span><b class="neg">本周无盈利 = 停转，倒计时照走</b></div>`}
+      <div class="row"><span>盈利（正 PnL）</span><b>决定速度 · 占池 1% = 满速</b></div>
+      <div class="row"><span>交易量</span><b>每 $1.2M = +1 次抽卡（赚亏都算）</b></div>
     </div>`;
 }
 
 function vLotto(){
   const can=Math.floor(S.chances)>=1&&S.miner&&!S.miner.dead;
   const cur=S.miner?S.miner.tier:'A';
-  let cardInner='🎴<small>消耗 1 次机会</small>',cls='';
-  if(S.lottoState==='spin'){cardInner='❓';cls='spin'}
+  let inner='<span class="big" style="color:var(--mut2)">?</span><small>消耗 1 次机会</small>',cls='';
+  if(S.lottoState==='spin'){inner='<span class="big" style="color:var(--mut)">···</span>';cls='spin'}
   if(S.lottoState==='done'){
     const r=S.lottoResult;
-    if(r==='stay')cardInner=`😅<small>没变，还是 ${cur} 级</small>`;
-    else{cardInner=`${TIERS[r].emoji}<small style="color:${TIERS[r].color};font-weight:800">${r} 级 · ${TIERS[r].cn}！</small><small>${TIERS[r].mult} · ${TIERS[r].supply}</small>`;cls=r==='C'?'winC':'win'}
+    if(r==='stay')inner=`<span class="big" style="color:var(--mut)">${cur}</span><small>未变 · 仍为 ${cur} 级</small>`;
+    else{inner=`<span class="big" style="color:${TIERS[r].color}">${r}</span><small style="color:${TIERS[r].color};font-weight:700">升级成功 · ${TIERS[r].mult}</small>`;cls=r==='C'?'winC':'win'}
   }
   return `
-    <div class="card hl">
-      <h1 style="text-align:center;margin-bottom:2px">🎰 升级抽卡</h1>
-      <p class="sub" style="text-align:center">给矿机抽一次「变身」，<b style="color:var(--text)">进度不清零</b>：<br>挖到 60% 时升级，就从新产量的 60% 继续挖</p>
-      <div class="tiers3">
-        <div class="t3 ${cur==='A'?'you':''}"><div class="e">⛏</div><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 800 台</div></div>
-        <div class="t3 B ${cur==='B'?'you':''}"><div class="e">🦾</div><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5<br>限量 120 台</div></div>
-        <div class="t3 C ${cur==='C'?'you':''}"><div class="e">💎</div><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2<br>全网仅 20 台</div></div>
+    <div class="panel-pad">
+      <div class="lbl">REMINT · 升级抽卡</div>
+      <p style="font-size:12px;color:var(--mut);margin-bottom:12px">消耗 1 次机会给矿机抽一次「变身」。<b style="color:var(--soft)">进度不清零</b>：挖到 60% 时升级，从新产量的 60% 继续。</p>
+      <div class="ladder">
+        <div class="t3 ${cur==='A'?'you':''}"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 800 台</div></div>
+        <div class="t3 B ${cur==='B'?'you':''}"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5 · 限量 120</div></div>
+        <div class="t3 C ${cur==='C'?'you':''}"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2 · 仅 20 台</div></div>
       </div>
-      <div class="slotbox">
-        <div class="slotcard ${cls}" style="${S.lottoState==='done'&&S.lottoResult!=='stay'?'color:'+TIERS[S.lottoResult].color:''}">${cardInner}</div>
-        <button class="btn" style="max-width:240px;margin:0 auto" ${can?'':'disabled'} onclick="remint()">
-          ${can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 去交易攒机会'}</button>
-      </div>
-      <div class="probbar">
-        <i style="width:30%;background:#3a3a3a"></i><i style="width:60%;background:var(--blue)"></i><i style="width:10%;background:var(--gold)"></i>
-      </div>
+      <div class="slot ${cls}">${inner}</div>
+      <button class="btn" ${can?'':'disabled'} onclick="remint()">${can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 交易攒机会'}</button>
+      <div class="probbar"><i style="width:30%;background:#3a3d3a"></i><i style="width:60%;background:var(--blue)"></i><i style="width:10%;background:var(--gold)"></i></div>
       <div class="problegend"><span>不变 30%</span><span style="color:var(--blue)">变 B 60%</span><span style="color:var(--gold)">变 C 10%</span></div>
-      <p class="sub" style="font-size:11.5px;margin-top:8px;text-align:center">概率对所有人公开一致 · B 全网限量 120 台、C 限量 20 台，<b style="color:var(--text)">抽完即止</b>（额度越少越难抽到）</p>
-    </div>
-    <div class="card">
-      <div class="rowline"><span>怎么攒机会？</span><b>每 $1.2M 交易量 = 1 次</b></div>
-      <div class="rowline"><span>当前进度</span><b>${(S.chances%1*100).toFixed(0)}% → 下一次</b></div>
-      <div class="rowline"><span>我的机器</span><b>${S.miner?S.miner.tier+' 级 · 已挖 '+((1-S.miner.rem/TIERS[S.miner.tier].total)*100).toFixed(0)+'%':'还没有'}</b></div>
+      <div class="divider"></div>
+      <div class="row"><span>怎么攒机会</span><b>每 $1,200,000 交易量 = 1 次</b></div>
+      <div class="row"><span>下一次进度</span><b>${(S.chances%1*100).toFixed(0)}%</b></div>
+      <div class="row"><span>我的机器</span><b>${S.miner?S.miner.tier+' 级 · 已挖 '+((1-S.miner.rem/TIERS[S.miner.tier].total)*100).toFixed(0)+'%':'—'}</b></div>
+      <p style="font-size:10.5px;color:var(--mut2);margin-top:8px">概率公开一致；B/C 配额抽完即止，额度越少越难抽到。</p>
     </div>`;
 }
 
 function vVault(){
+  const net=(S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent;
   return `
-    <div class="card hl">
-      <h1 style="margin-bottom:10px">🏦 金库</h1>
-      <div class="rowline"><span>⛏ 待领取（机器边挖边进）</span><b class="pos">${fmtLV(S.vault)} LV ≈ ${fmtU(S.vault*PLV)}</b></div>
-      <div style="height:10px"></div>
+    <div class="panel-pad">
+      <div class="lbl">CLAIMABLE · 待领取</div>
+      <div class="bignum" style="margin-bottom:2px">${fmtLV(S.vault)} <small>LV ≈ ${fmtU(S.vault*PLV)}</small></div>
+      <p style="font-size:11.5px;color:var(--mut2);margin-bottom:12px">机器边挖边进账，可随时领取</p>
       <div class="btnrow">
         <button class="btn ghost" ${S.vault<1?'disabled':''} onclick="claim()">领到钱包</button>
-        <button class="btn" ${S.wallet<1?'disabled':''} onclick="stakeAll()">存入分红池 →</button>
+        <button class="btn" ${S.wallet<1?'disabled':''} onclick="stakeAll()">存入分红池</button>
       </div>
-      <p class="sub" style="font-size:11.5px;margin-top:8px">💡 顺序：先「领到钱包」，再「存入分红池」吃分红；也可以领了直接卖，随你。</p>
-    </div>
-    <div class="card">
-      <h2>💰 分红池（存币生币）</h2>
-      <p class="sub" style="font-size:12.5px">协议把<b style="color:var(--text)">真实交易手续费</b>拿去回购 LV：一半分给存币的人，一半直接销毁。存进来就躺着分。</p>
-      <div style="height:8px"></div>
-      <div class="rowline"><span>钱包余额</span><b>${fmtLV(S.wallet)} LV</b></div>
-      <div class="rowline"><span>已存入</span><b>${fmtLV(S.staked)} LV</b></div>
-      <div class="rowline"><span>当前年化</span><b class="pos">≈ ${(VE_APR*100).toFixed(1)}%（随回购量浮动）</b></div>
-      <div class="rowline"><span>累计分红</span><b class="pos">+${fmtLV(S.divid)} LV ≈ ${fmtU(S.divid*PLV)}</b></div>
-    </div>
-    <div class="card">
-      <h2>📒 我的小账本</h2>
-      <div class="rowline"><span>买机器花掉</span><b class="neg">−${fmtU(S.miner||S.minedTotal>0?PRICE_USD:0)}</b></div>
-      <div class="rowline"><span>交易摩擦成本（估）</span><b class="neg">−${fmtU(S.feeSpent)}</b></div>
-      <div class="rowline"><span>累计挖出 + 分红</span><b class="pos">+${fmtU((S.minedTotal+S.divid)*PLV)}</b></div>
-      <div class="rowline"><span>净收益（按现价）</span><b class="${(S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent>=0?'pos':'neg'}">${fmtU((S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent)}</b></div>
-      <p class="sub" style="font-size:11px;margin-top:6px">LV 价格上涨时，同样的产出更值钱——这里按当前价 $0.0533 计算。</p>
+      <div class="divider"></div>
+      <div class="lbl">STAKING · 分红池（存币生币）</div>
+      <p style="font-size:12px;color:var(--mut);margin-bottom:8px">协议把<b style="color:var(--soft)">真实交易手续费</b>回购 LV：一半分给存币者，一半销毁。</p>
+      <div class="row"><span>钱包余额</span><b>${fmtLV(S.wallet)} LV</b></div>
+      <div class="row"><span>已存入</span><b>${fmtLV(S.staked)} LV</b></div>
+      <div class="row"><span>当前年化</span><b class="pos">≈ ${(VE_APR*100).toFixed(1)}%（随回购量浮动）</b></div>
+      <div class="row"><span>累计分红</span><b class="pos">+${fmtLV(S.divid)} LV ≈ ${fmtU(S.divid*PLV)}</b></div>
+      <div class="divider"></div>
+      <div class="lbl">P&amp;L · 我的小账本</div>
+      <div class="row"><span>买机器</span><b class="neg">−${fmtU(S.miner||S.minedTotal>0?PRICE_USD:0)}</b></div>
+      <div class="row"><span>交易摩擦成本（估）</span><b class="neg">−${fmtU(S.feeSpent)}</b></div>
+      <div class="row"><span>累计挖出 + 分红</span><b class="pos">+${fmtU((S.minedTotal+S.divid)*PLV)}</b></div>
+      <div class="row"><span>净收益（按现价 $0.0533）</span><b class="${net>=0?'pos':'neg'}">${fmtU(net)}</b></div>
     </div>`;
 }
 
-/* ---- shell ---- */
-function go(v){S.view=v;if(v!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}
-function setGear(k){S.gear=k;const msgs={Z:'🛌 没交易：'+(floorNow()===0?'机器停转，倒计时照走！':'宽限期内 1 倍速保底'),L:'😵 交易但亏了：'+(floorNow()===0?'没盈利 = 停转，但抽卡机会照攒':'保底 1 倍速，抽卡机会照攒'),W:'🙂 小赚 $2,000/周：约 2 倍速',B:'🐳 大赚 $20,000/周：满速 3 倍 🔥'};toast(msgs[k]);render()}
-function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._h);el._h=setTimeout(()=>el.style.display='none',2400)}
-
+/* ================= shell render ================= */
+const RAILS={boost:['战绩',vBoost],lotto:['抽卡',vLotto],vault:['金库',vVault]};
 function render(){
   $('sb_mon').textContent=S.mon.toLocaleString();
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
-  const app=$('app');
-  if(matchMedia('(min-width:1024px)').matches){
-    app.className='desk';
-    app.innerHTML=`<div class="dcol">${vHome(true)}</div><div class="dcol">${vBoost()}</div><div class="dcol">${vLotto()}</div><div class="dcol">${vVault()}</div>`;
+  const desk=matchMedia('(min-width:1024px)').matches;
+  if(desk){
+    $('main').innerHTML=vMiner();
+    $('rail').innerHTML=`<div class="panel">
+      <div class="railtabs">${Object.entries(RAILS).map(([k,[t]])=>`<button class="${S.rail===k?'on':''}" data-rail="${k}">${t}</button>`).join('')}</div>
+      ${RAILS[S.rail][1]()}
+    </div>`;
+    document.querySelectorAll('[data-rail]').forEach(b=>b.addEventListener('click',()=>{S.rail=b.dataset.rail;if(S.rail!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}));
   }else{
-    app.className='';
-    app.innerHTML=({home:()=>vHome(false),boost:vBoost,lotto:vLotto,vault:vVault})[S.view]();
+    $('rail').innerHTML='';
+    $('main').innerHTML=S.view==='home'?vMiner():`<div class="panel">${RAILS[S.view][1]()}</div>`;
   }
   $('c_day').textContent=S.day;
-  $('c_floor').textContent=floorNow()===1?'1×（宽限期，第42天结束）':'0×（不交易=停转）';
+  $('c_floor').textContent=floorNow()===1?'1×（宽限期，第42天止）':'0×（无盈利=停转）';
   $('c_ch').textContent=S.chances.toFixed(2);
 }
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
 window.addEventListener('resize',()=>render());
-document.getElementById('con_toggle').addEventListener('click',()=>document.getElementById('console').classList.toggle('open'));
+$('con_toggle').addEventListener('click',()=>$('console').classList.toggle('open'));
 document.querySelectorAll('.nv:not(.on)').forEach(b=>b.addEventListener('click',()=>toast('演示：该 Tab 为 LeverUp 现有页面')));
 $('c_d1').addEventListener('click',()=>tick(1));
 $('c_d7').addEventListener('click',()=>tick(7));
