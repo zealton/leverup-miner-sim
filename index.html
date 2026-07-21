@@ -206,7 +206,7 @@ footer a{color:var(--muted)}
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
-  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">盈利竞速</div><div class="d">boost = 我的正 PnL ÷ <b>全体矿工</b>盈利池，映射 1–3×。亏损周吃下限；后期下限归 <b>0</b>。交易量不给 boost，只攒 remint。</div></div>
+  <div class="fstep"><div class="n">03 / BOOST</div><div class="t">盈利竞速</div><div class="d">boost = 我的正 PnL（<b>60h-EMA</b>）÷ 全体矿工盈利池，映射 1–3×，每小时更新。EMA ≤ 0 吃下限；后期下限归 <b>0</b>。交易量不给 boost，只攒 remint。</div></div>
   <div class="fstep"><div class="n">04 / REMINT</div><div class="t">品质抽奖</div><div class="d">每 $1M 交易量 = 1 次机会。按<b>剩余配额加权</b>随机，可能保持原品质；配额满则抽不到。</div></div>
   <div class="fstep"><div class="n">05 / 升级</div><div class="t">进度继承</div><div class="d">升级<b>不重置时间</b>：按当前进度比例，剩余时间释放新品质对应的剩余 LV。</div></div>
 </div>
@@ -270,7 +270,7 @@ footer a{color:var(--muted)}
       <div class="sect">Boost 与刷量</div>
       <div class="ctl"><div class="ctl-top"><label>Boost 上限</label><span class="val" id="v_bmax"></span></div>
         <input type="range" id="i_bmax" min="1.5" max="5" step="0.5" value="3"></div>
-      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需盈利池占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的正 PnL 占比 ÷ 此值)。<b>分母 = 全体矿工当周正 PnL 之和</b>（亏损不计入）——矿工之间比谁更会赚。每周重算；亏损周占比为 0、只吃下限。">?</span></label><span class="val" id="v_smax"></span></div>
+      <div class="ctl"><div class="ctl-top"><label>拉满 boost 所需盈利池占比<span class="tip" data-tip="boost = 下限 + (上限 − 下限) × min(1, 我的正 PnL 占比 ÷ 此值)。<b>PnL 口径 = 60 小时半衰期 EMA</b>（指数移动平均，每日结算、每小时重算速度）：赚钱当天速度就爬升，2–3 天到满值；对锁钱包的输赢在 EMA 内互相净化、只剩手续费负漂移。分母 = 全体矿工的正 EMA 之和；EMA ≤ 0 只吃下限。模拟器按周步长取其期望近似。">?</span></label><span class="val" id="v_smax"></span></div>
         <input type="range" id="i_smax" min="0.05" max="10" step="0.05" value="1"></div>
       <div class="ctl"><div class="ctl-top"><label>Boost 下限归 0 时间<span class="tip" data-tip="前 X 周映射区间为 [1, 上限]：不刷量也按 1× 基速释放。第 X 周起变为 [0, 上限]：完全不刷量的矿机<b>停止释放（冻结）</b>，机身与剩余 LV 保留。设 0 = 一开始就是 [0, 上限]。">?</span></label><span class="val" id="v_floorw"></span></div>
         <input type="range" id="i_floorw" min="0" max="52" step="1" value="6"></div>
@@ -462,7 +462,7 @@ footer a{color:var(--muted)}
 </div>
 
 <footer>
-  模型假设：到期规则可选（默认②固定周期到期作废，负债随批次清零；①冻结延时为永续债务对照）· LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为正 PnL 占比映射（交易量只驱动 remint 与客损）；聚合模型按分层胜率取期望；钱包演练与沙盘按 PnL∝交易量近似· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
+  模型假设：boost 的 PnL 口径 = 60h 半衰期 EMA（每日结算、每小时重算；模拟按周步长近似）· 到期规则可选（默认②固定周期到期作废，负债随批次清零；①冻结延时为永续债务对照）· LV 价格与入场参数在模拟期内为外生给定（不模拟价格反身性）· boost 为正 PnL 占比映射（交易量只驱动 remint 与客损）；聚合模型按分层胜率取期望；钱包演练与沙盘按 PnL∝交易量近似· 排放只算矿机释放，不含团队/生态分配 · remint 机会仅用于 A 品质矿机（聚合模型；钱包演练不限）· 手续费收入按需求忽略 · 旧版模型存档：<a href="/legacy">边界模拟器</a> · <a href="/app">自动休眠原型</a>
 </footer>
 </div>
 
