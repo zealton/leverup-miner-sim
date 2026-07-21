@@ -256,9 +256,9 @@ footer a{color:var(--muted)}
 
       <div class="sect">矿机与品质（A 发售 · B/C 仅 remint）</div>
       <div class="tierhead"><span></span><span>单台总产出 LV</span><span>配额（台）</span></div>
-      <div class="tierrow"><span class="tn a">A</span><input type="text" inputmode="numeric" id="i_la" value="5,000"><input type="text" inputmode="numeric" id="i_qa" value="800"></div>
-      <div class="tierrow"><span class="tn b">B</span><input type="text" inputmode="numeric" id="i_lb" value="12,500"><input type="text" inputmode="numeric" id="i_qb" value="120"></div>
-      <div class="tierrow"><span class="tn c">C</span><input type="text" inputmode="numeric" id="i_lc" value="31,000"><input type="text" inputmode="numeric" id="i_qc" value="20"></div>
+      <div class="tierrow"><span class="tn a">A</span><input type="text" inputmode="numeric" id="i_la" value="4,800"><input type="text" inputmode="numeric" id="i_qa" value="500"></div>
+      <div class="tierrow"><span class="tn b">B</span><input type="text" inputmode="numeric" id="i_lb" value="12,000"><input type="text" inputmode="numeric" id="i_qb" value="75"></div>
+      <div class="tierrow"><span class="tn c">C</span><input type="text" inputmode="numeric" id="i_lc" value="30,000"><input type="text" inputmode="numeric" id="i_qc" value="12"></div>
       <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）<span class="tip" data-tip="默认 100 天：对齐 Monad 解锁时间节点——挖满一台矿机的周期与解锁预期同频，形成时间锚点叙事。">?</span></label><span class="val" id="v_T"></span></div>
         <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
       <div class="ctl"><div class="ctl-top"><label>到期规则<span class="tip" data-tip="<b>② 到期作废</b>：矿机寿命固定（从购买起 100 天），boost&lt;1 的时段按比例少产，到期时未释放的 LV 作废——协议负债有硬截止日，赛季化运营，可以开新玩法。<b>① 冻结延时</b>：boost 低只是拉长时间（0 = 无限冻结），所有 LV 迟早要付——永续债务、长期运维。">?</span></label><span class="val" id="v_expire"></span></div>
@@ -297,7 +297,7 @@ footer a{color:var(--muted)}
 
       <div class="sect">发售与入场（第一期：先售罄后开挖）</div>
       <div class="ctl"><div class="ctl-top"><label>期初售出（台 A，开挖前）<span class="tip" data-tip="第一期流程：先把首批卖完（或卖到某个数量），然后统一开挖。这批销售收入是期初资金池；开挖后的每周新入场只剩客损（真实 fee 的回购见 ve 模块）。">?</span></label><span class="val" id="v_gen"></span></div>
-        <input type="range" id="i_gen" min="50" max="2000" step="50" value="800"></div>
+        <input type="range" id="i_gen" min="50" max="2000" step="50" value="500"></div>
       <div class="ctl"><div class="ctl-top"><label>开挖后日销（台/日，第一期 = 0）</label><span class="val" id="v_daily"></span></div>
         <input type="range" id="i_daily" min="0" max="100" step="1" value="0"></div>
       <div class="ctl"><div class="ctl-top"><label>销量周增速</label><span class="val" id="v_grow"></span></div>
@@ -901,7 +901,8 @@ function render(){
     <div class="row"><span>当前市值 → 目标市值</span><span>${fmt(P.mc)} → ${fmt(P.tmc)}（${rP.toFixed(2)}×）</span></div>
     <div class="row hl"><span>需要净买入（拉盘成本）</span><span>${rP>1?fmt(pumpCost)+' ≈ '+fmtI(pumpMON)+' MON':'目标 ≤ 当前，无需买入'}</span></div>
     <div class="row"><span>金库顺带回收</span><span>${rP>1?fmtLV(lvGot)+' LV（到目标价值 '+fmt(lvGot*P.tplv)+'）':'—'}</span></div>
-    <div class="row"><span>对照：矿机销售可用资金</span><span>${fmt(totSold*P.priceUsd)}（首批 ${fmtI(totSold)} 台 × ${fmt(P.priceUsd)}）${rP>1&&totSold*P.priceUsd>0?'，覆盖拉盘的 '+(totSold*P.priceUsd/pumpCost*100).toFixed(0)+'%':''}</span></div>`;
+    <div class="row"><span>对照：矿机销售可用资金</span><span>${fmt(totSold*P.priceUsd)}（首批 ${fmtI(totSold)} 台 × ${fmt(P.priceUsd)}）${rP>1&&totSold*P.priceUsd>0?'，覆盖拉盘的 '+(totSold*P.priceUsd/pumpCost*100).toFixed(0)+'%':''}</span></div>
+    <div class="row hl"><span>弹药全用（销售+${P.hor}周客损 = ${fmt(last.cumRev)}）<span class="tip" data-tip="按你的策略：矿机收入与客损全部作为买盘燃料。AMM 反解：花 B 美元可把价格拉到 (1+B/深度)² 倍——假设无持有者抛压、排放卖压见 ve 模块。">?</span></span><span>理论可拉至市值 ≈ <b style="color:var(--acid)">${fmt(P.mc*Math.pow(1+last.cumRev/P.depth,2))}</b></span></div>`;
   // ladder: current -> target in 5 steps; per-cohort payback at each level
   const hwN=Math.round(P.hw*P.Q.A), mN=Math.round(mFrac*P.Q.A), idleN=Math.max(0,P.Q.A-hwN-mN);
   const relIdle=Math.min(1,P.floorw*7/P.T);
