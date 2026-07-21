@@ -172,6 +172,16 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .sblog div{border-bottom:1px dashed #1c1c1c;padding:2px 0}
 .sblog b{color:var(--acid)}
 
+/* collapsible modules */
+details.fold{border:1px solid var(--border);background:var(--panel);margin-bottom:16px}
+details.fold>summary{cursor:pointer;user-select:none;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:'▸';margin-right:9px;color:var(--dim)}
+details.fold[open]>summary::before{content:'▾';color:var(--acid)}
+details.fold>.panel{border:none;margin-bottom:0;background:transparent}
+.howto{border:1px dashed var(--border);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--muted);line-height:1.7}
+.howto b{color:var(--text)}
+
 footer{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8}
 footer a{color:var(--muted)}
 </style>
@@ -192,6 +202,7 @@ footer a{color:var(--muted)}
 </div>
 
 <div id="tab_overview">
+<div class="howto"><b>读法：</b>① 先看下方三张答案卡（排放预算 / 市值门槛 / 协议损益）→ ② 看「协议资金池」曲线确认第一期不转负 → ③ 需要细节时再展开带 ▸ 的折叠模块。参数在左栏，改动即全页联动。</div>
 <div class="flow">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
@@ -284,11 +295,11 @@ footer a{color:var(--muted)}
       <div class="ctl"><div class="ctl-top"><label>保持原品质概率<span class="tip" data-tip="remint 有概率不改变品质（消耗机会）。其余概率按目标品质剩余配额加权分配——配额越稀有越难抽到。">?</span></label><span class="val" id="v_stay"></span></div>
         <input type="range" id="i_stay" min="0" max="80" step="5" value="30"></div>
 
-      <div class="sect">入场速度（新用户）</div>
-      <div class="ctl"><div class="ctl-top"><label>创世批销量（台 A）</label><span class="val" id="v_gen"></span></div>
-        <input type="range" id="i_gen" min="50" max="2000" step="50" value="400"></div>
-      <div class="ctl"><div class="ctl-top"><label>后续日均销量（台/日）</label><span class="val" id="v_daily"></span></div>
-        <input type="range" id="i_daily" min="0" max="100" step="1" value="8"></div>
+      <div class="sect">发售与入场（第一期：先售罄后开挖）</div>
+      <div class="ctl"><div class="ctl-top"><label>期初售出（台 A，开挖前）<span class="tip" data-tip="第一期流程：先把首批卖完（或卖到某个数量），然后统一开挖。这批销售收入是期初资金池；开挖后的每周新入场只剩客损（真实 fee 的回购见 ve 模块）。">?</span></label><span class="val" id="v_gen"></span></div>
+        <input type="range" id="i_gen" min="50" max="2000" step="50" value="800"></div>
+      <div class="ctl"><div class="ctl-top"><label>开挖后日销（台/日，第一期 = 0）</label><span class="val" id="v_daily"></span></div>
+        <input type="range" id="i_daily" min="0" max="100" step="1" value="0"></div>
       <div class="ctl"><div class="ctl-top"><label>销量周增速</label><span class="val" id="v_grow"></span></div>
         <input type="range" id="i_grow" min="-30" max="50" step="5" value="10">
         <div class="hint">卖完 A 配额自动停售（后续批次 = 调大配额再看）</div></div>
@@ -316,7 +327,7 @@ footer a{color:var(--muted)}
     <div class="stats">
       <div class="stat"><div class="k">最大理论排放<span class="tip" data-tip="三档配额全部铸满并释放完的 LV 总量 = ΣL×Q，及其占流通量比例。">?</span></div><div class="v white" id="o_maxemit">—</div><div class="u" id="o_maxemit_u">—</div></div>
       <div class="stat"><div class="k">平均 Boost（正 PnL 竞速）<span class="tip" data-tip="按分层假设加权：大户稳定占盈利池大头，普通矿工按周胜率轮流进池，躺平者恒为下限。用户回本、APR、各品质表按「普通矿工期望速度」折算实际寿命。">?</span></div><div class="v white" id="o_boost">—</div><div class="u" id="o_boost_u">—</div></div>
-      <div class="stat"><div class="k">排放覆盖率（最差周）<span class="tip" data-tip="每周「新入场资金 ÷ 排放 LV 市值」的最小值。≥1 表示任何一周的抛压都有新钱接住；&lt;1 表示存在失衡周。">?</span></div><div class="v" id="o_cover">—</div><div class="u">入场资金 ÷ 排放市值</div></div>
+      <div class="stat"><div class="k">资金池最低点<span class="tip" data-tip="第一期口径：资金池 = 期初销售收入 + 累计客损 − 累计排放市值。逐周取最低值——全程 ≥ 0 说明先售后挖的这一批自身可兜底；转负则需要 treasury 或真实 fee 补。">?</span></div><div class="v" id="o_cover">—</div><div class="u" id="o_cover_u">期初销售 + 累计客损 − 累计排放</div></div>
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
 
@@ -340,7 +351,7 @@ footer a{color:var(--muted)}
     </div>
 
     <div class="panel" style="margin-bottom:16px">
-      <div class="panel-h">协议累计损益 <span class="tag">USD</span></div>
+      <div class="panel-h">协议资金池（累计收入 − 累计排放） <span class="tag">USD</span></div>
       <div style="padding:16px 16px 0"><canvas id="c_pnl" height="200"></canvas></div>
       <div class="legend"><span><i style="background:#C7F50D"></i>累计收入（销售+客损）</span><span><i style="background:#FA5000"></i>累计排放成本</span><span><i style="background:#e8e8e8"></i>累计净损益</span></div>
     </div>
@@ -565,18 +576,18 @@ function simulate(scale){
   return weeks;
 }
 
-/* worst-week coverage ratio (skip genesis week 0 spike for the min? keep it: genesis inflow is real) */
-function coverage(weeks){
-  let min=Infinity;
-  weeks.forEach(x=>{if(x.emitUsd>1){min=Math.min(min,x.inflow/x.emitUsd)}});
-  return min===Infinity?99:min;
+/* phase-1 solvency: pool = upfront sales + cumulative client-loss − cumulative emission value; must never go negative */
+function poolMin(weeks){
+  let m=Infinity,negW=null;
+  weeks.forEach(x=>{const bal=x.cumRev-x.cumCost;if(bal<m)m=bal;if(bal<0&&negW===null)negW=x.w});
+  return {min:m===Infinity?0:m,negW};
 }
-/* solve max scale k where coverage >= 1 */
+/* solve max scale k where pool stays >= 0 all the way */
 function solveScale(){
   let lo=0.02,hi=8;
-  if(coverage(simulate(hi))>=1)return hi;
-  if(coverage(simulate(lo))<1)return 0;
-  for(let i=0;i<28;i++){const mid=(lo+hi)/2;if(coverage(simulate(mid))>=1)lo=mid;else hi=mid}
+  if(poolMin(simulate(hi)).min>=0)return hi;
+  if(poolMin(simulate(lo)).min<0)return 0;
+  for(let i=0;i<28;i++){const mid=(lo+hi)/2;if(poolMin(simulate(mid)).min>=0)lo=mid;else hi=mid}
   return lo;
 }
 
@@ -635,6 +646,7 @@ function drawFlow(weeks){
     {label:'覆盖率',color:'#7a7a7a',vals:weeks.map(x=>x.emitUsd>1?x.inflow/x.emitUsd:Infinity),fmt:v=>isFinite(v)?v.toFixed(2)+'×':'∞'}]});
 }
 function drawFleet(weeks){
+  if($('c_fleet').clientWidth<50)return;
   const c=$('c_fleet'),[ctx,W,H]=setup(c,200);
   const padL=56;
   const ymax=Math.max(...weeks.map(x=>x.counts.A+x.counts.B+x.counts.C),...weeks.map(x=>x.dead),1)*1.12;
@@ -720,14 +732,15 @@ function render(){
   const volTyp=P.vol;
   const b=bTyp;
   const weeks=simulate(1);
-  const cov=coverage(weeks);
+  const pool=poolMin(weeks);
   const maxEmit=P.L.A*P.Q.A+P.L.B*P.Q.B+P.L.C*P.Q.C;
 
   $('o_maxemit').textContent=fmtLV(maxEmit)+' LV';
   $('o_maxemit_u').textContent='占流通量 '+(maxEmit/P.circ*100).toFixed(1)+'% · 市值 '+fmt(maxEmit*P.plv);
   $('o_boost').textContent=bEarly.toFixed(2)+'× → '+bLate.toFixed(2)+'×';
   $('o_boost_u').textContent='分层加权 · 归0前→后 · 大户 '+bHW.toFixed(2)+'× / 普通期望 '+bTyp.toFixed(2)+'×';
-  const oc=$('o_cover');oc.textContent=cov>=99?'∞':cov.toFixed(2)+'×';oc.className='v '+(cov>=1?'':'red');
+  const oc=$('o_cover');oc.textContent=(pool.min>=0?'+':'')+fmt(pool.min);oc.className='v '+(pool.min>=0?'':'red');
+  $('o_cover_u').textContent=pool.negW!==null?'第 '+pool.negW+' 周转负':'全程 ≥ 0（第一期判据达标）';
 
   // user payback (A miner)
   const dailyYield=P.L.A/P.T*b*P.plv;
@@ -741,12 +754,12 @@ function render(){
   pb.className='v '+(payback<=P.payt?'':payback>lifeDays?'red':'white');
   $('o_payback_u').textContent='目标 '+P.payt+' 天 · 寿命 '+(isFinite(lifeDays)?Math.round(lifeDays)+' 天':'∞（boost 0）')+' · 全周期产出 '+fmt(totalOut);
 
-  // ① emission budget
+  // ① emission budget (phase-1: sell out, then mine; pool must stay >= 0)
   const k=solveScale();
   const a1=$('ans_emit');
-  if(cov>=1){a1.classList.remove('warn')}else{a1.classList.add('warn')}
-  $('a1_v').innerHTML=k<=0?'当前入场无法承接任何排放':`单台 A ≤ <b>${fmtLV(P.L.A*k)}</b> LV`;
-  $('a1_d').innerHTML=`当前设置：A=${fmtLV(P.L.A)}/台 → 最差周覆盖率 <b>${cov>=99?'∞':cov.toFixed(2)}×</b>${cov>=1?'（健康）':'（<b style="color:var(--red)">失衡</b>）'}。按当前入场速度反解：单台 A ≤ ${fmtLV(P.L.A*k)} LV（B/C 等比 ${fmtLV(P.L.B*k)} / ${fmtLV(P.L.C*k)}），对应总排放上限 ≈ <b>${fmtLV(maxEmit*k)} LV</b>（占流通 ${(maxEmit*k/P.circ*100).toFixed(1)}%，市值 ${fmt(maxEmit*k*P.plv)}）。`;
+  if(pool.min>=0){a1.classList.remove('warn')}else{a1.classList.add('warn')}
+  $('a1_v').innerHTML=k<=0?'资金池无法承接任何排放':`单台 A ≤ <b>${fmtLV(P.L.A*k)}</b> LV`;
+  $('a1_d').innerHTML=`第一期口径（先售罄后开挖）：期初资金 = 销售收入，开挖后每周新入场仅剩<b>客损</b>。判据 = 资金池全程 ≥ 0。当前设置 A=${fmtLV(P.L.A)}/台 → 资金池最低 <b style="color:${pool.min>=0?'var(--acid)':'var(--red)'}">${fmt(pool.min)}</b>${pool.negW!==null?'（第 '+pool.negW+' 周转负）':'（全程为正）'}。反解：单台 A ≤ ${fmtLV(P.L.A*k)} LV（B/C 等比 ${fmtLV(P.L.B*k)} / ${fmtLV(P.L.C*k)}），总排放上限 ≈ <b>${fmtLV(maxEmit*k)} LV</b>（市值 ${fmt(maxEmit*k*P.plv)}）。`;
 
   // ② market cap thresholds around target payback
   const mcFor=days=>totalCost*P.circ*P.T/(P.L.A*b*days);
@@ -1014,7 +1027,7 @@ document.querySelectorAll('.tierrow input').forEach(el=>{
 $('i_expire').addEventListener('change',render);
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
-$('w_reset').addEventListener('click',()=>{read();wInit()});
+$('w_reset').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();read();wInit()});
 window.addEventListener('resize',render);
 
 // tooltips
@@ -1028,9 +1041,23 @@ function showTip(el){if(tipEl)tipEl.classList.remove('on');tipEl=el;tipbox.inner
   tipbox.style.left=x+'px';tipbox.style.top=y+'px';el.classList.add('on')}
 function hideTip(){if(tipEl){tipEl.classList.remove('on');tipEl=null}tipbox.style.display='none'}
 document.addEventListener('mouseover',e=>{const t=e.target.closest('.tip');if(t)showTip(t);else if(tipEl)hideTip()});
-document.addEventListener('click',e=>{const t=e.target.closest('.tip');if(t){tipEl===t?hideTip():showTip(t)}else hideTip()});
+document.addEventListener('click',e=>{const t=e.target.closest('.tip');if(t){e.preventDefault();tipEl===t?hideTip():showTip(t)}else hideTip()});
 window.addEventListener('scroll',hideTip,{passive:true});
 
+// collapse secondary modules into <details> (default closed)
+(function foldify(){
+  const foldTitles=['活跃矿机构成','ve(3,3) 现金流','拉盘成本','各品质收益率','分层收益','市值 → 用户收益体感','钱包视角'];
+  document.querySelectorAll('#tab_overview .panel > .panel-h, #tab_overview .panel > div > .panel-h').forEach(h=>{});
+  document.querySelectorAll('#tab_overview .panel').forEach(panel=>{
+    const h=panel.querySelector(':scope > .panel-h');if(!h)return;
+    if(!foldTitles.some(ft=>h.textContent.includes(ft)))return;
+    const det=document.createElement('details');det.className='fold';
+    const sum=document.createElement('summary');sum.className='panel-h';sum.innerHTML=h.innerHTML;
+    panel.parentNode.insertBefore(det,panel);
+    h.remove();det.appendChild(sum);det.appendChild(panel);
+    det.addEventListener('toggle',()=>render());
+  });
+})();
 read();wInit();render();
 </script>
 <script>
