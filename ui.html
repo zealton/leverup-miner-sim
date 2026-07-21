@@ -233,15 +233,15 @@ const fmtDec=v=>v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
 /* ---- constants (aligned with simulator) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
 const TIERS={
-  A:{total:5000,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 800 台'},
-  B:{total:12500,color:'var(--blue)',cn:'稀有',mult:'产量 ×2.5',supply:'全网限量 120 台'},
-  C:{total:31000,color:'var(--gold)',cn:'传说',mult:'产量 ×6.2',supply:'全网仅 20 台'}};
+  A:{total:5000,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 500 台'},
+  B:{total:12500,color:'var(--blue)',cn:'稀有',mult:'产量 ×2.5',supply:'全网限量 75 台'},
+  C:{total:31000,color:'var(--gold)',cn:'传说',mult:'产量 ×6.2',supply:'全网仅 12 台'}};
 const GEARS={
   Z:{v:0,pnl:0,name:'没交易',desc:'不开单'},
   L:{v:50000,pnl:0,name:'交易但亏',desc:'量 $50,000/周'},
   W:{v:50000,pnl:2000,name:'小赚',desc:'PnL +$2,000/周'},
   B:{v:200000,pnl:20000,name:'大赚',desc:'PnL +$20,000/周'}};
-const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=120, QC=20, VE_APR=0.469;
+const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.30, QB=75, QC=12, VE_APR=0.469;
 
 let S;
 function init(){
@@ -284,7 +284,7 @@ function remint(){
   S.chances-=1;S.lottoState='spin';render();
   setTimeout(()=>{
     const r=rnd(),cur=S.miner.tier;let res='stay';
-    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',800]);
+    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',500]);
     const tot=opts.reduce((a,o)=>a+o[1],0);
     if(r>=STAY&&tot>0){let x=(r-STAY)/(1-STAY)*tot;for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}}
     if(res!=='stay'&&res!==cur){const frac=S.miner.rem/TIERS[cur].total;S.miner.tier=res;S.miner.rem=TIERS[res].total*frac}
@@ -303,12 +303,12 @@ function go(v){S.view=v;if(v!=='home')S.rail=v;if(v!=='lotto'){S.lottoState='idl
 function vMiner(){
   if(!S.miner)return `
     <div class="panel">
-      <div class="ph"><span class="t">Miner</span><span class="r">首批 已认领 623 / 800</span></div>
+      <div class="ph"><span class="t">Miner</span><span class="r">首批 已认领 412 / 500</span></div>
       <div class="panel-pad">
         <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
           <div class="tbadge A"><span class="lt">A</span><span class="mn">MINER</span></div>
           <div style="flex:1;min-width:0">
-            <div class="lbl">A 级矿机 · 首批 800 台</div>
+            <div class="lbl">A 级矿机 · 首批 500 台</div>
             <div class="bignum">5,000 <small>LV / 100 天 · ≈ ${fmtU(5000*PLV)}</small></div>
             <div style="font-size:11.5px;color:var(--mut2);margin-top:2px">价格 8,000 MON（≈ ${fmtU(PRICE_USD)}）</div>
           </div>
@@ -405,9 +405,9 @@ function vLotto(){
       <div class="lbl">REMINT · 升级抽卡</div>
       <p style="font-size:12px;color:var(--mut);margin-bottom:12px">消耗 1 次机会给矿机抽一次「变身」。<b style="color:var(--soft)">进度不清零</b>：挖到 60% 时升级，从新产量的 60% 继续。</p>
       <div class="ladder">
-        <div class="t3 ${cur==='A'?'you':''}"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 800 台</div></div>
-        <div class="t3 B ${cur==='B'?'you':''}"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5 · 限量 120</div></div>
-        <div class="t3 C ${cur==='C'?'you':''}"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2 · 仅 20 台</div></div>
+        <div class="t3 ${cur==='A'?'you':''}"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 500 台</div></div>
+        <div class="t3 B ${cur==='B'?'you':''}"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5 · 限量 75</div></div>
+        <div class="t3 C ${cur==='C'?'you':''}"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2 · 仅 12 台</div></div>
       </div>
       <div class="slot ${cls}">${inner}</div>
       <button class="btn" ${can?'':'disabled'} onclick="remint()">${can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 交易攒机会'}</button>
