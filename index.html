@@ -78,9 +78,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--acid
 .tierrow{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px}
 .tierrow .tn{font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px}
 .tierrow .tn.a{color:var(--text)} .tierrow .tn.b{color:var(--blue)} .tierrow .tn.c{color:var(--gold)}
-.tierrow input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--acid);
+.tierrow input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--acid);
   font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:12px;padding:5px 8px;outline:none}
-.tierrow input[type=number]:focus{border-color:var(--acid)}
+.tierrow input:focus{border-color:var(--acid)}
 .tierhead{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
 
 /* stats + charts */
@@ -243,9 +243,9 @@ footer a{color:var(--muted)}
 
       <div class="sect">矿机与品质（A 发售 · B/C 仅 remint）</div>
       <div class="tierhead"><span></span><span>单台总产出 LV</span><span>配额（台）</span></div>
-      <div class="tierrow"><span class="tn a">A</span><input type="number" id="i_la" value="5000" min="100" step="100"><input type="number" id="i_qa" value="800" min="100" step="100"></div>
-      <div class="tierrow"><span class="tn b">B</span><input type="number" id="i_lb" value="12500" min="100" step="100"><input type="number" id="i_qb" value="120" min="10" step="10"></div>
-      <div class="tierrow"><span class="tn c">C</span><input type="number" id="i_lc" value="31000" min="100" step="100"><input type="number" id="i_qc" value="20" min="10" step="10"></div>
+      <div class="tierrow"><span class="tn a">A</span><input type="text" inputmode="numeric" id="i_la" value="5,000"><input type="text" inputmode="numeric" id="i_qa" value="800"></div>
+      <div class="tierrow"><span class="tn b">B</span><input type="text" inputmode="numeric" id="i_lb" value="12,500"><input type="text" inputmode="numeric" id="i_qb" value="120"></div>
+      <div class="tierrow"><span class="tn c">C</span><input type="text" inputmode="numeric" id="i_lc" value="31,000"><input type="text" inputmode="numeric" id="i_qc" value="20"></div>
       <div class="ctl" style="margin-top:12px"><div class="ctl-top"><label>基础释放周期（天，boost=1）<span class="tip" data-tip="默认 100 天：对齐 Monad 解锁时间节点——挖满一台矿机的周期与解锁预期同频，形成时间锚点叙事。">?</span></label><span class="val" id="v_T"></span></div>
         <input type="range" id="i_T" min="30" max="365" step="5" value="100"></div>
       <div class="ctl"><div class="ctl-top"><label>到期规则<span class="tip" data-tip="<b>② 到期作废</b>：矿机寿命固定（从购买起 100 天），boost&lt;1 的时段按比例少产，到期时未释放的 LV 作废——协议负债有硬截止日，赛季化运营，可以开新玩法。<b>① 冻结延时</b>：boost 低只是拉长时间（0 = 无限冻结），所有 LV 迟早要付——永续债务、长期运维。">?</span></label><span class="val" id="v_expire"></span></div>
@@ -447,6 +447,8 @@ const $=id=>document.getElementById(id);
 const fmt=v=>{const a=Math.abs(v);let s;if(a>=1e9)s='$'+(a/1e9).toFixed(2)+'B';else if(a>=1000)s='$'+Math.round(a).toLocaleString('en-US');else s='$'+a.toFixed(2);return(v<0?'−':'')+s};
 const fmtLV=v=>{const a=Math.abs(v);if(a>=1e9)return(a/1e9).toFixed(2)+'B';return Math.round(a).toLocaleString('en-US')};
 const fmtI=v=>Math.round(v).toLocaleString('en-US');
+const parseNum=v=>{const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?NaN:n};
+const fmtInput=v=>{const n=+v;return isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:6}):''};
 
 const P={};
 function read(){
@@ -457,8 +459,8 @@ function read(){
   P.hw=+$('i_hw').value/100; P.hy=+$('i_hy').value/100; P.idle=+$('i_idle').value/100; P.wr=+$('i_wr').value/100;
   if(P.hw+P.idle>0.9){P.idle=Math.max(0,0.9-P.hw);$('i_idle').value=Math.round(P.idle*100)}
   P.xmon=+$('i_xmon').value; P.pmon=+$('i_pmon').value; P.priceUsd=P.xmon*P.pmon;
-  P.L={A:+$('i_la').value,B:+$('i_lb').value,C:+$('i_lc').value};
-  P.Q={A:+$('i_qa').value,B:+$('i_qb').value,C:+$('i_qc').value};
+  P.L={A:parseNum($('i_la').value)||0,B:parseNum($('i_lb').value)||0,C:parseNum($('i_lc').value)||0};
+  P.Q={A:parseNum($('i_qa').value)||0,B:parseNum($('i_qb').value)||0,C:parseNum($('i_qc').value)||0};
   P.T=+$('i_T').value;
   P.bmax=+$('i_bmax').value; P.smax=+$('i_smax').value/100; P.floorw=+$('i_floorw').value;
   P.vol=+$('i_vol').value; P.cuser=+$('i_cuser').value/100;
@@ -939,18 +941,22 @@ function renderWallet(reset){
 // pair every slider with a synced number input (typing beyond range extends the slider)
 document.querySelectorAll('input[type=range]').forEach(r=>{
   const num=document.createElement('input');
-  num.type='number';num.className='numin';num.step='any';num.value=r.value;
+  num.type='text';num.inputMode='decimal';num.className='numin';num.value=fmtInput(r.value);
   const wrap=document.createElement('div');wrap.className='sliderrow';
   r.parentNode.insertBefore(wrap,r);wrap.appendChild(r);wrap.appendChild(num);
   num.addEventListener('input',()=>{
-    const v=parseFloat(num.value);if(isNaN(v))return;
+    const v=parseNum(num.value);if(isNaN(v))return;
     if(v>+r.max)r.max=v; if(v<+r.min)r.min=v;
     r.value=v;render();
   });
-  r.addEventListener('input',()=>{num.value=r.value});
+  num.addEventListener('change',()=>{const v=parseNum(num.value);num.value=fmtInput(isNaN(v)?r.value:v)});
+  r.addEventListener('input',()=>{num.value=fmtInput(r.value)});
 });
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',render));
-document.querySelectorAll('.tierrow input[type=number]').forEach(el=>el.addEventListener('input',render));
+document.querySelectorAll('.tierrow input').forEach(el=>{
+  el.addEventListener('input',render);
+  el.addEventListener('change',()=>{const v=parseNum(el.value);if(!isNaN(v))el.value=fmtInput(v);render()});
+});
 $('i_expire').addEventListener('change',render);
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
@@ -992,7 +998,7 @@ function sbRenderEditors(){
   // MC checkpoints
   sbEl('sb_mc').innerHTML=SB.mc.map((c,i)=>`
     <div class="sb-row">第 <input type="number" data-mc="${i}" data-f="w" value="${c.w}" min="0" step="1" style="width:60px"> 周
-      市值 $<input type="number" data-mc="${i}" data-f="mc" value="${c.mc}" step="100000" style="width:110px">
+      市值 $<input type="text" inputmode="numeric" data-mc="${i}" data-f="mc" value="${fmtInput(c.mc)}" style="width:110px">
       <span style="color:var(--dim)">${fmt(c.mc)}</span>
       <button class="del" data-act="mc_del" data-i="${i}">✕</button></div>`).join('')
     ||'<div class="hint">无检查点 = 恒定当前市值</div>';
@@ -1025,7 +1031,7 @@ function sbRenderForm(ui){
   const t=sel?sel.value:'buy';
   const box=sbEl('sb_form_'+ui);if(!box)return;
   if(t==='buy')box.innerHTML=`周 <input type="number" id="f_${ui}_w" value="0" min="0" style="width:56px"> 台数 <input type="number" id="f_${ui}_n" value="1" min="1" style="width:56px">`;
-  else if(t==='wash')box.innerHTML=`起 <input type="number" id="f_${ui}_w1" value="0" min="0" style="width:56px"> 止 <input type="number" id="f_${ui}_w2" value="8" min="0" style="width:56px"> 周量 <input type="number" id="f_${ui}_v" value="100000" step="10000" style="width:90px">`;
+  else if(t==='wash')box.innerHTML=`起 <input type="number" id="f_${ui}_w1" value="0" min="0" style="width:56px"> 止 <input type="number" id="f_${ui}_w2" value="8" min="0" style="width:56px"> 周量 <input type="text" inputmode="numeric" id="f_${ui}_v" value="100,000" style="width:90px">`;
   else box.innerHTML=`周 <input type="number" id="f_${ui}_w" value="4" min="0" style="width:56px">`;
 }
 
@@ -1174,7 +1180,7 @@ document.getElementById('tab_sandbox').addEventListener('click',e=>{
   if(act==='a_del')SB.users[+b.dataset.u].actions.splice(+b.dataset.i,1);
   if(act==='a_add'){
     const ui=+b.dataset.u,t=document.querySelector(`select[data-sel="${ui}"]`).value;
-    const gv=id=>{const el=document.getElementById(id);return el?+el.value:0};
+    const gv=id=>{const el=document.getElementById(id);if(!el)return 0;const v=parseNum(el.value);return isNaN(v)?0:v};
     if(t==='buy')SB.users[ui].actions.push({t:'buy',w:gv(`f_${ui}_w`),n:Math.max(1,gv(`f_${ui}_n`))});
     if(t==='wash'){const vv=gv(`f_${ui}_v`);if(vv>0)SB.users[ui].actions.push({t:'wash',w1:gv(`f_${ui}_w1`),w2:Math.max(gv(`f_${ui}_w1`),gv(`f_${ui}_w2`)),v:vv})}
     if(t==='remint')SB.users[ui].actions.push({t:'remint',w:gv(`f_${ui}_w`)});
@@ -1184,7 +1190,7 @@ document.getElementById('tab_sandbox').addEventListener('click',e=>{
 });
 document.getElementById('tab_sandbox').addEventListener('input',e=>{
   const t=e.target;
-  if(t.dataset.mc!==undefined&&t.dataset.f){SB.mc[+t.dataset.mc][t.dataset.f]=+t.value||0;sbResults(sbRun())}
+  if(t.dataset.mc!==undefined&&t.dataset.f){const v=parseNum(t.value);if(!isNaN(v))SB.mc[+t.dataset.mc][t.dataset.f]=v;sbResults(sbRun())}
 });
 document.getElementById('tab_sandbox').addEventListener('change',e=>{
   if(e.target.matches('select[data-sel]'))sbRenderForm(+e.target.dataset.sel);
