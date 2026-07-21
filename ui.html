@@ -213,6 +213,7 @@ button{font-family:inherit}
   <h3>演示控制台（非产品）</h3>
   <button class="btn ghost" id="c_d1">快进 1 天</button>
   <button class="btn ghost" id="c_d7">快进 7 天</button>
+  <button class="btn ghost" id="c_grant">模拟获得首批矿机</button>
   <button class="btn ghost" id="c_chance">+1 抽卡机会</button>
   <button class="btn ghost" id="c_reset">重置演示</button>
   <div style="margin-top:10px">
@@ -302,28 +303,24 @@ function go(v){S.view=v;if(v!=='home')S.rail=v;if(v!=='lotto'){S.lottoState='idl
 function vMiner(){
   if(!S.miner)return `
     <div class="panel">
-      <div class="ph"><span class="t">Miner · 首批发售</span><span class="r">已认领 623 / 800</span></div>
+      <div class="ph"><span class="t">Miner</span><span class="r">首批 已认领 623 / 800</span></div>
       <div class="panel-pad">
-        <div class="lbl">MYSTERY SALE</div>
-        <h2 style="font-size:18px;font-weight:800;margin-bottom:6px">首批矿机 · 神秘发售</h2>
-        <p style="font-size:12.5px;color:var(--mut);margin-bottom:14px">本页没有购买按钮。发售地址只出现在官方推特的那条推文里。</p>
-        <div class="block steps" style="margin-bottom:14px">
-          <div class="row"><span>第一步</span><b>找到 @LeverUpFi 置顶推文</b></div>
-          <div class="row"><span>第二步</span><b>转 恰好 8,000 MON 至推文地址</b></div>
-          <div class="row"><span>第三步</span><b>矿机自动出现在本页（绑定转账钱包）</b></div>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+          <div class="tbadge A"><span class="lt">A</span><span class="mn">MINER</span></div>
+          <div style="flex:1;min-width:0">
+            <div class="lbl">A 级矿机 · 首批 800 台</div>
+            <div class="bignum">5,000 <small>LV / 100 天 · ≈ ${fmtU(5000*PLV)}</small></div>
+            <div style="font-size:11.5px;color:var(--mut2);margin-top:2px">价格 8,000 MON（≈ ${fmtU(PRICE_USD)}）</div>
+          </div>
         </div>
-        <button class="btn ghost" onclick="checkTx()">我已转账 · 检测到账</button>
-        <div class="divider"></div>
-        <div class="row"><span>单台规格</span><b>100 天内最多 5,000 LV（≈ ${fmtU(5000*PLV)}）</b></div>
+        <div class="row"><span>产出方式</span><b>按秒线性释放，边挖边领</b></div>
         <div class="row"><span>加速规则</span><b>周盈利占比 → 最高 3 倍速</b></div>
+        <div class="row"><span>升级抽卡</span><b>每 $1.2M 交易量 = 1 次，可抽 B / C</b></div>
         <div class="row"><span>到期规则</span><b>100 天硬到期，未挖出部分作废</b></div>
+        <div class="divider"></div>
+        <button class="btn" disabled>Buy · 暂未开放</button>
+        <p style="font-size:11.5px;color:var(--mut2);margin-top:8px;text-align:center">首批发售正在官方 X（Twitter）进行 · 页面购买入口将于后续批次开放</p>
       </div>
-    </div>
-    <div class="warnbox">
-      <div class="t">防伪提示</div>
-      <p>1. 地址<b>只认官方账号置顶推文</b>——评论区与私信里的地址均为假冒。<br>
-      2. 金额必须<b>恰好 8,000 MON</b>：多转、少转、售罄后转均自动原路退回。<br>
-      3. 全程<b>不需要授权任何合约</b>，只是一笔普通转账。</p>
     </div>`;
 
   const m=S.miner,tier=TIERS[m.tier];
@@ -478,6 +475,7 @@ $('con_toggle').addEventListener('click',()=>$('console').classList.toggle('open
 document.querySelectorAll('.nv:not(.on)').forEach(b=>b.addEventListener('click',()=>toast('演示：该 Tab 为 LeverUp 现有页面')));
 $('c_d1').addEventListener('click',()=>tick(1));
 $('c_d7').addEventListener('click',()=>tick(7));
+$('c_grant').addEventListener('click',()=>checkTx());
 $('c_chance').addEventListener('click',()=>{S.chances+=1;render()});
 $('c_reset').addEventListener('click',init);
 init();
