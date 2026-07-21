@@ -13,19 +13,39 @@
   --text:#f0f0f0; --muted:#8a8a8a; --dim:#4a4a4a;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:#050505;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;min-height:100vh;
-  display:flex;justify-content:center;align-items:flex-start;gap:24px;padding:28px 16px 60px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;min-height:100vh}
 
-/* phone frame */
-.phone{width:414px;max-width:100%;background:var(--bg);border:1px solid #333;border-radius:36px;overflow:hidden;
-  box-shadow:0 24px 80px rgba(0,0,0,.7);display:flex;flex-direction:column;min-height:860px;position:relative}
-.statusbar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 10px;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--muted)}
-.statusbar b{color:var(--text)}
-.appbody{flex:1;overflow-y:auto;padding:6px 16px 90px;scrollbar-width:none}
-.appbody::-webkit-scrollbar{display:none}
+/* app shell: top nav imitating app.leverup.xyz */
+.topnav{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:20px;height:54px;padding:0 18px;
+  background:#0b0b0b;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;white-space:nowrap}
+.logo .bars{display:flex;align-items:flex-end;gap:2px;height:16px}
+.logo .bars i{width:4px;background:var(--acid);border-radius:1px}
+.logo .bars i:nth-child(1){height:7px}.logo .bars i:nth-child(2){height:11px}.logo .bars i:nth-child(3){height:16px}
+.logo span b{color:var(--acid)}
+.navitems{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.navitems::-webkit-scrollbar{display:none}
+.nv{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;
+  padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nv:hover{color:var(--text)}
+.nv.on{color:var(--acid);background:rgba(199,245,13,.08)}
+.nv .new{font-size:9px;background:var(--red);color:#fff;padding:1px 5px;border-radius:99px;font-weight:700;letter-spacing:.04em}
+.navright{display:flex;align-items:center;gap:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:6px 11px;border-radius:10px}
+.chip b{color:var(--text)}
+.wallet{font-size:13px;font-weight:700;background:var(--acid);color:#0a0a0a;border:none;padding:8px 14px;border-radius:10px;cursor:pointer}
+@media(max-width:900px){.navitems .nv:not(.on){display:none}.topnav{gap:12px}}
+
+/* content shell */
+.shell{max-width:1360px;margin:0 auto;padding:18px 16px 96px}
+@media(min-width:1024px){.shell{padding-bottom:32px}}
+.desk{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+@media(max-width:1359px){.desk{grid-template-columns:repeat(2,1fr)}}
+.dcol{min-width:0}
 
 /* bottom tabs */
-.tabs{position:absolute;bottom:0;left:0;right:0;display:flex;background:#0d0d0d;border-top:1px solid var(--border);padding:10px 8px 18px;z-index:10}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(13,13,13,.96);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:10px 8px 18px;z-index:30}
+@media(min-width:1024px){.tabs{display:none}}
 .tabs button{flex:1;background:none;border:none;color:var(--dim);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 .tabs button .ic{font-size:20px;line-height:1}
 .tabs button.on{color:var(--acid)}
@@ -135,41 +155,62 @@ h2{font-size:16px;font-weight:700;margin-bottom:4px}
 .tag{display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--acid);color:var(--acid);font-weight:600;letter-spacing:.06em}
 
 /* toast & modal */
-#toast{position:absolute;bottom:104px;left:50%;transform:translateX(-50%);background:#1c1c1c;border:1px solid var(--acid);
+#toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:#1c1c1c;border:1px solid var(--acid);
   color:var(--text);font-size:13px;padding:10px 18px;border-radius:14px;display:none;z-index:60;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.6)}
-.overlay{position:absolute;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;z-index:50}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.overlay .sheet{max-width:520px}
 .overlay.show{display:flex}
 .sheet{background:var(--panel);border-top:1px solid var(--acid);border-radius:24px 24px 0 0;padding:22px 20px 30px;width:100%;max-height:82%;overflow-y:auto}
 .sheet h2{margin-bottom:10px}
 
 /* demo console */
-.console{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;position:sticky;top:28px}
+.console{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;
+  position:fixed;right:16px;top:70px;z-index:45;display:none;box-shadow:0 16px 50px rgba(0,0,0,.6)}
+.console.open{display:block}
+@media(min-width:1520px){.console{display:block}#con_toggle{display:none}}
+#con_toggle{position:fixed;right:16px;top:64px;z-index:46;width:40px;height:40px;border-radius:12px;
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);font-size:17px;cursor:pointer}
 .console h3{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
 .console .btn{margin-bottom:8px;padding:10px;font-size:13px}
 .console .k{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #1e1e1e}
 .console .k b{color:var(--text)}
 .console a{color:var(--muted);font-size:11px;font-family:'IBM Plex Mono',monospace}
-@media(max-width:720px){.console{display:none}}
+
 </style>
 </head>
 <body>
 
-<div class="phone">
-  <div class="statusbar"><span>⛏ LeverUp 矿机</span><span>LV <b id="sb_price">$0.0533</b> · <b id="sb_mon">20,000</b> MON</span></div>
-  <div class="appbody" id="app"></div>
-
-  <div class="tabs">
-    <button data-v="home" class="on"><span class="ic">⛏</span>矿机</button>
-    <button data-v="boost"><span class="ic">📈</span>战绩</button>
-    <button data-v="lotto"><span class="ic">🎰</span>抽卡</button>
-    <button data-v="vault"><span class="ic">🏦</span>金库</button>
+<nav class="topnav">
+  <div class="logo"><span class="bars"><i></i><i></i><i></i></span><span>Lever <b>Up</b></span></div>
+  <div class="navitems">
+    <button class="nv">📊 Trade</button>
+    <button class="nv">💵 LVUSD</button>
+    <button class="nv">🟣 LVMON</button>
+    <button class="nv">🎁 LV Airdrop</button>
+    <button class="nv">🏆 Competition</button>
+    <button class="nv on">⛏ Miner <span class="new">NEW</span></button>
   </div>
+  <div class="navright">
+    <span class="chip">LV <b id="sb_price">$0.0533</b></span>
+    <span class="chip"><b id="sb_mon">20,000</b> MON</span>
+    <button class="wallet">0x3F…9A2C</button>
+  </div>
+</nav>
 
-  <div id="toast"></div>
-  <div class="overlay" id="sheet_ov"><div class="sheet" id="sheet"></div></div>
+<main class="shell"><div id="app"></div></main>
+
+<div class="tabs">
+  <button data-v="home" class="on"><span class="ic">⛏</span>矿机</button>
+  <button data-v="boost"><span class="ic">📈</span>战绩</button>
+  <button data-v="lotto"><span class="ic">🎰</span>抽卡</button>
+  <button data-v="vault"><span class="ic">🏦</span>金库</button>
 </div>
 
-<div class="console">
+<div id="toast"></div>
+<div class="overlay" id="sheet_ov"><div class="sheet" id="sheet"></div></div>
+
+<button id="con_toggle" title="演示控制台">🎛</button>
+<div class="console" id="console">
   <h3>演示控制台（非产品）</h3>
   <button class="btn ghost" id="c_d1">⏩ 快进 1 天</button>
   <button class="btn ghost" id="c_d7">⏩⏩ 快进 7 天</button>
@@ -271,7 +312,7 @@ function claim(){if(S.vault<1)return;S.wallet+=S.vault;toast('已领取 '+fmtLV(
 function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池，开始吃分红');S.wallet=0;render()}
 
 /* ---- views ---- */
-function vHome(){
+function vHome(compact){
   if(!S.miner)return `
     <div class="card hl" style="text-align:center;padding:26px 18px">
       <div style="font-size:54px" class="pulse">🕳️</div>
@@ -338,7 +379,7 @@ function vHome(){
       <div class="deadline ${daysLeft<=21?'warn':''}">⏳ 还剩 <b class="mono" style="font-size:16px">&nbsp;${daysLeft}&nbsp;</b> 天${daysLeft<=21?' · 到期没挖完的会消失！':'，到期后没挖完的部分会消失'}</div>
       ${b<=0?'<div style="height:10px"></div><button class="btn" onclick="go(\'boost\')">😱 本周没盈利，机器停了！→</button>':''}
     </div>
-    <div class="card">
+    ${compact?'':`<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div><h2>🎰 抽卡机会 <b class="mono" style="color:var(--acid)">${Math.floor(S.chances)}</b> 次</h2>
         <p class="sub" style="font-size:12px">升级 B/C 产量翻倍，进度不清零</p></div>
@@ -351,7 +392,7 @@ function vHome(){
         <p class="sub" style="font-size:12px">≈ ${fmtU(S.vault*PLV)} · 可领取或存着吃分红</p></div>
         <button class="btn mini ghost" onclick="go('vault')">去金库</button>
       </div>
-    </div>`;
+    </div>`}`;
 }
 
 function vBoost(){
@@ -457,12 +498,22 @@ function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';
 function render(){
   $('sb_mon').textContent=S.mon.toLocaleString();
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
-  $('app').innerHTML={home:vHome,boost:vBoost,lotto:vLotto,vault:vVault}[S.view]();
+  const app=$('app');
+  if(matchMedia('(min-width:1024px)').matches){
+    app.className='desk';
+    app.innerHTML=`<div class="dcol">${vHome(true)}</div><div class="dcol">${vBoost()}</div><div class="dcol">${vLotto()}</div><div class="dcol">${vVault()}</div>`;
+  }else{
+    app.className='';
+    app.innerHTML=({home:()=>vHome(false),boost:vBoost,lotto:vLotto,vault:vVault})[S.view]();
+  }
   $('c_day').textContent=S.day;
   $('c_floor').textContent=floorNow()===1?'1×（宽限期，第42天结束）':'0×（不交易=停转）';
   $('c_ch').textContent=S.chances.toFixed(2);
 }
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+window.addEventListener('resize',()=>render());
+document.getElementById('con_toggle').addEventListener('click',()=>document.getElementById('console').classList.toggle('open'));
+document.querySelectorAll('.nv:not(.on)').forEach(b=>b.addEventListener('click',()=>toast('演示：该 Tab 为 LeverUp 现有页面')));
 $('c_d1').addEventListener('click',()=>tick(1));
 $('c_d7').addEventListener('click',()=>tick(7));
 $('c_chance').addEventListener('click',()=>{S.chances+=1;render()});
