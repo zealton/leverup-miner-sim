@@ -47,8 +47,7 @@ h1 .thin{color:var(--muted);font-weight:500}
 .ans.warn .k{color:var(--red)}
 
 /* layout */
-.grid{display:grid;grid-template-columns:340px 1fr;gap:16px}
-@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
 .panel{border:1px solid var(--border);background:var(--panel)}
 .panel-h{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -204,14 +203,21 @@ footer a{color:var(--muted)}
 </div>
 
 <div id="tab_overview">
-<div class="howto"><b>读法：</b>① 先看下方三张答案卡（排放预算 / 市值门槛 / 协议损益）→ ② 看「协议资金池」曲线确认第一期不转负 → ③ 需要细节时再展开带 ▸ 的折叠模块。参数在左栏，改动即全页联动。</div>
-<div class="flow">
+<div class="howto"><b>本页 = 第一期数值定稿（供智能合约与前后端实现对照）。</b>读法：① 定稿参数速查 → ② 三张结论卡 → ③ 核心指标。其余分析全部折叠备查（带 ▸ 可展开）；「全部参数」折叠内可调节探索，改动即全页实时重算。</div>
+
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-h">第一期定稿参数 · 实现速查 <span class="tag">SPEC</span></div>
+  <div class="panel-b kv" id="spec_kv" style="line-height:2.1"></div>
+</div>
+<details class="fold"><summary class="panel-h">机制五步（速览）</summary>
+<div class="flow" style="margin-bottom:0;border:none">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
   <div class="fstep"><div class="n">03 / BOOST</div><div class="t">盈利竞速</div><div class="d">boost = 我的正 PnL（<b>60h-EMA</b>）÷ 全体矿工盈利池，映射 1–3×，每小时更新。EMA ≤ 0 吃下限；后期下限归 <b>0</b>。交易量不给 boost，只攒 remint。</div></div>
   <div class="fstep"><div class="n">04 / REMINT</div><div class="t">品质抽奖</div><div class="d">每 $1M 交易量 = 1 次机会。按<b>剩余配额加权</b>随机，可能保持原品质；配额满则抽不到。</div></div>
   <div class="fstep"><div class="n">05 / 升级</div><div class="t">进度继承</div><div class="d">升级<b>不重置时间</b>：按当前进度比例，剩余时间释放新品质对应的剩余 LV。</div></div>
 </div>
+</details>
 
 <!-- ANSWERS -->
 <div class="answers">
@@ -333,12 +339,14 @@ footer a{color:var(--muted)}
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
 
-    <div class="stats">
+    <details class="fold"><summary class="panel-h">用户整体视角与 APR/APY</summary>
+    <div class="stats" style="margin-bottom:0;border:none">
       <div class="stat"><div class="k">用户整体投入<span class="tip" data-tip="模拟期内全体用户实际掏出的钱：矿机购买 + 刷量摩擦成本（交易量 × 刷量成本率）。B/C 通过 remint 获得、不额外付购机费。">?</span></div><div class="v white" id="u_in">—</div><div class="u" id="u_in_u">—</div></div>
       <div class="stat"><div class="k">用户整体产出市值</div><div class="v white" id="u_out">—</div><div class="u">全部排放 LV × 当前价</div></div>
       <div class="stat"><div class="k">用户整体净盈亏<span class="tip" data-tip="产出市值 − 投入。为负说明按当前 LV 价格、全体用户是净亏的——收益故事只能靠市值增长兑现。">?</span></div><div class="v" id="u_net">—</div><div class="u" id="u_net_u">—</div></div>
       <div class="stat"><div class="k">A 矿机 APR / APY<span class="tip" data-tip="按<b>当前市值</b>与全成本（购机+刷量）计算。APR = 单周期收益率 × (365 ÷ 寿命)，单利年化；APY = (1 + 周期收益率)^(365 ÷ 寿命) − 1，假设每期产出全部复投买新矿机的复利年化。">?</span></div><div class="v white" id="u_apr">—</div><div class="u" id="u_apr_u">—</div></div>
     </div>
+    </details>
 
     <div class="panel" style="margin-bottom:16px">
       <div class="panel-h"><span>回本时间分布 · 谁先回本、谁回不了本<span class="tip" data-tip="按「边挖边卖」口径：每条线是该分层单台矿机的累计净现金流（产出变现 − 购机 − 交易摩擦）。穿越 $0 的那天 = 回本日。设计目标：大户短期回本形成战报，低 boost 者被时间和到期作废逐渐挤出短期回本区。">?</span></span>
@@ -637,7 +645,8 @@ function chartMove(e){
 function chartLeave(){if(chartTip){chartTip.style.display='none';chartGuide.style.display='none'}}
 
 function drawFlow(weeks){
-  const c=$('c_flow'),[ctx,W,H]=setup(c,240);
+  const c=$('c_flow');if(c.clientWidth<50)return;
+  const [ctx,W,H]=setup(c,240);
   const padL=56;
   const vals=weeks.flatMap(x=>[x.inflow,x.emitUsd]);
   const ymax=Math.max(...vals,1)*1.12,ymin=0;
@@ -681,7 +690,8 @@ function drawFleet(weeks){
     {label:'已耗尽（累计）',color:'#FA5000',vals:weeks.map(x=>x.dead),fmt:fN}]});
 }
 function drawPnl(weeks){
-  const c=$('c_pnl'),[ctx,W,H]=setup(c,200);
+  const c=$('c_pnl');if(c.clientWidth<50)return;
+  const [ctx,W,H]=setup(c,200);
   const padL=64;
   const vals=weeks.flatMap(x=>[x.cumRev,x.cumCost,x.cumRev-x.cumCost]);
   let ymax=Math.max(...vals,1)*1.1,ymin=Math.min(...vals,0)*1.1;
@@ -740,6 +750,18 @@ function render(){
   const bTyp=P.vol>0?P.wr*bTypWin+(1-P.wr)*fl0:fl0;
   const volTyp=P.vol;
   const b=bTyp;
+  // spec quick-reference (implementation handoff)
+  const pA=(1-P.stay)*Math.max(0,P.Q.B)/(Math.max(0,P.Q.B)+Math.max(0,P.Q.C)||1);
+  const pC2=(1-P.stay)*Math.max(0,P.Q.C)/(Math.max(0,P.Q.B)+Math.max(0,P.Q.C)||1);
+  $('spec_kv').innerHTML=`
+    <div class="row"><span>发售（第一期）</span><span>首批 <b>${fmtI(P.gen)} 台 A</b> · <b>${fmtI(P.xmon)} MON</b>/台（≈${fmt(P.priceUsd)}）· 先售罄后统一开挖 · 推特发售，页面 Buy 置灰</span></div>
+    <div class="row"><span>品质与配额</span><span>总量恒 ${fmtI(P.Q.A)} · A 发售 · <b>B 上限 ${fmtI(P.Q.B)}</b> · <b>C 上限 ${fmtI(P.Q.C)}</b>（B/C 仅 remint 可得）</span></div>
+    <div class="row"><span>单台产出</span><span>A <b>${fmtLV(P.L.A)}</b> / B <b>${fmtLV(P.L.B)}</b> / C <b>${fmtLV(P.L.C)}</b> LV · 每秒线性释放 · 周期 <b>${P.T} 天</b>（boost=1）</span></div>
+    <div class="row"><span>到期规则</span><span><b>${P.expire==='forfeit'?'硬到期：第 '+P.T+' 天未挖出部分作废（负债随批清零）':'冻结延时（永续负债）'}</b></span></div>
+    <div class="row"><span>Boost</span><span>钱包 PnL 的 <b>60h 半衰期 EMA</b> ÷ 全体矿工正 EMA 池 → 占 <b>${(P.smax*100).toFixed(1)}%</b> 满速 · 区间 [下限, ${P.bmax}×] · <b>第 ${P.floorw} 周起下限 1→0</b> · 绑定单台生效、可随时换绑</span></div>
+    <div class="row"><span>Remint</span><span>每 <b>${fmt(P.rth)}</b> 交易量 = 1 次（钱包级，赚亏都算）· <b>${Math.round(P.stay*100)}% 不变</b> · A→B ${(pA*100).toFixed(1)}% / A→C ${(pC2*100).toFixed(1)}%（按剩余配额加权）· <b>C 不可抽</b> · B 再抽 ~34% 降级 · 升级进度继承（剩余比例 × 新品质总量）</span></div>
+    <div class="row"><span>Claim / 质押</span><span>每台独立 claim + 一键全领 · 产出可入 ve 分红池（真实 fee 回购：${Math.round(P.veShare*100)}% 分质押者 / ${Math.round((1-P.veShare)*100)}% 销毁）</span></div>
+    <div class="row"><span>资金策略</span><span>矿机收入 + 客损 <b>全额作为拉盘弹药</b>（假设见「拉盘成本」折叠模块）· LV 现价按 CMC ${fmt(P.mc)} / 流通 ${fmtLV(P.circ)}</span></div>`;
   const weeks=simulate(1);
   const pool=poolMin(weeks);
   const maxEmit=P.L.A*P.Q.A+P.L.B*P.Q.B+P.L.C*P.Q.C;
@@ -1109,7 +1131,7 @@ window.addEventListener('scroll',hideTip,{passive:true});
 
 // collapse secondary modules into <details> (default closed)
 (function foldify(){
-  const foldTitles=['活跃矿机构成','ve(3,3) 现金流','拉盘成本','各品质收益率','分层收益','市值 → 用户收益体感','钱包视角'];
+  const foldTitles=['活跃矿机构成','ve(3,3) 现金流','拉盘成本','各品质收益率','分层收益','市值 → 用户收益体感','钱包视角','可调参数','回本时间分布','周排放市值','协议资金池'];
   document.querySelectorAll('#tab_overview .panel > .panel-h, #tab_overview .panel > div > .panel-h').forEach(h=>{});
   document.querySelectorAll('#tab_overview .panel').forEach(panel=>{
     const h=panel.querySelector(':scope > .panel-h');if(!h)return;
