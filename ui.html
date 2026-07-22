@@ -463,22 +463,40 @@ function vMiner(){
 function toggleExp(id){S.expandId=S.expandId===id?null:id;render()}
 function boostDetail(m,b,bound){
   const g=GEARS[S.gear],fl=floorNow();
-  const share=g.pnl>0?g.pnl/(PNL_POOL+g.pnl):0;
+  const myE=g.pnl;
+  const share=myE>0?myE/(PNL_POOL+myE):0;
+  const bFor=e=>{const sh=e>0?e/(PNL_POOL+e):0;return fl+(BMAX-fl)*Math.min(1,sh/SMAX)};
+  const eMax=Math.ceil(SMAX*PNL_POOL/(1-SMAX));
+  const rate=TIERS[m.tier].total/T;
   if(!bound)return `
     <div class="mexp">
       <div class="row" style="border:none"><span>为什么是 ${b.toFixed(2)}×</span><b>未绑定 — 不吃 PnL 加成，按基础速度（当前下限 ${fl}×${fl===0?'，已停转':''}）</b></div>
-      <div class="fml">速度 = 下限 ${fl}×（宽限期${fl===1?'内，第 42 天起归 0':'已结束'}）</div>
+      <div class="fml">速度 = 下限 ${fl}×（宽限期${fl===1?'内，第 42 天起归 0':'已结束'}）· 绑定后可达 ${bFor(eMax).toFixed(2)}×，这台每天多挖 ${fmtDec(rate*(bFor(eMax)-b))} LV</div>
       <button class="btn-xs" onclick="bind(${m.id})">绑定这台，吃我的 PnL 加成</button>
     </div>`;
+  const refs=[...new Set([0,Math.round(eMax*0.25),Math.round(eMax*0.5),eMax,myE])]
+    .filter(e=>e===myE||Math.abs(e-myE)/eMax>0.06)
+    .sort((a,x)=>a-x);
+  const ladder=refs.map(e=>{
+    const bb=bFor(e),me=e===myE;
+    return `<div class="row" style="border:none;padding:3px 0;${me?'color:var(--green);font-weight:700':''}">
+      <span>${e<=0?'亏损 / 不交易':'盈利 EMA +$'+e.toLocaleString('en-US')}${me?' ← 你在这':''}</span>
+      <b style="${me?'color:var(--green)':''}">${e>0?'占池 '+((e/(PNL_POOL+e))*100).toFixed(2)+'% · ':''}${bb.toFixed(2)}×${bb>=BMAX-0.01?' 满速':''}</b></div>`;
+  }).join('');
+  const gapE=Math.max(0,eMax-myE);
+  const gainLV=rate*(BMAX-b);
   return `
     <div class="mexp">
       <div class="row" style="border:none;padding-top:0"><span>结算口径</span><b>钱包 PnL 的 60 小时半衰期 EMA · 每日结算 · 每小时更新速度</b></div>
       <div class="fml">
-        我的 PnL EMA（演示情景）= <b style="color:var(--green)">+${g.pnl.toLocaleString('en-US')}/周</b><br>
-        占全体矿工盈利池 = ${g.pnl.toLocaleString('en-US')} ÷ ${(PNL_POOL+g.pnl).toLocaleString('en-US')} = <b>${(share*100).toFixed(2)}%</b><br>
-        速度 = 下限 ${fl} + (3 − ${fl}) × min(1, ${(share*100).toFixed(2)}% ÷ 1%) = <b style="color:var(--green)">${b.toFixed(2)}×</b>
+        我的 PnL EMA（演示情景）= <b style="color:var(--green)">+$${myE.toLocaleString('en-US')}</b>
+        → 占盈利池 ${myE.toLocaleString('en-US')} ÷ ${(PNL_POOL+myE).toLocaleString('en-US')} = <b>${(share*100).toFixed(2)}%</b>
+        → 速度 = ${fl} + (${BMAX} − ${fl}) × min(1, ${(share*100).toFixed(2)}% ÷ ${(SMAX*100).toFixed(0)}%) = <b style="color:var(--green)">${b.toFixed(2)}×</b>
       </div>
-      <div class="row" style="border:none"><span>规则</span><b>占盈利池 1% = 满速 3×；亏损周 EMA ≤ 0 → 只有下限（${fl}×）；第 42 天起下限归 0</b></div>
+      <div class="lbl" style="margin:8px 0 2px">速度阶梯（全网盈利池 $${PNL_POOL.toLocaleString('en-US')} 时）</div>
+      ${ladder}
+      ${b<BMAX-0.01?`<div class="missbox" style="margin-top:8px">再赚 <b>+$${gapE.toLocaleString('en-US')}</b>（EMA 口径）→ 满速 ${BMAX}×，这台每天多挖 <b>${fmtDec(gainLV)} LV ≈ ${fmtU(gainLV*PLV)}</b></div>`
+        :'<div style="font-size:11.5px;color:var(--green);margin-top:8px">已满速 — 超过 1% 占比不再叠加，保持盈利在线即可</div>'}
     </div>`;
 }
 function heroSale(){
