@@ -328,8 +328,10 @@ function init(){
 }
 const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
 function floorNow(){return S.day>=FLOOR_DAY?0:1}
-function boostOf(g){const p=GEARS[g].pnl,sh=p>0?p/(PNL_POOL+p):0,fl=floorNow();return fl+(BMAX-fl)*Math.min(1,sh/SMAX)}
-function speedOf(m){return m.id===S.boundId?boostOf(S.gear):floorNow()}
+const EMA_D=Math.pow(0.5,24/60); // per-day decay, 60h half-life
+function boostForEma(e){const fl=floorNow(),sh=e>0?e/(PNL_POOL+e):0;return fl+(BMAX-fl)*Math.min(1,sh/SMAX)}
+function boostOf(g){return boostForEma(GEARS[g].pnl)} // scenario steady-state reference
+function speedOf(m){return boostForEma(m.ema||0)}
 const alive=()=>S.miners.filter(m=>!m.dead);
 const claimTotal=()=>S.miners.reduce((a,m)=>a+m.claimable,0);
 
@@ -338,6 +340,7 @@ function tick(days){
     S.day++;
     S.miners.forEach(m=>{
       if(m.dead)return;
+      m.ema=(m.ema||0)*EMA_D+(m.id===S.boundId?GEARS[S.gear].pnl:0)*(1-EMA_D);
       const b=speedOf(m);
       const e=Math.min(m.rem,TIERS[m.tier].total/T*b);
       m.rem-=e;m.claimable+=e;S.minedTotal+=e;
@@ -369,15 +372,15 @@ function checkTx(){
   if(S.mon<PRICE_MON){toast('钱包 MON 不足 8,000');return}
   toast('正在链上检测你的转账…');
   setTimeout(()=>{S.mon-=PRICE_MON;S.spentBuy+=PRICE_USD;
-    const m={id:S.nextId++,tier:'A',rem:TIERS.A.total,born:S.day,claimable:0,dead:false,done:false,forfeit:0};
+    const m={id:S.nextId++,tier:'A',rem:TIERS.A.total,born:S.day,claimable:0,ema:0,dead:false,done:false,forfeit:0};
     S.miners.push(m);
     if(S.boundId===null)S.boundId=m.id;
     toast('检测到 8,000 MON — 矿机 #'+pad(m.id)+' 已入账并开挖');
     S.view='home';render();
   },1200);
 }
-function bind(id){S.boundId=id;toast('#'+pad(id)+' 已绑定：你的 PnL 加成只作用于这台');render()}
-function unbind(){S.boundId=null;toast('已解绑：所有矿机回到基础速度');render()}
+function bind(id){S.boundId=id;toast('#'+pad(id)+' 已绑定：此后平仓盈利记入这台的 EMA（旧矿机系数按 60h 衰减）');render()}
+function unbind(){S.boundId=null;toast('已解绑：平仓盈利暂不记入任何矿机，各机 EMA 自然衰减');render()}
 function claimOne(id){const m=S.miners.find(x=>x.id===id);if(!m||m.claimable<0.1)return;
   S.wallet+=m.claimable;toast('#'+pad(id)+' 已领取 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
 function claimAll(){const t=claimTotal();if(t<0.1)return;S.wallet+=t;S.miners.forEach(m=>m.claimable=0);toast('已领取全部 '+fmtLV(t)+' LV 到钱包');render()}
@@ -463,16 +466,16 @@ function vMiner(){
 function toggleExp(id){S.expandId=S.expandId===id?null:id;render()}
 function boostDetail(m,b,bound){
   const g=GEARS[S.gear],fl=floorNow();
-  const myE=g.pnl;
+  const myE=Math.round(m.ema||0);
   const share=myE>0?myE/(PNL_POOL+myE):0;
   const bFor=e=>{const sh=e>0?e/(PNL_POOL+e):0;return fl+(BMAX-fl)*Math.min(1,sh/SMAX)};
   const eMax=Math.ceil(SMAX*PNL_POOL/(1-SMAX));
   const rate=TIERS[m.tier].total/T;
   if(!bound)return `
     <div class="mexp">
-      <div class="row" style="border:none"><span>为什么是 ${b.toFixed(2)}×</span><b>未绑定 — 不吃 PnL 加成，按基础速度（当前下限 ${fl}×${fl===0?'，已停转':''}）</b></div>
-      <div class="fml">速度 = 下限 ${fl}×（宽限期${fl===1?'内，第 42 天起归 0':'已结束'}）· 绑定后可达 ${bFor(eMax).toFixed(2)}×，这台每天多挖 ${fmtDec(rate*(bFor(eMax)-b))} LV</div>
-      <button class="btn-xs" onclick="bind(${m.id})">绑定这台，吃我的 PnL 加成</button>
+      <div class="row" style="border:none"><span>为什么是 ${b.toFixed(2)}×</span><b>${myE>0?'未绑定 — 残留 EMA +$'+myE.toLocaleString('en-US')+' 正以 60h 半衰期衰减，速度将逐步回落到下限 '+fl+'×':'未绑定且无 EMA 累计 — 按基础速度（下限 '+fl+'×'+(fl===0?'，已停转':'')+'）'}</b></div>
+      <div class="fml">${myE>0?'当前：占池 '+(share*100).toFixed(2)+'% → '+b.toFixed(2)+'×（无新 PnL 流入，每天 ×0.76 衰减）':'速度 = 下限 '+fl+'×（宽限期'+(fl===1?'内，第 42 天起归 0':'已结束')+'）'} · 绑定并持续盈利可达 ${bFor(eMax).toFixed(2)}×</div>
+      <button class="btn-xs" onclick="bind(${m.id})">绑定这台，平仓盈利记入它</button>
     </div>`;
   const refs=[...new Set([0,Math.round(eMax*0.25),Math.round(eMax*0.5),eMax,myE])]
     .filter(e=>e===myE||Math.abs(e-myE)/eMax>0.06)
@@ -489,7 +492,7 @@ function boostDetail(m,b,bound){
     <div class="mexp">
       <div class="row" style="border:none;padding-top:0"><span>结算口径</span><b>钱包 PnL 的 60 小时半衰期 EMA · 每日结算 · 每小时更新速度</b></div>
       <div class="fml">
-        我的 PnL EMA（演示情景）= <b style="color:var(--green)">+$${myE.toLocaleString('en-US')}</b>
+        这台矿机累计的 PnL EMA = <b style="color:var(--green)">+$${myE.toLocaleString('en-US')}</b>${S.gear!=='Z'&&S.gear!=='L'?'（绑定中，按情景每日流入）':'（绑定中，当前情景无盈利流入，衰减中）'}
         → 占盈利池 ${myE.toLocaleString('en-US')} ÷ ${(PNL_POOL+myE).toLocaleString('en-US')} = <b>${(share*100).toFixed(2)}%</b>
         → 速度 = ${fl} + (${BMAX} − ${fl}) × min(1, ${(share*100).toFixed(2)}% ÷ ${(SMAX*100).toFixed(0)}%) = <b style="color:var(--green)">${b.toFixed(2)}×</b>
       </div>
@@ -538,14 +541,15 @@ function heroSale(){
 }
 
 function vBoost(){
-  const fl=floorNow(),b=boostOf(S.gear);
+  const fl=floorNow();
   const bm=S.miners.find(m=>m.id===S.boundId&&!m.dead);
+  const b=bm?speedOf(bm):fl;
   return `
     <div class="panel-pad">
-      <div class="lbl">我的钱包加成 · PNL (60H EMA)</div>
+      <div class="lbl">绑定矿机的 PNL 加成 (60H EMA)</div>
       <div class="speed"><span class="v ${b<=0?'zero':b<1.5?'slow':''}">${b.toFixed(2)}×</span>
-        <span style="text-align:right;font-size:11.5px;color:var(--mut2)">${bm?'作用于 <b style="color:var(--green)">#'+pad(bm.id)+'</b>（'+bm.tier+' 级）':'<b style="color:var(--red)">未绑定 · 不作用于任何矿机</b>'}<br>盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
-      <p style="font-size:11px;color:var(--mut2);margin:-2px 0 10px">加成属于<b style="color:var(--mut)">钱包</b>，只作用于当前绑定的那台矿机；其余矿机按基础速度（在矿机列表换绑）。</p>
+        <span style="text-align:right;font-size:11.5px;color:var(--mut2)">${bm?'<b style="color:var(--green)">#'+pad(bm.id)+'</b>（'+bm.tier+' 级）· EMA <b style="color:var(--soft)">'+(bm.ema>0?'+$'+Math.round(bm.ema).toLocaleString('en-US'):'$0')+'</b>':'<b style="color:var(--red)">未绑定 · 平仓盈利不记入任何矿机</b>'}<br>${bm&&bm.ema>0?'占盈利池 '+((bm.ema/(PNL_POOL+bm.ema))*100).toFixed(2)+'%':'占盈利池 0%'}</span></div>
+      <p style="font-size:11px;color:var(--mut2);margin:-2px 0 10px">系数是<b style="color:var(--mut)">矿机的属性</b>：平仓 PnL 记入「平仓时绑定」的那台矿机的 EMA；<b style="color:var(--mut)">换绑不转移系数</b>，旧矿机的 EMA 按 60h 半衰期自然衰减。</p>
       ${(()=>{const act=alive();if(!act.length)return'';
         const fl=floorNow();
         const expDay=act.reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0);
@@ -565,7 +569,7 @@ function vBoost(){
         ${Object.entries(GEARS).map(([k,g])=>`
           <button class="${S.gear===k?'on':''}" onclick="setGear('${k}')">${g.name}<small>${boostOf(k).toFixed(2)}×</small></button>`).join('')}
       </div>
-      <p style="font-size:10.5px;color:var(--mut2);margin-top:8px">演示用四个假设情景；真实产品读取钱包 PnL 的 60h-EMA（每小时更新速度）与累计交易量。</p>
+      <p style="font-size:10.5px;color:var(--mut2);margin-top:8px">情景 = 钱包平仓盈利的流入速率（记入绑定矿机）；标注的倍速为该速率下的<b style="color:var(--mut)">稳态值</b>，EMA 需 2–3 天爬满。真实产品读取链上平仓 PnL。</p>
       <div class="divider"></div>
       ${fl===1
         ?`<div class="row"><span>宽限期（前 6 周）</span><b>亏损或不交易也有 1× 保底</b></div>
