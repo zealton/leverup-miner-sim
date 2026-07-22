@@ -159,6 +159,19 @@ button{font-family:inherit}
 .warnbox p{font-size:12px;color:#d9b3a5;line-height:1.7}
 .warnbox p b{color:#f0c9bb}
 
+/* miner list & remint picker */
+.msum{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bindbadge{font-size:10px;font-weight:700;color:var(--green-dk);background:var(--green);padding:2px 8px;border-radius:2px;letter-spacing:.03em}
+.mini2{height:30px;font-size:11.5px;padding:0 12px;width:auto;display:inline-block}
+.pick{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:2px;background:var(--chip);cursor:pointer;margin-bottom:8px}
+.pick:hover{background:#242822}
+.pick.on{border-color:var(--green);background:var(--olive)}
+.pick.dis{opacity:.45;cursor:not-allowed}
+.pick .radio{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--mut2);flex:none}
+.pick.on .radio{border-color:var(--green);background:var(--green)}
+.pick .info{flex:1;min-width:0;font-size:12px;color:var(--mut)}
+.pick .info b{color:var(--txt)}
+.pick .ev{font-size:11.5px;font-weight:700;text-align:right}
 /* sale hero */
 .shell.solo{grid-template-columns:1fr}
 .hero{padding:0;overflow:hidden}
@@ -216,7 +229,7 @@ button{font-family:inherit}
   </div>
   <div class="navright">
     <span class="chip">LV <b id="sb_price">$0.0533</b></span>
-    <span class="chip"><b id="sb_mon">20,000</b> MON</span>
+    <span class="chip"><b id="sb_mon">40,000</b> MON</span>
     <button class="wallet">0x3F…9A2C</button>
   </div>
 </nav>
@@ -254,9 +267,9 @@ button{font-family:inherit}
 const $=id=>document.getElementById(id);
 const fmtLV=v=>{const a=Math.abs(v);return a>=100?Math.round(a).toLocaleString('en-US'):a.toFixed(1)};
 const fmtU=v=>{const a=Math.abs(v);const t=a>=1000?Math.round(a).toLocaleString('en-US'):a.toFixed(2);return(v<0?'−$':'$')+t};
-const fmtDec=v=>v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
+const fmtDec=v=>v>=1000?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
 
-/* ---- constants (aligned with simulator) ---- */
+/* ---- constants (aligned with simulator batch-1) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
 const TIERS={
   A:{total:5000,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 500 台'},
@@ -268,67 +281,147 @@ const GEARS={
   W:{v:50000,pnl:2000,name:'小赚',desc:'PnL +$2,000/周'},
   B:{v:200000,pnl:20000,name:'大赚',desc:'PnL +$20,000/周'}};
 const PNL_POOL=400000, SMAX=0.01, BMAX=3, RTH=1200000, STAY=0.65, QB=75, QC=12, VE_APR=0.469;
+const PROB={fromA:{B:(1-STAY)*QB/(QB+QC),C:(1-STAY)*QC/(QB+QC)},fromB:{A:(1-STAY)*500/512,C:(1-STAY)*QC/512}};
 
 let S;
 function init(){
-  S={day:0,view:'home',rail:'boost',mon:20000,gear:'W',miner:null,chances:0,minedTotal:0,
-     vault:0,wallet:0,staked:0,divid:0,feeSpent:0,lottoState:'idle',lottoResult:null,seed:99};
+  S={day:0,view:'home',rail:'boost',mon:40000,gear:'W',miners:[],boundId:null,nextId:1,
+     chances:0,minedTotal:0,spentBuy:0,wallet:0,staked:0,divid:0,feeSpent:0,
+     lottoState:'idle',lottoResult:null,lottoTarget:null,seed:99};
   render();
 }
 const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
 function floorNow(){return S.day>=FLOOR_DAY?0:1}
 function boostOf(g){const p=GEARS[g].pnl,sh=p>0?p/(PNL_POOL+p):0,fl=floorNow();return fl+(BMAX-fl)*Math.min(1,sh/SMAX)}
+function speedOf(m){return m.id===S.boundId?boostOf(S.gear):floorNow()}
+const alive=()=>S.miners.filter(m=>!m.dead);
+const claimTotal=()=>S.miners.reduce((a,m)=>a+m.claimable,0);
+
 function tick(days){
   for(let i=0;i<days;i++){
     S.day++;
-    if(S.miner&&!S.miner.dead){
-      const b=boostOf(S.gear);
-      const e=Math.min(S.miner.rem,TIERS[S.miner.tier].total/T*b);
-      S.miner.rem-=e;S.vault+=e;S.minedTotal+=e;
-      S.chances+=GEARS[S.gear].v/7/RTH;
-      S.feeSpent+=GEARS[S.gear].v/7*0.0002;
-      if(S.miner.rem<=0.5){S.miner.dead=true;S.miner.done=true;toast('挖完了：全部 '+fmtLV(TIERS[S.miner.tier].total)+' LV 已产出')}
-      else if(S.day-S.miner.born>=T){S.miner.dead=true;S.miner.forfeit=S.miner.rem;S.miner.rem=0;
-        toast(T+' 天到期：未挖出的 '+fmtLV(S.miner.forfeit)+' LV 已作废')}
-    }
+    S.miners.forEach(m=>{
+      if(m.dead)return;
+      const b=speedOf(m);
+      const e=Math.min(m.rem,TIERS[m.tier].total/T*b);
+      m.rem-=e;m.claimable+=e;S.minedTotal+=e;
+      if(m.rem<=0.5){m.dead=true;m.done=true;toast('#'+pad(m.id)+' 挖完了：全部 '+fmtLV(TIERS[m.tier].total)+' LV 已产出')}
+      else if(S.day-m.born>=T){m.dead=true;m.forfeit=m.rem;m.rem=0;
+        toast('#'+pad(m.id)+' 到期：未挖出的 '+fmtLV(m.forfeit)+' LV 已作废')}
+    });
+    if(alive().length){S.chances+=GEARS[S.gear].v/7/RTH;S.feeSpent+=GEARS[S.gear].v/7*0.0002}
     S.divid+=S.staked*VE_APR/365;
   }
   render();
 }
+/* per-second live mining */
+setInterval(()=>{
+  let changed=false;
+  S&&S.miners.forEach(m=>{
+    if(m.dead)return;
+    const e=Math.min(m.rem,TIERS[m.tier].total/T*speedOf(m)/86400);
+    if(e>0){m.rem-=e;m.claimable+=e;S.minedTotal+=e;changed=true}
+  });
+  if(!changed)return;
+  S.miners.forEach(m=>{const el=$('cl_'+m.id);if(el)el.textContent=fmtDec(m.claimable)});
+  const t=$('cl_total');if(t)t.textContent=fmtDec(claimTotal());
+  const t2=$('cl_total2');if(t2)t2.textContent=fmtDec(claimTotal())+' LV ≈ '+fmtU(claimTotal()*PLV);
+},1000);
+
+const pad=id=>String(id).padStart(4,'0');
 function checkTx(){
-  if(S.miner)return;
   if(S.mon<PRICE_MON){toast('钱包 MON 不足 8,000');return}
   toast('正在链上检测你的转账…');
-  setTimeout(()=>{S.mon-=PRICE_MON;
-    S.miner={tier:'A',rem:TIERS.A.total,born:S.day,dead:false,forfeit:0,done:false};
-    toast('检测到 8,000 MON — 矿机已绑定，自动开挖');
+  setTimeout(()=>{S.mon-=PRICE_MON;S.spentBuy+=PRICE_USD;
+    const m={id:S.nextId++,tier:'A',rem:TIERS.A.total,born:S.day,claimable:0,dead:false,done:false,forfeit:0};
+    S.miners.push(m);
+    if(S.boundId===null)S.boundId=m.id;
+    toast('检测到 8,000 MON — 矿机 #'+pad(m.id)+' 已入账并开挖');
     S.view='home';render();
-  },1400);
-}
-function remint(){
-  if(S.chances<1||!S.miner||S.miner.dead)return;
-  if(S.miner.tier==='C'){toast('C 已是顶级品质，无需抽卡');return}
-  S.chances-=1;S.lottoState='spin';render();
-  setTimeout(()=>{
-    const r=rnd(),cur=S.miner.tier;let res='stay';
-    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',500]);
-    const tot=opts.reduce((a,o)=>a+o[1],0);
-    if(r>=STAY&&tot>0){let x=(r-STAY)/(1-STAY)*tot;for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}}
-    if(res!=='stay'&&res!==cur){const frac=S.miner.rem/TIERS[cur].total;S.miner.tier=res;S.miner.rem=TIERS[res].total*frac}
-    S.lottoState='done';S.lottoResult=res;render();
   },1200);
 }
-function claim(){if(S.vault<1)return;S.wallet+=S.vault;toast('已领取 '+fmtLV(S.vault)+' LV 到钱包');S.vault=0;render()}
+function bind(id){S.boundId=id;toast('#'+pad(id)+' 已绑定：你的 PnL 加成只作用于这台');render()}
+function unbind(){S.boundId=null;toast('已解绑：所有矿机回到基础速度');render()}
+function claimOne(id){const m=S.miners.find(x=>x.id===id);if(!m||m.claimable<0.1)return;
+  S.wallet+=m.claimable;toast('#'+pad(id)+' 已领取 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
+function claimAll(){const t=claimTotal();if(t<0.1)return;S.wallet+=t;S.miners.forEach(m=>m.claimable=0);toast('已领取全部 '+fmtLV(t)+' LV 到钱包');render()}
 function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池');S.wallet=0;render()}
-function setGear(k){S.gear=k;const m={Z:floorNow()===0?'没交易：机器停转，倒计时照走':'没交易：宽限期内 1 倍速保底',
-  L:floorNow()===0?'本周亏损：无盈利 = 停转；交易量仍在攒抽卡':'本周亏损：保底 1 倍速；交易量照攒抽卡',
-  W:'小赚 $2,000/周 — 约 2 倍速',B:'大赚 $20,000/周 — 满速 3 倍'};toast(m[k]);render()}
+function setGear(k){S.gear=k;const m={Z:floorNow()===0?'没交易：绑定矿机停转，倒计时照走':'没交易：宽限期内 1 倍速保底',
+  L:floorNow()===0?'本周亏损：绑定矿机无加成；交易量仍在攒抽卡':'本周亏损：保底 1 倍速；交易量照攒抽卡',
+  W:'小赚 $2,000/周 — 绑定矿机约 2 倍速',B:'大赚 $20,000/周 — 绑定矿机满速 3 倍'};toast(m[k]);render()}
 function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._h);el._h=setTimeout(()=>el.style.display='none',2400)}
 function go(v){S.view=v;if(v!=='home')S.rail=v;if(v!=='lotto'){S.lottoState='idle';S.lottoResult=null}render()}
 
+/* remint on selected miner */
+function remintEV(m){
+  const p=1-m.rem/TIERS[m.tier].total;
+  if(m.tier==='A')return (PROB.fromA.B*(TIERS.B.total-TIERS.A.total)+PROB.fromA.C*(TIERS.C.total-TIERS.A.total))*(1-p)*PLV;
+  if(m.tier==='B')return (PROB.fromB.C*(TIERS.C.total-TIERS.B.total)-PROB.fromB.A*(TIERS.B.total-TIERS.A.total))*(1-p)*PLV;
+  return 0;
+}
+function remint(){
+  const m=S.miners.find(x=>x.id===S.lottoTarget);
+  if(!m||m.dead||m.tier==='C'||S.chances<1)return;
+  S.chances-=1;S.lottoState='spin';render();
+  setTimeout(()=>{
+    const r=rnd(),cur=m.tier;let res='stay';
+    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',500]);
+    const tot=opts.reduce((a,o)=>a+o[1],0);
+    if(r>=STAY&&tot>0){let x=(r-STAY)/(1-STAY)*tot;for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}}
+    if(res!=='stay'&&res!==cur){const frac=m.rem/TIERS[cur].total;m.tier=res;m.rem=TIERS[res].total*frac}
+    S.lottoState='done';S.lottoResult=res;render();
+  },1200);
+}
+
 /* ================= views ================= */
 function vMiner(){
-  if(!S.miner)return `
+  if(!S.miners.length)return heroSale();
+  const act=alive();
+  const list=S.miners.map(m=>{
+    const tier=TIERS[m.tier];
+    if(m.dead)return `
+      <div class="panel">
+        <div class="ph"><span class="t">#${pad(m.id)} · ${m.done?'已挖完':'已到期'}</span><span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span></div>
+        <div class="panel-pad" style="padding-top:12px">
+          <div class="row"><span>${m.done?'全部产出已释放':'到期作废'}</span><b class="${m.done?'pos':'neg'}">${m.done?fmtLV(tier.total)+' LV':'−'+fmtLV(m.forfeit)+' LV 未挖出'}</b></div>
+          ${m.claimable>0.1?`<div class="row"><span>未领取</span><b class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV <button class="btn ghost mini2" style="margin-left:8px" onclick="claimOne(${m.id})">领取</button></b></div>`:''}
+        </div>
+      </div>`;
+    const prog=1-m.rem/tier.total;
+    const daysLeft=Math.max(0,T-(S.day-m.born));
+    const b=speedOf(m),bound=m.id===S.boundId;
+    return `
+      <div class="panel tier${m.tier}">
+        <div class="ph">
+          <span class="t"><span class="statusdot ${b>0?'':'off'}"></span>#${pad(m.id)} ${bound?'<span class="bindbadge">已绑定 BOOST</span>':''}</span>
+          <span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span>
+        </div>
+        <div class="panel-pad" style="padding-top:12px">
+          <div class="pbar ${daysLeft<=21?'warn':''}" style="margin-top:2px"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut2);margin-bottom:6px"><span>已挖 ${(prog*100).toFixed(1)}% · ${fmtLV(tier.total-m.rem)} / ${fmtLV(tier.total)} LV</span><span>剩 ${daysLeft} 天</span></div>
+          <div class="row"><span>当前速度</span><b>${b.toFixed(2)}×${bound?'':b>0?'（未绑定 · 基础速度）':'（未绑定 · 已停转）'}</b></div>
+          <div class="row"><span>待领取（每秒累积）</span><b class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</b></div>
+          <div class="btnrow" style="margin-top:10px">
+            ${bound?'<button class="btn ghost" onclick="unbind()">解绑</button>':'<button class="btn ghost" onclick="bind('+m.id+')">绑定 BOOST</button>'}
+            <button class="btn" onclick="claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="panel">
+      <div class="ph"><span class="t">我的矿机 · ${S.miners.length} 台（运行中 ${act.length}）</span>
+      <span class="msum"><span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtDec(claimTotal())}</span> LV</b></span>
+      <button class="btn mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button></span></div>
+      <div class="panel-pad" style="padding:10px 16px">
+        <p style="font-size:11.5px;color:var(--mut2)">同一时间只有 <b style="color:var(--mut)">1 台</b>矿机可绑定你的 PnL 加成（可随时换绑）；未绑定的按基础速度运行${floorNow()===0?'（宽限期已过：基础速度 = 0，停转）':'（宽限期内 1×）'}。</p>
+      </div>
+    </div>
+    ${list}`;
+}
+
+function heroSale(){
+  return `
     <div class="panel hero">
       <div class="hero-grid">
         <div class="hero-l">
@@ -363,59 +456,18 @@ function vMiner(){
       <div class="panel panel-pad"><div class="lbl">REMINT</div><h2>抽卡升级</h2><p>每 $1,200,000 交易量 = 1 次机会：65% 不变 / 30.2% 变 B / 4.8% 变 C，升级进度不清零。</p></div>
       <div class="panel panel-pad"><div class="lbl">EXPIRY</div><h2>100 天到期</h2><p>到期未挖出的部分作废——保持盈利在线，把额度挖满再退役。</p></div>
     </div>`;
-
-  const m=S.miner,tier=TIERS[m.tier];
-  const prog=1-m.rem/tier.total;
-  const daysLeft=Math.max(0,T-(S.day-m.born));
-  const b=boostOf(S.gear);
-  const perDay=tier.total/T*b;
-  if(m.dead)return `
-    <div class="panel">
-      <div class="ph"><span class="t">Miner #0001</span><span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span></div>
-      <div class="panel-pad">
-        <h2 style="font-size:18px;font-weight:800;margin-bottom:6px">${m.done?'挖完收工':'机器已到期退役'}</h2>
-        <p style="font-size:12.5px;color:var(--mut);margin-bottom:12px">${m.done
-          ?`这台 ${m.tier} 级机器产出了全部 ${fmtLV(tier.total)} LV。`
-          :`共挖出 ${fmtLV(tier.total-m.forfeit)} LV；<b style="color:var(--red)">${fmtLV(m.forfeit)} LV 未挖出，已作废</b>。下一台请保持盈利在线。`}</p>
-        <div class="row"><span>本季累计挖出</span><b class="pos">${fmtLV(S.minedTotal)} LV ≈ ${fmtU(S.minedTotal*PLV)}</b></div>
-        <div class="divider"></div>
-        <button class="btn ghost" onclick="toast('下一批发售时间与地址只在推特公布')">蹲下一批 · 关注 @LeverUpFi</button>
-      </div>
-    </div>`;
-
-  return `
-    <div class="panel tier${m.tier}">
-      <div class="ph">
-        <span class="t"><span class="statusdot ${b>0?'':'off'}"></span>Miner #0001 · ${b>0?'运行中':'已停转'}</span>
-        <span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span>
-      </div>
-      <div class="panel-pad">
-        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-          <div class="tbadge ${m.tier}"><span class="lt">${m.tier}</span><span class="mn">MINER</span></div>
-          <div style="flex:1;min-width:0">
-            <div class="lbl">${tier.mult} · ${tier.supply}</div>
-            <div class="bignum">${fmtLV(tier.total-m.rem)} <small>/ ${fmtLV(tier.total)} LV</small></div>
-            <div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut2)"><span>进度 ${(prog*100).toFixed(1)}%</span><span>剩余 ${fmtLV(m.rem)} LV</span></div>
-          </div>
-        </div>
-        <div class="row"><span>今日产出</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+fmtDec(perDay)+' LV ≈ '+fmtU(perDay*PLV):'0 — 本周无盈利，机器停转'}</b></div>
-        <div class="row"><span>当前速度</span><b>${b.toFixed(2)}×</b></div>
-        <div class="row"><span>累计产出价值（现价）</span><b>≈ ${fmtU((tier.total-m.rem)*PLV)}</b></div>
-        ${m.tier!=='A'?`<div class="row"><span>对比 A 级多产</span><b style="color:${tier.color}">+${fmtLV(tier.total-TIERS.A.total)} LV</b></div>`:''}
-        <div class="deadline ${daysLeft<=21?'warn':''}">到期倒计时 <b>${daysLeft} 天</b><span style="margin-left:auto">${daysLeft<=21?'到期未挖出的部分将作废':'到期后未挖出的部分作废'}</span></div>
-      </div>
-    </div>`;
 }
 
 function vBoost(){
   const fl=floorNow(),b=boostOf(S.gear);
+  const bm=S.miners.find(m=>m.id===S.boundId&&!m.dead);
   return `
     <div class="panel-pad">
       <div class="lbl">PNL (60H EMA) → SPEED</div>
       <div class="speed"><span class="v ${b<=0?'zero':b<1.5?'slow':''}">${b.toFixed(2)}×</span>
         <span style="font-size:11.5px;color:var(--mut2)">盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
-      <p style="font-size:12px;color:var(--mut);margin-bottom:10px">你的<b style="color:var(--soft)">近期盈利（60 小时半衰期 EMA）</b>占全体矿工盈利池的比例，决定机器速度——赚钱当天提速、每小时更新；持续亏损只有保底。</p>
+      <div class="row" style="margin-bottom:8px"><span>加成作用于</span><b>${bm?'#'+pad(bm.id)+'（'+bm.tier+' 级）':'<span style="color:var(--red)">未绑定任何矿机</span>'}</b></div>
+      <p style="font-size:12px;color:var(--mut);margin-bottom:10px">你的<b style="color:var(--soft)">近期盈利（60 小时半衰期 EMA）</b>占全体矿工盈利池的比例，决定<b style="color:var(--soft)">绑定矿机</b>的速度——赚钱当天提速、每小时更新；其余矿机按基础速度。</p>
       <div class="seg">
         ${Object.entries(GEARS).map(([k,g])=>`
           <button class="${S.gear===k?'on':''}" onclick="setGear('${k}')">${g.name}<small>${boostOf(k).toFixed(2)}×</small></button>`).join('')}
@@ -424,54 +476,68 @@ function vBoost(){
       <div class="divider"></div>
       ${fl===1
         ?`<div class="row"><span>宽限期（前 6 周）</span><b>亏损或不交易也有 1× 保底</b></div>
-           <div class="row"><span>第 42 天起</span><b class="neg">保底取消 — 无盈利周机器停转</b></div>`
-        :`<div class="row"><span>宽限期已结束</span><b class="neg">本周无盈利 = 停转，倒计时照走</b></div>`}
-      <div class="row"><span>盈利（60h EMA）</span><b>决定速度 · 占池 1% = 满速 · 每小时更新</b></div>
-      <div class="row"><span>交易量</span><b>每 $1.2M = +1 次抽卡（赚亏都算）</b></div>
+           <div class="row"><span>第 42 天起</span><b class="neg">保底取消 — 未绑定/无盈利 = 停转</b></div>`
+        :`<div class="row"><span>宽限期已结束</span><b class="neg">无盈利或未绑定 = 停转，倒计时照走</b></div>`}
+      <div class="row"><span>盈利（60h EMA）</span><b>决定绑定矿机速度 · 占池 1% = 满速</b></div>
+      <div class="row"><span>交易量</span><b>每 $1.2M = +1 次抽卡（赚亏都算，钱包级）</b></div>
     </div>`;
 }
 
 function vLotto(){
-  const isTop=S.miner&&S.miner.tier==='C';
-  const can=Math.floor(S.chances)>=1&&S.miner&&!S.miner.dead&&!isTop;
-  const cur=S.miner?S.miner.tier:'A';
-  let inner='<span class="big" style="color:var(--mut2)">?</span><small>消耗 1 次机会</small>',cls='';
+  const cands=alive();
+  if(S.lottoTarget===null||!cands.some(m=>m.id===S.lottoTarget&&m.tier!=='C')){
+    const first=cands.find(m=>m.tier!=='C');S.lottoTarget=first?first.id:null;
+  }
+  const target=S.miners.find(m=>m.id===S.lottoTarget);
+  const needVol=(1-S.chances%1)*RTH;
+  let inner='<span class="big" style="color:var(--mut2)">?</span><small>选择矿机后抽卡</small>',cls='';
   if(S.lottoState==='spin'){inner='<span class="big" style="color:var(--mut)">···</span>';cls='spin'}
   if(S.lottoState==='done'){
     const r=S.lottoResult;
-    if(r==='stay')inner=`<span class="big" style="color:var(--mut)">${cur}</span><small>未变 · 仍为 ${cur} 级</small>`;
+    if(r==='stay')inner=`<span class="big" style="color:var(--mut)">${target?target.tier:''}</span><small>未变 · 品质保持</small>`;
     else{inner=`<span class="big" style="color:${TIERS[r].color}">${r}</span><small style="color:${TIERS[r].color};font-weight:700">升级成功 · ${TIERS[r].mult}</small>`;cls=r==='C'?'winC':'win'}
   }
+  const picks=cands.map(m=>{
+    const p=1-m.rem/TIERS[m.tier].total;
+    const ev=remintEV(m);
+    const dis=m.tier==='C';
+    return `<div class="pick ${S.lottoTarget===m.id?'on':''} ${dis?'dis':''}" ${dis?'':`onclick="S.lottoTarget=${m.id};S.lottoState='idle';render()"`}>
+      <span class="radio"></span>
+      <span class="info"><b>#${pad(m.id)}</b> · <span style="color:${TIERS[m.tier].color}">${m.tier} 级</span> · 已挖 ${(p*100).toFixed(0)}%</span>
+      <span class="ev" style="color:${dis?'var(--mut2)':ev>=0?'var(--green)':'var(--red)'}">${dis?'顶级 · 不可抽':(ev>=0?'+':'')+fmtU(ev)+' 期望'}${m.tier==='B'&&!dis?'<br><span style="color:var(--red);font-weight:500">34% 降级风险</span>':''}</span>
+    </div>`;
+  }).join('');
   return `
     <div class="panel-pad">
       <div class="lbl">REMINT · 升级抽卡</div>
-      <p style="font-size:12px;color:var(--mut);margin-bottom:12px">消耗 1 次机会给矿机抽一次「变身」。<b style="color:var(--soft)">进度不清零</b>：挖到 60% 时升级，从新产量的 60% 继续。</p>
-      <div class="ladder">
-        <div class="t3 ${cur==='A'?'you':''}"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 500 台</div></div>
-        <div class="t3 B ${cur==='B'?'you':''}"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 ×2.5 · 限量 75</div></div>
-        <div class="t3 C ${cur==='C'?'you':''}"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 ×6.2 · 仅 12 台</div></div>
-      </div>
+      <div class="row" style="border:none;padding:0"><span>我的抽卡机会</span><b style="font-size:18px;color:var(--green)">${Math.floor(S.chances)} 次</b></div>
+      <div class="pbar" style="margin:8px 0 4px"><i style="width:${(S.chances%1*100).toFixed(0)}%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut2);margin-bottom:12px"><span>下一次进度 ${(S.chances%1*100).toFixed(0)}%</span><span>还需交易量 ${fmtU(needVol)}</span></div>
+      <div class="lbl">选择要抽卡的矿机</div>
+      ${picks||'<p style="font-size:12px;color:var(--mut2);padding:8px 0">没有可抽卡的矿机</p>'}
+      <p style="font-size:10.5px;color:var(--mut2);margin:2px 0 6px">期望收益 = 升级增量 ×（1−已挖进度）× 现价 × 概率——<b style="color:var(--mut)">越早抽越值</b>（进度继承）。</p>
       <div class="slot ${cls}">${inner}</div>
-      <button class="btn" ${can?'':'disabled'} onclick="remint()">${isTop?'已是顶级 C · 无需抽卡':can?'抽一次（剩 '+Math.floor(S.chances)+' 次机会）':'机会不足 · 交易攒机会'}</button>
+      <button class="btn" ${target&&target.tier!=='C'&&Math.floor(S.chances)>=1?'':'disabled'} onclick="remint()">
+        ${!target?'无可抽矿机':target.tier==='C'?'该矿机已是顶级':Math.floor(S.chances)<1?'机会不足 · 还需 '+fmtU(needVol)+' 交易量':'对 #'+pad(target.id)+' 抽一次（剩 '+Math.floor(S.chances)+' 次）'}
+      </button>
       <div class="probbar"><i style="width:65%;background:#3a3d3a"></i><i style="width:30.2%;background:var(--blue)"></i><i style="width:4.8%;background:var(--gold)"></i></div>
       <div class="problegend"><span>不变 65%</span><span style="color:var(--blue)">变 B 30.2%</span><span style="color:var(--gold)">变 C 4.8%</span></div>
       <div class="divider"></div>
-      <div class="row"><span>怎么攒机会</span><b>每 $1,200,000 交易量 = 1 次</b></div>
-      <div class="row"><span>下一次进度</span><b>${(S.chances%1*100).toFixed(0)}%</b></div>
-      <div class="row"><span>我的机器</span><b>${S.miner?S.miner.tier+' 级 · 已挖 '+((1-S.miner.rem/TIERS[S.miner.tier].total)*100).toFixed(0)+'%':'—'}</b></div>
-      <p style="font-size:10.5px;color:var(--mut2);margin-top:8px">概率公开一致；B/C 配额抽完即止，额度越少越难抽到。</p>
+      <div class="row"><span>攒机会</span><b>每 $1,200,000 交易量 = 1 次（钱包级）</b></div>
+      <div class="row"><span>配额</span><b>B 限 75 · C 限 12 · 抽完即止</b></div>
     </div>`;
 }
 
 function vVault(){
-  const net=(S.minedTotal+S.divid)*PLV-(S.miner||S.minedTotal>0?PRICE_USD:0)-S.feeSpent;
+  const ct=claimTotal();
+  const net=(S.minedTotal+S.divid)*PLV-S.spentBuy-S.feeSpent;
   return `
     <div class="panel-pad">
-      <div class="lbl">CLAIMABLE · 待领取</div>
-      <div class="bignum" style="margin-bottom:2px">${fmtLV(S.vault)} <small>LV ≈ ${fmtU(S.vault*PLV)}</small></div>
-      <p style="font-size:11.5px;color:var(--mut2);margin-bottom:12px">机器边挖边进账，可随时领取</p>
+      <div class="lbl">CLAIMABLE · 待领取（全部矿机）</div>
+      <div class="bignum" style="margin-bottom:2px"><span id="cl_total2">${fmtDec(ct)} LV ≈ ${fmtU(ct*PLV)}</span></div>
+      <p style="font-size:11.5px;color:var(--mut2);margin-bottom:12px">每秒累积 · 可按台领取（矿机列表）或一键全领</p>
       <div class="btnrow">
-        <button class="btn ghost" ${S.vault<1?'disabled':''} onclick="claim()">领到钱包</button>
+        <button class="btn ghost" ${ct<0.1?'disabled':''} onclick="claimAll()">全部领取</button>
         <button class="btn" ${S.wallet<1?'disabled':''} onclick="stakeAll()">存入分红池</button>
       </div>
       <div class="divider"></div>
@@ -483,7 +549,7 @@ function vVault(){
       <div class="row"><span>累计分红</span><b class="pos">+${fmtLV(S.divid)} LV ≈ ${fmtU(S.divid*PLV)}</b></div>
       <div class="divider"></div>
       <div class="lbl">P&amp;L · 我的小账本</div>
-      <div class="row"><span>买机器</span><b class="neg">−${fmtU(S.miner||S.minedTotal>0?PRICE_USD:0)}</b></div>
+      <div class="row"><span>买矿机（${S.miners.length} 台）</span><b class="neg">−${fmtU(S.spentBuy)}</b></div>
       <div class="row"><span>交易摩擦成本（估）</span><b class="neg">−${fmtU(S.feeSpent)}</b></div>
       <div class="row"><span>累计挖出 + 分红</span><b class="pos">+${fmtU((S.minedTotal+S.divid)*PLV)}</b></div>
       <div class="row"><span>净收益（按现价 $0.0533）</span><b class="${net>=0?'pos':'neg'}">${fmtU(net)}</b></div>
@@ -496,8 +562,8 @@ function render(){
   $('sb_mon').textContent=S.mon.toLocaleString();
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
   const desk=matchMedia('(min-width:1024px)').matches;
-  document.querySelector('.shell').classList.toggle('solo',desk&&!S.miner);
-  if(desk&&!S.miner){
+  document.querySelector('.shell').classList.toggle('solo',desk&&!S.miners.length);
+  if(desk&&!S.miners.length){
     $('main').innerHTML=vMiner();
     $('rail').innerHTML='';
   }else if(desk){
