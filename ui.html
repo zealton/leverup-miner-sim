@@ -172,6 +172,34 @@ button{font-family:inherit}
 .pick .info{flex:1;min-width:0;font-size:12px;color:var(--mut)}
 .pick .info b{color:var(--txt)}
 .pick .ev{font-size:11.5px;font-weight:700;text-align:right}
+/* compact miner table (position-list style) */
+.mtablewrap{overflow-x:auto}
+.mtable{min-width:680px}
+.mrow{display:grid;grid-template-columns:118px 76px 1fr 86px 118px 64px 148px;gap:8px;align-items:center;
+  padding:9px 14px;border-bottom:1px solid var(--hair);font-size:12.5px;color:var(--mut)}
+.mrow:last-child{border-bottom:none}
+.mrow.mhead{padding:8px 14px;font-size:10.5px;color:var(--mut2);font-weight:600}
+.mrow b{color:var(--txt);font-weight:600}
+.mrow .id{display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:700;color:var(--txt)}
+.tierchip.sm{font-size:10px;padding:2px 7px}
+.bindbadge.sm{font-size:8.5px;padding:1px 5px}
+.miniprog{display:flex;align-items:center;gap:8px}
+.miniprog .pbar{flex:1;height:4px;margin:0}
+.miniprog span{font-size:11px;color:var(--mut2);white-space:nowrap}
+.bcell{cursor:pointer;user-select:none;font-weight:700;color:var(--txt);white-space:nowrap}
+.bcell:hover{color:var(--green)}
+.bcell .car{color:var(--mut2);font-size:9px;margin-left:3px}
+.btn-xs{height:26px;padding:0 10px;font-size:11px;font-weight:600;border-radius:2px;border:1px solid var(--border);
+  background:var(--chip);color:var(--soft);cursor:pointer;white-space:nowrap}
+.btn-xs:hover{background:#242822}
+.btn-xs.pri{background:var(--green);color:var(--green-dk);border:none}
+.btn-xs.pri:hover{filter:brightness(1.07)}
+.btn-xs:disabled{opacity:.35;cursor:not-allowed}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+.mexp{grid-column:1/-1;background:var(--block);border-radius:2px;padding:12px 14px;margin:2px 0 6px}
+.mexp .row{font-size:12px;padding:5px 0}
+.mexp .fml{font-size:12px;color:var(--soft);background:var(--chip);border-radius:2px;padding:8px 10px;margin:8px 0;font-variant-numeric:tabular-nums}
+.mrow.dead{opacity:.6}
 /* sale hero */
 .shell.solo{grid-template-columns:1fr}
 .hero{padding:0;overflow:hidden}
@@ -287,7 +315,7 @@ let S;
 function init(){
   S={day:0,view:'home',rail:'boost',mon:40000,gear:'W',miners:[],boundId:null,nextId:1,
      chances:0,minedTotal:0,spentBuy:0,wallet:0,staked:0,divid:0,feeSpent:0,
-     lottoState:'idle',lottoResult:null,lottoTarget:null,seed:99};
+     lottoState:'idle',lottoResult:null,lottoTarget:null,expandId:null,seed:99};
   render();
 }
 const rnd=()=>((S.seed=(S.seed*1664525+1013904223)>>>0)/4294967296);
@@ -377,49 +405,72 @@ function remint(){
 function vMiner(){
   if(!S.miners.length)return heroSale();
   const act=alive();
-  const list=S.miners.map(m=>{
+  const rows=S.miners.map(m=>{
     const tier=TIERS[m.tier];
     if(m.dead)return `
-      <div class="panel">
-        <div class="ph"><span class="t">#${pad(m.id)} · ${m.done?'已挖完':'已到期'}</span><span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span></div>
-        <div class="panel-pad" style="padding-top:12px">
-          <div class="row"><span>${m.done?'全部产出已释放':'到期作废'}</span><b class="${m.done?'pos':'neg'}">${m.done?fmtLV(tier.total)+' LV':'−'+fmtLV(m.forfeit)+' LV 未挖出'}</b></div>
-          ${m.claimable>0.1?`<div class="row"><span>未领取</span><b class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV <button class="btn ghost mini2" style="margin-left:8px" onclick="claimOne(${m.id})">领取</button></b></div>`:''}
-        </div>
+      <div class="mrow dead">
+        <span class="id">#${pad(m.id)}</span>
+        <span><span class="tierchip sm ${m.tier}">${m.tier}</span></span>
+        <span>${m.done?'已挖完 · 全部释放':'已到期 · <b style="color:var(--red)">−'+fmtLV(m.forfeit)+' LV 作废</b>'}</span>
+        <span>—</span>
+        <span class="pos">${m.claimable>0.1?`<span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV`:'—'}</span>
+        <span>—</span>
+        <span class="acts">${m.claimable>0.1?`<button class="btn-xs pri" onclick="claimOne(${m.id})">领取</button>`:''}</span>
       </div>`;
     const prog=1-m.rem/tier.total;
     const daysLeft=Math.max(0,T-(S.day-m.born));
     const b=speedOf(m),bound=m.id===S.boundId;
+    const exp=S.expandId===m.id;
     return `
-      <div class="panel tier${m.tier}">
-        <div class="ph">
-          <span class="t"><span class="statusdot ${b>0?'':'off'}"></span>#${pad(m.id)} ${bound?'<span class="bindbadge">已绑定 BOOST</span>':''}</span>
-          <span class="tierchip ${m.tier}">${m.tier} · ${tier.cn}</span>
-        </div>
-        <div class="panel-pad" style="padding-top:12px">
-          <div class="pbar ${daysLeft<=21?'warn':''}" style="margin-top:2px"><i style="width:${(prog*100).toFixed(1)}%"></i></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut2);margin-bottom:6px"><span>已挖 ${(prog*100).toFixed(1)}% · ${fmtLV(tier.total-m.rem)} / ${fmtLV(tier.total)} LV</span><span>剩 ${daysLeft} 天</span></div>
-          <div class="row"><span>当前速度</span><b>${b.toFixed(2)}×${bound?'':b>0?'（未绑定 · 基础速度）':'（未绑定 · 已停转）'}</b></div>
-          <div class="row"><span>待领取（每秒累积）</span><b class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</b></div>
-          <div class="btnrow" style="margin-top:10px">
-            ${bound?'<button class="btn ghost" onclick="unbind()">解绑</button>':'<button class="btn ghost" onclick="bind('+m.id+')">绑定 BOOST</button>'}
-            <button class="btn" onclick="claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取</button>
-          </div>
-        </div>
-      </div>`;
+      <div class="mrow">
+        <span class="id"><span class="statusdot ${b>0?'':'off'}"></span>#${pad(m.id)}${bound?' <span class="bindbadge sm">BOOST</span>':''}</span>
+        <span><span class="tierchip sm ${m.tier}">${m.tier} · ${tier.cn}</span></span>
+        <span class="miniprog"><span>${(prog*100).toFixed(1)}%</span><div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div><span>${fmtLV(tier.total-m.rem)}/${fmtLV(tier.total)}</span></span>
+        <span class="bcell" onclick="toggleExp(${m.id})">${b.toFixed(2)}×<span class="car">${exp?'▲':'▼'}</span></span>
+        <span class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</span>
+        <span>${daysLeft} 天</span>
+        <span class="acts">
+          ${bound?'<button class="btn-xs" onclick="unbind()">解绑</button>':'<button class="btn-xs" onclick="bind('+m.id+')">绑定</button>'}
+          <button class="btn-xs pri" onclick="claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取</button>
+        </span>
+      </div>
+      ${exp?boostDetail(m,b,bound):''}`;
   }).join('');
   return `
     <div class="panel">
       <div class="ph"><span class="t">我的矿机 · ${S.miners.length} 台（运行中 ${act.length}）</span>
       <span class="msum"><span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtDec(claimTotal())}</span> LV</b></span>
       <button class="btn mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button></span></div>
-      <div class="panel-pad" style="padding:10px 16px">
-        <p style="font-size:11.5px;color:var(--mut2)">同一时间只有 <b style="color:var(--mut)">1 台</b>矿机可绑定你的 PnL 加成（可随时换绑）；未绑定的按基础速度运行${floorNow()===0?'（宽限期已过：基础速度 = 0，停转）':'（宽限期内 1×）'}。</p>
+      <div class="mtablewrap"><div class="mtable">
+        <div class="mrow mhead"><span>矿机</span><span>品质</span><span>进度</span><span>Boost</span><span>待领取</span><span>剩余</span><span style="text-align:right">操作</span></div>
+        ${rows}
+      </div></div>
+      <div class="panel-pad" style="padding:8px 16px 12px">
+        <p style="font-size:11px;color:var(--mut2)">同一时间仅 1 台可绑定 PnL 加成（随时换绑）；未绑定的按基础速度${floorNow()===0?'（宽限期已过 = 0，停转）':'（宽限期内 1×）'}。点 Boost 数值可展开计算明细。</p>
       </div>
-    </div>
-    ${list}`;
+    </div>`;
 }
-
+function toggleExp(id){S.expandId=S.expandId===id?null:id;render()}
+function boostDetail(m,b,bound){
+  const g=GEARS[S.gear],fl=floorNow();
+  const share=g.pnl>0?g.pnl/(PNL_POOL+g.pnl):0;
+  if(!bound)return `
+    <div class="mexp">
+      <div class="row" style="border:none"><span>为什么是 ${b.toFixed(2)}×</span><b>未绑定 — 不吃 PnL 加成，按基础速度（当前下限 ${fl}×${fl===0?'，已停转':''}）</b></div>
+      <div class="fml">速度 = 下限 ${fl}×（宽限期${fl===1?'内，第 42 天起归 0':'已结束'}）</div>
+      <button class="btn-xs" onclick="bind(${m.id})">绑定这台，吃我的 PnL 加成</button>
+    </div>`;
+  return `
+    <div class="mexp">
+      <div class="row" style="border:none;padding-top:0"><span>结算口径</span><b>钱包 PnL 的 60 小时半衰期 EMA · 每日结算 · 每小时更新速度</b></div>
+      <div class="fml">
+        我的 PnL EMA（演示情景）= <b style="color:var(--green)">+${g.pnl.toLocaleString('en-US')}/周</b><br>
+        占全体矿工盈利池 = ${g.pnl.toLocaleString('en-US')} ÷ ${(PNL_POOL+g.pnl).toLocaleString('en-US')} = <b>${(share*100).toFixed(2)}%</b><br>
+        速度 = 下限 ${fl} + (3 − ${fl}) × min(1, ${(share*100).toFixed(2)}% ÷ 1%) = <b style="color:var(--green)">${b.toFixed(2)}×</b>
+      </div>
+      <div class="row" style="border:none"><span>规则</span><b>占盈利池 1% = 满速 3×；亏损周 EMA ≤ 0 → 只有下限（${fl}×）；第 42 天起下限归 0</b></div>
+    </div>`;
+}
 function heroSale(){
   return `
     <div class="panel hero">
