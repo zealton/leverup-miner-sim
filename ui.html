@@ -386,6 +386,8 @@ function claimOne(id){const m=S.miners.find(x=>x.id===id);if(!m||m.claimable<0.1
   S.wallet+=m.claimable;m.claimed=(m.claimed||0)+m.claimable;toast('#'+pad(id)+' 已领取 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
 function claimAll(){const t=claimTotal();if(t<0.1)return;S.wallet+=t;S.miners.forEach(m=>{m.claimed=(m.claimed||0)+m.claimable;m.claimable=0});toast('已领取全部 '+fmtLV(t)+' LV 到钱包');render()}
 function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池');S.wallet=0;render()}
+function claimStakeAll(){const t=claimTotal();if(t<0.1)return;S.staked+=t;S.miners.forEach(m=>{m.claimed=(m.claimed||0)+m.claimable;m.claimable=0});toast('已领取并质押 '+fmtLV(t)+' LV，开始按 ≈'+(VE_APR*100).toFixed(0)+'% 年化吃分红');render()}
+function claimStakeOne(id){const m=S.miners.find(x=>x.id===id);if(!m||m.claimable<0.1)return;S.staked+=m.claimable;m.claimed=(m.claimed||0)+m.claimable;toast('#'+pad(id)+' 已领取并质押 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
 function setGear(k){S.gear=k;const m={Z:floorNow()===0?'没交易：绑定矿机停转，倒计时照走':'没交易：宽限期内 1 倍速保底',
   L:floorNow()===0?'本周亏损：绑定矿机无加成；交易量仍在攒抽卡':'本周亏损：保底 1 倍速；交易量照攒抽卡',
   W:'小赚 $2,000/周 — 绑定矿机约 2 倍速',B:'大赚 $20,000/周 — 绑定矿机满速 3 倍'};toast(m[k]);render()}
@@ -456,7 +458,8 @@ function vMiner(){
       <div class="ph"><span class="t">我的矿机 · ${S.miners.length} 台（运行中 ${act.length}）</span>
       <span class="msum"><span style="font-size:12px;color:var(--mut)">今日预期 <b style="color:var(--txt)">${fmtDec(alive().reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0))} LV/天</b></span>
       <span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtLive(claimTotal())}</span> LV</b></span>
-      <button class="btn mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button></span></div>
+      <button class="btn ghost mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button>
+      <button class="btn mini2" onclick="claimStakeAll()" ${claimTotal()<0.1?'disabled':''}>领取并质押</button></span></div>
       <div class="mtablewrap"><div class="mtable">
         <div class="mrow mhead"><span>矿机</span><span>品质</span><span>进度</span><span>Boost</span><span>待领取</span><span>剩余</span><span style="text-align:right">操作</span></div>
         ${rows}
@@ -480,6 +483,7 @@ function minerDetail(m,b,bound){
     <div style="display:flex;gap:6px;margin:8px 0 12px">
       ${bound?'<button class="btn-xs" onclick="event.stopPropagation();unbind()">解绑</button>':'<button class="btn-xs" onclick="event.stopPropagation();bind('+m.id+')">绑定 BOOST</button>'}
       <button class="btn-xs" onclick="event.stopPropagation();claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取 ${fmtDec(m.claimable)} LV</button>
+      <button class="btn-xs pri" onclick="event.stopPropagation();claimStakeOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取并质押</button>
       ${m.tier!=='C'?`<button class="btn-xs" onclick="event.stopPropagation();S.lottoTarget=${m.id};go('lotto')">设为抽卡目标 →</button>`:''}
     </div>
     <div class="divider" style="margin:0 0 10px"></div>`;
@@ -655,13 +659,14 @@ function vVault(){
       <div class="bignum" style="margin-bottom:2px"><span id="cl_total2">${fmtLive(ct)} LV ≈ ${fmtU(ct*PLV)}</span></div>
       <p style="font-size:11.5px;color:var(--mut2);margin-bottom:12px">每秒累积 · 可按台领取（矿机列表）或一键全领</p>
       <div class="btnrow">
-        <button class="btn ghost" ${ct<0.1?'disabled':''} onclick="claimAll()">全部领取</button>
-        <button class="btn" ${S.wallet<1?'disabled':''} onclick="stakeAll()">存入分红池</button>
+        <button class="btn ghost" ${ct<0.1?'disabled':''} onclick="claimAll()">全部领取到钱包</button>
+        <button class="btn" ${ct<0.1?'disabled':''} onclick="claimStakeAll()">领取并质押 ≈${(VE_APR*100).toFixed(0)}%</button>
       </div>
+      <p style="font-size:11px;color:var(--mut2);margin-top:8px">领到钱包可自由卖出；「领取并质押」一步进入分红池吃真实 fee 回购分成。</p>
       <div class="divider"></div>
       <div class="lbl">STAKING · 分红池（存币生币）</div>
       <p style="font-size:12px;color:var(--mut);margin-bottom:8px">协议把<b style="color:var(--soft)">真实交易手续费</b>回购 LV：一半分给存币者，一半销毁。</p>
-      <div class="row"><span>钱包余额</span><b>${fmtLV(S.wallet)} LV</b></div>
+      <div class="row"><span>钱包余额</span><b>${fmtLV(S.wallet)} LV${S.wallet>=1?' <button class="btn-xs pri" style="margin-left:8px" onclick="stakeAll()">存入分红池</button>':''}</b></div>
       <div class="row"><span>已存入</span><b>${fmtLV(S.staked)} LV</b></div>
       <div class="row"><span>当前年化</span><b class="pos">≈ ${(VE_APR*100).toFixed(1)}%（随回购量浮动）</b></div>
       <div class="row"><span>累计分红</span><b class="pos">+${fmtLV(S.divid)} LV ≈ ${fmtU(S.divid*PLV)}</b></div>
