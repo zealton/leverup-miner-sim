@@ -343,7 +343,7 @@ function tick(days){
       m.ema=(m.ema||0)*EMA_D+(m.id===S.boundId?GEARS[S.gear].pnl:0)*(1-EMA_D);
       const b=speedOf(m);
       const e=Math.min(m.rem,TIERS[m.tier].total/T*b);
-      m.rem-=e;m.claimable+=e;S.minedTotal+=e;
+      m.rem-=e;m.claimable+=e;m.mined=(m.mined||0)+e;S.minedTotal+=e;
       if(m.rem<=0.5){m.dead=true;m.done=true;toast('#'+pad(m.id)+' 挖完了：全部 '+fmtLV(TIERS[m.tier].total)+' LV 已产出')}
       else if(S.day-m.born>=T){m.dead=true;m.forfeit=m.rem;m.rem=0;
         toast('#'+pad(m.id)+' 到期：未挖出的 '+fmtLV(m.forfeit)+' LV 已作废')}
@@ -359,7 +359,7 @@ setInterval(()=>{
   S&&S.miners.forEach(m=>{
     if(m.dead)return;
     const e=Math.min(m.rem,TIERS[m.tier].total/T*speedOf(m)/86400);
-    if(e>0){m.rem-=e;m.claimable+=e;S.minedTotal+=e;changed=true}
+    if(e>0){m.rem-=e;m.claimable+=e;m.mined=(m.mined||0)+e;S.minedTotal+=e;changed=true}
   });
   if(!changed)return;
   S.miners.forEach(m=>{const el=$('cl_'+m.id);if(el)el.textContent=fmtDec(m.claimable)});
@@ -372,7 +372,7 @@ function checkTx(){
   if(S.mon<PRICE_MON){toast('钱包 MON 不足 8,000');return}
   toast('正在链上检测你的转账…');
   setTimeout(()=>{S.mon-=PRICE_MON;S.spentBuy+=PRICE_USD;
-    const m={id:S.nextId++,tier:'A',rem:TIERS.A.total,born:S.day,claimable:0,ema:0,dead:false,done:false,forfeit:0};
+    const m={id:S.nextId++,tier:'A',rem:TIERS.A.total,born:S.day,claimable:0,mined:0,claimed:0,ema:0,dead:false,done:false,forfeit:0};
     S.miners.push(m);
     if(S.boundId===null)S.boundId=m.id;
     toast('检测到 8,000 MON — 矿机 #'+pad(m.id)+' 已入账并开挖');
@@ -382,8 +382,8 @@ function checkTx(){
 function bind(id){S.boundId=id;toast('#'+pad(id)+' 已绑定：此后平仓盈利记入这台的 EMA（旧矿机系数按 60h 衰减）');render()}
 function unbind(){S.boundId=null;toast('已解绑：平仓盈利暂不记入任何矿机，各机 EMA 自然衰减');render()}
 function claimOne(id){const m=S.miners.find(x=>x.id===id);if(!m||m.claimable<0.1)return;
-  S.wallet+=m.claimable;toast('#'+pad(id)+' 已领取 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
-function claimAll(){const t=claimTotal();if(t<0.1)return;S.wallet+=t;S.miners.forEach(m=>m.claimable=0);toast('已领取全部 '+fmtLV(t)+' LV 到钱包');render()}
+  S.wallet+=m.claimable;m.claimed=(m.claimed||0)+m.claimable;toast('#'+pad(id)+' 已领取 '+fmtLV(m.claimable)+' LV');m.claimable=0;render()}
+function claimAll(){const t=claimTotal();if(t<0.1)return;S.wallet+=t;S.miners.forEach(m=>{m.claimed=(m.claimed||0)+m.claimable;m.claimable=0});toast('已领取全部 '+fmtLV(t)+' LV 到钱包');render()}
 function stakeAll(){if(S.wallet<1)return;S.staked+=S.wallet;toast('已存入分红池');S.wallet=0;render()}
 function setGear(k){S.gear=k;const m={Z:floorNow()===0?'没交易：绑定矿机停转，倒计时照走':'没交易：宽限期内 1 倍速保底',
   L:floorNow()===0?'本周亏损：绑定矿机无加成；交易量仍在攒抽卡':'本周亏损：保底 1 倍速；交易量照攒抽卡',
@@ -434,19 +434,19 @@ function vMiner(){
     const exp=S.expandId===m.id;
     const bCls=b>=BMAX-0.01?'bmax':b>floorNow()+0.01?'bhi':b>0?'':'bzero';
     return `
-      <div class="mrow ${bound?'bd':''}">
+      <div class="mrow ${bound?'bd':''}" onclick="toggleExp(${m.id})" style="cursor:pointer">
         <span class="id"><span class="statusdot ${b>0?'':'off'}"></span>#${pad(m.id)}${bound?' <span class="bindbadge sm">BOOST</span>':''}</span>
         <span><span class="tierchip sm ${m.tier}">${m.tier} · ${tier.cn}</span></span>
         <span class="miniprog"><span>${(prog*100).toFixed(1)}%</span><div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div><span>${fmtLV(tier.total-m.rem)}/${fmtLV(tier.total)}</span></span>
-        <span class="bcell ${bCls}" onclick="toggleExp(${m.id})">${b.toFixed(2)}×${b>=BMAX-0.01?'<span class="maxtag">MAX</span>':''}${b<=0?' 停转':''}<span class="car">${exp?'▲':'▼'}</span></span>
+        <span class="bcell ${bCls}">${b.toFixed(2)}×${b>=BMAX-0.01?'<span class="maxtag">MAX</span>':''}${b<=0?' 停转':''}<span class="car">${exp?'▲':'▼'}</span></span>
         <span class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</span>
         <span>${daysLeft} 天</span>
         <span class="acts">
-          ${bound?'<button class="btn-xs" onclick="unbind()">解绑</button>':'<button class="btn-xs" onclick="bind('+m.id+')">绑定</button>'}
-          <button class="btn-xs pri" onclick="claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取</button>
+          ${bound?'<button class="btn-xs" onclick="event.stopPropagation();unbind()">解绑</button>':'<button class="btn-xs" onclick="event.stopPropagation();bind('+m.id+')">绑定</button>'}
+          <button class="btn-xs pri" onclick="event.stopPropagation();claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取</button>
         </span>
       </div>
-      ${exp?boostDetail(m,b,bound):''}`;
+      ${exp?minerDetail(m,b,bound):''}`;
   }).join('');
   return `
     <div class="panel">
@@ -459,11 +459,29 @@ function vMiner(){
         ${rows}
       </div></div>
       <div class="panel-pad" style="padding:8px 16px 12px">
-        <p style="font-size:11px;color:var(--mut2)">同一时间仅 1 台可绑定 PnL 加成（随时换绑）；未绑定的按基础速度${floorNow()===0?'（宽限期已过 = 0，停转）':'（宽限期内 1×）'}。点 Boost 数值可展开计算明细。</p>
+        <p style="font-size:11px;color:var(--mut2)">同一时间仅 1 台可绑定 PnL 加成（随时换绑）；未绑定的按基础速度${floorNow()===0?'（宽限期已过 = 0，停转）':'（宽限期内 1×）'}。点击矿机行可展开该机战绩与 boost 计算明细。</p>
       </div>
     </div>`;
 }
 function toggleExp(id){S.expandId=S.expandId===id?null:id;render()}
+function minerDetail(m,b,bound){
+  const tier=TIERS[m.tier];
+  const daysLeft=Math.max(0,T-(S.day-m.born));
+  const perDay=tier.total/T*b;
+  const stats=`
+    <div class="lbl" style="margin-bottom:4px">#${pad(m.id)} 挖矿战绩</div>
+    <div class="row" style="border:none;padding:3px 0"><span>今日产出（当前速度）</span><b class="${b>0?'pos':'neg'}">${b>0?'+'+fmtDec(perDay)+' LV ≈ '+fmtU(perDay*PLV)+' /天':'0 — 停转中'}</b></div>
+    <div class="row" style="border:none;padding:3px 0"><span>生涯已挖 / 总额度</span><b>${fmtDec(m.mined||0)} / ${fmtLV(tier.total)} LV</b></div>
+    <div class="row" style="border:none;padding:3px 0"><span>已领取 · 待领取</span><b>${fmtDec(m.claimed||0)} · <span class="pos">${fmtDec(m.claimable)}</span> LV</b></div>
+    <div class="row" style="border:none;padding:3px 0"><span>购入 / 到期</span><b>第 ${m.born} 天购入 · 还剩 ${daysLeft} 天${daysLeft<=21?'（到期未挖出作废）':''}</b></div>
+    <div style="display:flex;gap:6px;margin:8px 0 12px">
+      ${bound?'<button class="btn-xs" onclick="event.stopPropagation();unbind()">解绑</button>':'<button class="btn-xs" onclick="event.stopPropagation();bind('+m.id+')">绑定 BOOST</button>'}
+      <button class="btn-xs" onclick="event.stopPropagation();claimOne(${m.id})" ${m.claimable<0.1?'disabled':''}>领取 ${fmtDec(m.claimable)} LV</button>
+      ${m.tier!=='C'?`<button class="btn-xs" onclick="event.stopPropagation();S.lottoTarget=${m.id};go('lotto')">设为抽卡目标 →</button>`:''}
+    </div>
+    <div class="divider" style="margin:0 0 10px"></div>`;
+  return boostDetail(m,b,bound).replace('<div class="mexp">','<div class="mexp" onclick="event.stopPropagation()">'+stats);
+}
 function boostDetail(m,b,bound){
   const g=GEARS[S.gear],fl=floorNow();
   const myE=Math.round(m.ema||0);
