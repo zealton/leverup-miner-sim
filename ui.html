@@ -405,9 +405,11 @@ function remint(){
   S.chances-=1;S.lottoState='spin';render();
   setTimeout(()=>{
     const r=rnd(),cur=m.tier;let res='stay';
-    const opts=[];if(cur!=='B')opts.push(['B',QB]);if(cur!=='C')opts.push(['C',QC]);if(cur==='B')opts.push(['A',500]);
-    const tot=opts.reduce((a,o)=>a+o[1],0);
-    if(r>=STAY&&tot>0){let x=(r-STAY)/(1-STAY)*tot;for(const o of opts){if(x<o[1]){res=o[0];break}x-=o[1]}}
+    // fixed base rate x remaining-quota decay (demo: quotas at initial values)
+    const pUp=cur==='A'?[['B',(1-STAY)*QB/(QB+QC)],['C',(1-STAY)*QC/(QB+QC)]]
+             :cur==='B'?[['A',(1-STAY)*500/(500+QC)],['C',(1-STAY)*QC/(500+QC)]]:[];
+    let acc=STAY;
+    for(const[t,pr] of pUp){if(r>=acc&&r<acc+pr){res=t;break}acc+=pr}
     if(res!=='stay'&&res!==cur){const frac=m.rem/TIERS[cur].total;m.tier=res;m.rem=TIERS[res].total*frac}
     S.lottoState='done';S.lottoResult=res;render();
   },1200);
