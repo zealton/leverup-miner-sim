@@ -159,6 +159,32 @@ button{font-family:inherit}
 .warnbox p{font-size:12px;color:#d9b3a5;line-height:1.7}
 .warnbox p b{color:#f0c9bb}
 
+/* sale hero */
+.shell.solo{grid-template-columns:1fr}
+.hero{padding:0;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.hero-l{padding:30px 28px}
+.hero-r{border-left:1px solid var(--hair);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;
+  background:radial-gradient(circle at 50% 42%,rgba(199,245,13,.06),transparent 65%)}
+@media(max-width:900px){.hero-r{border-left:none;border-top:1px solid var(--hair)}}
+.hero h1{font-size:25px;line-height:1.25;margin-bottom:10px}
+.hero .heroSub{font-size:13.5px;color:var(--mut);margin-bottom:6px;max-width:520px}
+.spec4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 16px}
+@media(max-width:700px){.spec4{grid-template-columns:repeat(2,1fr)}}
+.spec{background:var(--block);border-radius:4px;padding:12px 12px}
+.spec .k{font-size:10.5px;color:var(--mut2);margin-bottom:4px}
+.spec .v{font-size:17px;font-weight:800}
+.spec .v small{font-size:10.5px;color:var(--mut2);font-weight:500}
+.tbadge.big{width:150px;height:150px;border-width:1.5px}
+.tbadge.big .lt{font-size:62px}
+.tbadge.big .mn{font-size:10px;margin-top:6px;letter-spacing:.22em}
+.btn.xl{height:52px;font-size:14.5px}
+.rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){.rules3{grid-template-columns:1fr}}
+.rules3 h2{margin-bottom:6px}
+.rules3 p{font-size:12px;color:var(--mut);line-height:1.65}
+
 /* toast / console */
 #toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#1c1f1a;border:1px solid var(--border);
   color:var(--soft);font-size:12.5px;font-weight:500;padding:10px 16px;border-radius:2px;display:none;z-index:60;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.6)}
@@ -303,25 +329,39 @@ function go(v){S.view=v;if(v!=='home')S.rail=v;if(v!=='lotto'){S.lottoState='idl
 /* ================= views ================= */
 function vMiner(){
   if(!S.miner)return `
-    <div class="panel">
-      <div class="ph"><span class="t">Miner</span><span class="r">首批 已认领 412 / 500</span></div>
-      <div class="panel-pad">
-        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
-          <div class="tbadge A"><span class="lt">A</span><span class="mn">MINER</span></div>
-          <div style="flex:1;min-width:0">
-            <div class="lbl">A 级矿机 · 首批 500 台</div>
-            <div class="bignum">5,000 <small>LV / 100 天 · ≈ ${fmtU(5000*PLV)}</small></div>
-            <div style="font-size:11.5px;color:var(--mut2);margin-top:2px">价格 8,000 MON（≈ ${fmtU(PRICE_USD)}）</div>
+    <div class="panel hero">
+      <div class="hero-grid">
+        <div class="hero-l">
+          <div class="lbl">BATCH #1 · LIVE ON X</div>
+          <h1>LeverUp Miner<br>首批限量发售</h1>
+          <p class="heroSub">一台会挖 LV 的机器：买入后 <b style="color:var(--soft)">100 天持续产出</b>，交易战绩越好挖得越快（60h EMA，最高 3 倍速），交易量还能抽卡升级稀有品质。</p>
+          <div class="spec4">
+            <div class="spec"><div class="k">单台总产出</div><div class="v">5,000 <small>LV</small></div></div>
+            <div class="spec"><div class="k">产出周期</div><div class="v">100 <small>天</small></div></div>
+            <div class="spec"><div class="k">发售价格</div><div class="v">8,000 <small>MON</small></div></div>
+            <div class="spec"><div class="k">首批限量</div><div class="v">500 <small>台</small></div></div>
           </div>
+          <div class="row" style="border:none;padding:0 0 4px"><span>已认领进度</span><b class="pos">412 / 500 · 82%</b></div>
+          <div class="pbar"><i style="width:82.4%"></i></div>
+          <div style="height:16px"></div>
+          <button class="btn xl" disabled>Buy · 暂未开放</button>
+          <p style="font-size:11.5px;color:var(--mut2);margin-top:10px">首批发售正在官方 X（Twitter）<b style="color:var(--mut)">@LeverUpFi</b> 进行 · 页面购买入口将于后续批次开放</p>
         </div>
-        <div class="row"><span>产出方式</span><b>按秒线性释放，边挖边领</b></div>
-        <div class="row"><span>加速规则</span><b>周盈利占比 → 最高 3 倍速</b></div>
-        <div class="row"><span>升级抽卡</span><b>每 $1.2M 交易量 = 1 次，可抽 B / C</b></div>
-        <div class="row"><span>到期规则</span><b>100 天硬到期，未挖出部分作废</b></div>
-        <div class="divider"></div>
-        <button class="btn" disabled>Buy · 暂未开放</button>
-        <p style="font-size:11.5px;color:var(--mut2);margin-top:8px;text-align:center">首批发售正在官方 X（Twitter）进行 · 页面购买入口将于后续批次开放</p>
+        <div class="hero-r">
+          <div class="tbadge A big"><span class="lt">A</span><span class="mn">MINER · BATCH 1</span></div>
+          <div class="ladder" style="width:100%;margin:0">
+            <div class="t3"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 发售</div></div>
+            <div class="t3 B"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 · 仅抽卡</div></div>
+            <div class="t3 C"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 · 仅抽卡</div></div>
+          </div>
+          <p style="font-size:10.5px;color:var(--mut2);text-align:center">B / C 无法直接购买——持有 A 后通过抽卡升级</p>
+        </div>
       </div>
+    </div>
+    <div class="rules3">
+      <div class="panel panel-pad"><div class="lbl">SPEED</div><h2>赚钱提速</h2><p>盈利（60h EMA）占全体矿工盈利池的比例决定速度，最高 3 倍；前 6 周有 1 倍保底。</p></div>
+      <div class="panel panel-pad"><div class="lbl">REMINT</div><h2>抽卡升级</h2><p>每 $1,200,000 交易量 = 1 次机会：65% 不变 / 30.2% 变 B / 4.8% 变 C，升级进度不清零。</p></div>
+      <div class="panel panel-pad"><div class="lbl">EXPIRY</div><h2>100 天到期</h2><p>到期未挖出的部分作废——保持盈利在线，把额度挖满再退役。</p></div>
     </div>`;
 
   const m=S.miner,tier=TIERS[m.tier];
@@ -456,7 +496,11 @@ function render(){
   $('sb_mon').textContent=S.mon.toLocaleString();
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
   const desk=matchMedia('(min-width:1024px)').matches;
-  if(desk){
+  document.querySelector('.shell').classList.toggle('solo',desk&&!S.miner);
+  if(desk&&!S.miner){
+    $('main').innerHTML=vMiner();
+    $('rail').innerHTML='';
+  }else if(desk){
     $('main').innerHTML=vMiner();
     $('rail').innerHTML=`<div class="panel">
       <div class="railtabs">${Object.entries(RAILS).map(([k,[t]])=>`<button class="${S.rail===k?'on':''}" data-rail="${k}">${t}</button>`).join('')}</div>
