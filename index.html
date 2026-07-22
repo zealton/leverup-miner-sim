@@ -758,7 +758,7 @@ function render(){
     <div class="row"><span>品质与配额</span><span>总量恒 ${fmtI(P.Q.A)} · A 发售 · <b>B 上限 ${fmtI(P.Q.B)}</b> · <b>C 上限 ${fmtI(P.Q.C)}</b>（B/C 仅 remint 可得）</span></div>
     <div class="row"><span>单台产出</span><span>A <b>${fmtLV(P.L.A)}</b> / B <b>${fmtLV(P.L.B)}</b> / C <b>${fmtLV(P.L.C)}</b> LV · 每秒线性释放 · 周期 <b>${P.T} 天</b>（boost=1）</span></div>
     <div class="row"><span>到期规则</span><span><b>${P.expire==='forfeit'?'硬到期：第 '+P.T+' 天未挖出部分作废（负债随批清零）':'冻结延时（永续负债）'}</b></span></div>
-    <div class="row"><span>Boost</span><span>钱包 PnL 的 <b>60h 半衰期 EMA</b> ÷ 全体矿工正 EMA 池 → 占 <b>${(P.smax*100).toFixed(1)}%</b> 满速 · 区间 [下限, ${P.bmax}×] · <b>第 ${P.floorw} 周起下限 1→0</b> · 绑定单台生效、可随时换绑</span></div>
+    <div class="row"><span>Boost</span><span>占比 = 钱包 PnL 的 <b>60h 半衰期 EMA</b> ÷ 全体矿工正 EMA 之和 · boost = 下限 + (${P.bmax}−下限) × min(1, 占比÷${(P.smax*100).toFixed(1)}%)，即<b>占盈利池 ≥${(P.smax*100).toFixed(1)}% 满速 ${P.bmax}×</b>（线性映射、超出封顶）· <b>第 ${P.floorw} 周起下限 1→0</b> · 绑定单台生效、可随时换绑</span></div>
     <div class="row"><span>Remint</span><span>每 <b>${fmt(P.rth)}</b> 交易量 = 1 次（钱包级，赚亏都算）· <b>${Math.round(P.stay*100)}% 不变</b> · A→B ${(pA*100).toFixed(1)}% / A→C ${(pC2*100).toFixed(1)}%（按剩余配额加权）· <b>C 不可抽</b> · B 再抽 ~34% 降级 · 升级进度继承（剩余比例 × 新品质总量）</span></div>
     <div class="row"><span>Claim / 质押</span><span>每台独立 claim + 一键全领 · 产出可入 ve 分红池（真实 fee 回购：${Math.round(P.veShare*100)}% 分质押者 / ${Math.round((1-P.veShare)*100)}% 销毁）</span></div>
     <div class="row"><span>资金策略</span><span>矿机收入 + 客损 <b>全额作为拉盘弹药</b>（假设见「拉盘成本」折叠模块）· LV 现价按 CMC ${fmt(P.mc)} / 流通 ${fmtLV(P.circ)}</span></div>`;
