@@ -172,6 +172,14 @@ button{font-family:inherit}
 .pick .info{flex:1;min-width:0;font-size:12px;color:var(--mut)}
 .pick .info b{color:var(--txt)}
 .pick .ev{font-size:11.5px;font-weight:700;text-align:right}
+/* boost feedback emphasis */
+.bcell.bmax{color:var(--green);text-shadow:0 0 14px rgba(199,245,13,.55)}
+.bcell.bhi{color:var(--green)}
+.bcell.bzero{color:var(--red)}
+.maxtag{font-size:8.5px;background:var(--green);color:var(--green-dk);padding:1px 4px;border-radius:2px;font-weight:800;margin-left:4px;vertical-align:1px}
+.mrow.bd{background:rgba(199,245,13,.04);box-shadow:inset 2px 0 0 var(--green)}
+.missbox{border-left:2px solid var(--red);background:#1d1109;border-radius:2px;padding:9px 12px;margin-top:10px;font-size:12px;color:#e0a893}
+.missbox b{color:var(--red)}
 /* compact miner table (position-list style) */
 .mtablewrap{overflow-x:auto}
 .mtable{min-width:680px}
@@ -300,9 +308,9 @@ const fmtDec=v=>v>=1000?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
 /* ---- constants (aligned with simulator batch-1) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
 const TIERS={
-  A:{total:5000,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 500 台'},
-  B:{total:12500,color:'var(--blue)',cn:'稀有',mult:'产量 ×2.5',supply:'全网限量 75 台'},
-  C:{total:31000,color:'var(--gold)',cn:'传说',mult:'产量 ×6.2',supply:'全网仅 12 台'}};
+  A:{total:4800,color:'var(--soft)',cn:'常规',mult:'基础产量',supply:'首批 500 台'},
+  B:{total:12000,color:'var(--blue)',cn:'稀有',mult:'产量 ×2.5',supply:'全网限量 75 台'},
+  C:{total:30000,color:'var(--gold)',cn:'传说',mult:'产量 ×6.2',supply:'全网仅 12 台'}};
 const GEARS={
   Z:{v:0,pnl:0,name:'没交易',desc:'不开单'},
   L:{v:50000,pnl:0,name:'交易但亏',desc:'量 $50,000/周'},
@@ -421,12 +429,13 @@ function vMiner(){
     const daysLeft=Math.max(0,T-(S.day-m.born));
     const b=speedOf(m),bound=m.id===S.boundId;
     const exp=S.expandId===m.id;
+    const bCls=b>=BMAX-0.01?'bmax':b>floorNow()+0.01?'bhi':b>0?'':'bzero';
     return `
-      <div class="mrow">
+      <div class="mrow ${bound?'bd':''}">
         <span class="id"><span class="statusdot ${b>0?'':'off'}"></span>#${pad(m.id)}${bound?' <span class="bindbadge sm">BOOST</span>':''}</span>
         <span><span class="tierchip sm ${m.tier}">${m.tier} · ${tier.cn}</span></span>
         <span class="miniprog"><span>${(prog*100).toFixed(1)}%</span><div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div><span>${fmtLV(tier.total-m.rem)}/${fmtLV(tier.total)}</span></span>
-        <span class="bcell" onclick="toggleExp(${m.id})">${b.toFixed(2)}×<span class="car">${exp?'▲':'▼'}</span></span>
+        <span class="bcell ${bCls}" onclick="toggleExp(${m.id})">${b.toFixed(2)}×${b>=BMAX-0.01?'<span class="maxtag">MAX</span>':''}${b<=0?' 停转':''}<span class="car">${exp?'▲':'▼'}</span></span>
         <span class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</span>
         <span>${daysLeft} 天</span>
         <span class="acts">
@@ -439,7 +448,8 @@ function vMiner(){
   return `
     <div class="panel">
       <div class="ph"><span class="t">我的矿机 · ${S.miners.length} 台（运行中 ${act.length}）</span>
-      <span class="msum"><span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtDec(claimTotal())}</span> LV</b></span>
+      <span class="msum"><span style="font-size:12px;color:var(--mut)">今日预期 <b style="color:var(--txt)">${fmtDec(alive().reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0))} LV/天</b></span>
+      <span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtDec(claimTotal())}</span> LV</b></span>
       <button class="btn mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button></span></div>
       <div class="mtablewrap"><div class="mtable">
         <div class="mrow mhead"><span>矿机</span><span>品质</span><span>进度</span><span>Boost</span><span>待领取</span><span>剩余</span><span style="text-align:right">操作</span></div>
@@ -480,7 +490,7 @@ function heroSale(){
           <h1>LeverUp Miner<br>首批限量发售</h1>
           <p class="heroSub">一台会挖 LV 的机器：买入后 <b style="color:var(--soft)">100 天持续产出</b>，交易战绩越好挖得越快（60h EMA，最高 3 倍速），交易量还能抽卡升级稀有品质。</p>
           <div class="spec4">
-            <div class="spec"><div class="k">单台总产出</div><div class="v">5,000 <small>LV</small></div></div>
+            <div class="spec"><div class="k">单台总产出</div><div class="v">4,800 <small>LV</small></div></div>
             <div class="spec"><div class="k">产出周期</div><div class="v">100 <small>天</small></div></div>
             <div class="spec"><div class="k">发售价格</div><div class="v">8,000 <small>MON</small></div></div>
             <div class="spec"><div class="k">首批限量</div><div class="v">500 <small>台</small></div></div>
@@ -494,9 +504,9 @@ function heroSale(){
         <div class="hero-r">
           <div class="tbadge A big"><span class="lt">A</span><span class="mn">MINER · BATCH 1</span></div>
           <div class="ladder" style="width:100%;margin:0">
-            <div class="t3"><div class="nm">A</div><div class="amt">5,000 LV</div><div class="sup">常规 · 发售</div></div>
-            <div class="t3 B"><div class="nm">B</div><div class="amt">12,500 LV</div><div class="sup">稀有 · 仅抽卡</div></div>
-            <div class="t3 C"><div class="nm">C</div><div class="amt">31,000 LV</div><div class="sup">传说 · 仅抽卡</div></div>
+            <div class="t3"><div class="nm">A</div><div class="amt">4,800 LV</div><div class="sup">常规 · 发售</div></div>
+            <div class="t3 B"><div class="nm">B</div><div class="amt">12,000 LV</div><div class="sup">稀有 · 仅抽卡</div></div>
+            <div class="t3 C"><div class="nm">C</div><div class="amt">30,000 LV</div><div class="sup">传说 · 仅抽卡</div></div>
           </div>
           <p style="font-size:10.5px;color:var(--mut2);text-align:center">B / C 无法直接购买——持有 A 后通过抽卡升级</p>
         </div>
@@ -518,6 +528,20 @@ function vBoost(){
       <div class="speed"><span class="v ${b<=0?'zero':b<1.5?'slow':''}">${b.toFixed(2)}×</span>
         <span style="font-size:11.5px;color:var(--mut2)">盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
       <div class="row" style="margin-bottom:8px"><span>加成作用于</span><b>${bm?'#'+pad(bm.id)+'（'+bm.tier+' 级）':'<span style="color:var(--red)">未绑定任何矿机</span>'}</b></div>
+      ${(()=>{const act=alive();if(!act.length)return'';
+        const fl=floorNow();
+        const expDay=act.reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0);
+        let bi=0;act.forEach((m,i)=>{if(TIERS[m.tier].total>TIERS[act[bi].tier].total)bi=i});
+        const maxDay=act.reduce((a,m,i)=>a+TIERS[m.tier].total/T*(i===bi?BMAX:fl),0);
+        const gap=Math.max(0,maxDay-expDay);
+        return `<div class="block" style="margin-bottom:12px">
+          <div class="lbl" style="margin-bottom:8px">今日产出账本（${act.length} 台合计）</div>
+          <div class="row" style="border:none;padding:3px 0"><span>按当前速度，今天预期挖出</span><b class="pos">${fmtDec(expDay)} LV ≈ ${fmtU(expDay*PLV)}</b></div>
+          <div class="row" style="border:none;padding:3px 0"><span>满速可得（最佳绑定 + ${BMAX}×）</span><b>${fmtDec(maxDay)} LV ≈ ${fmtU(maxDay*PLV)}</b></div>
+          <div class="pbar" style="margin:8px 0 4px"><i style="width:${(maxDay>0?expDay/maxDay*100:0).toFixed(0)}%"></i></div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut2)"><span>产能利用率 ${(maxDay>0?expDay/maxDay*100:0).toFixed(0)}%</span><span>满速 = 占盈利池 1%</span></div>
+          ${gap>0.5?`<div class="missbox">今天正在错失 <b>${fmtDec(gap)} LV ≈ ${fmtU(gap*PLV)}</b> — 去交易，把 PnL（60h EMA）拉进盈利池前 1% 即满速${fl===0?'；宽限期已过，无盈利的矿机正在空转倒计时':''}</div>`:`<div style="font-size:11px;color:var(--green);margin-top:8px">已接近满速产能，保持盈利在线即可</div>`}
+        </div>`})()}
       <p style="font-size:12px;color:var(--mut);margin-bottom:10px">你的<b style="color:var(--soft)">近期盈利（60 小时半衰期 EMA）</b>占全体矿工盈利池的比例，决定<b style="color:var(--soft)">绑定矿机</b>的速度——赚钱当天提速、每小时更新；其余矿机按基础速度。</p>
       <div class="seg">
         ${Object.entries(GEARS).map(([k,g])=>`
