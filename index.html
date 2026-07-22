@@ -176,6 +176,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 /* collapsible modules */
 details.fold{border:1px solid var(--border);background:var(--panel);margin-bottom:16px}
 details.fold>summary{cursor:pointer;user-select:none;list-style:none}
+details.fold>summary:hover{color:var(--text);background:rgba(255,255,255,.02)}
 details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::before{content:'▸';margin-right:9px;color:var(--dim)}
 details.fold[open]>summary::before{content:'▾';color:var(--acid)}
@@ -209,7 +210,7 @@ footer a{color:var(--muted)}
   <div class="panel-h">第一期定稿参数 · 实现速查 <span class="tag">SPEC</span></div>
   <div class="panel-b kv" id="spec_kv" style="line-height:2.1"></div>
 </div>
-<details class="fold"><summary class="panel-h">机制五步（速览）</summary>
+<details class="fold"><summary class="panel-h"><span>机制五步（速览）</span><span class="tag">MECHANISM</span></summary>
 <div class="flow" style="margin-bottom:0;border:none">
   <div class="fstep"><div class="n">01 / 认购</div><div class="t">公平发售 A 品质</div><div class="d">创世批 + 后续批次，售价 <b>x MON</b>。一个钱包可买多台。</div></div>
   <div class="fstep"><div class="n">02 / 释放</div><div class="t">线性产出 LV</div><div class="d">每台矿机内置固定 LV 总量，按秒线性释放，释放完矿机报废。</div></div>
@@ -349,7 +350,7 @@ footer a{color:var(--muted)}
       </div>
     </div>
 
-    <details class="fold"><summary class="panel-h">用户整体视角与 APR/APY</summary>
+    <details class="fold"><summary class="panel-h"><span>用户整体视角与 APR / APY</span><span class="tag">USERS</span></summary>
     <div class="stats" style="margin-bottom:0;border:none">
       <div class="stat"><div class="k">用户整体投入<span class="tip" data-tip="模拟期内全体用户实际掏出的钱：矿机购买 + 刷量摩擦成本（交易量 × 刷量成本率）。B/C 通过 remint 获得、不额外付购机费。">?</span></div><div class="v white" id="u_in">—</div><div class="u" id="u_in_u">—</div></div>
       <div class="stat"><div class="k">用户整体产出市值</div><div class="v white" id="u_out">—</div><div class="u">全部排放 LV × 当前价</div></div>
@@ -1131,8 +1132,8 @@ document.querySelectorAll('.tierrow input').forEach(el=>{
   el.addEventListener('change',()=>{const v=parseNum(el.value);if(!isNaN(v))el.value=fmtInput(v);render()});
 });
 $('i_expire').addEventListener('change',render);
-$('pb_cur').addEventListener('click',()=>{PBMODE='cur';$('pb_cur').classList.add('on');$('pb_tgt').classList.remove('on');render()});
-$('pb_tgt').addEventListener('click',()=>{PBMODE='tgt';$('pb_tgt').classList.add('on');$('pb_cur').classList.remove('on');render()});
+$('pb_cur').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();PBMODE='cur';$('pb_cur').classList.add('on');$('pb_tgt').classList.remove('on');render()});
+$('pb_tgt').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();PBMODE='tgt';$('pb_tgt').classList.add('on');$('pb_cur').classList.remove('on');render()});
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
 $('w_reset').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();read();wInit()});
@@ -1160,7 +1161,8 @@ window.addEventListener('scroll',hideTip,{passive:true});
     const h=panel.querySelector(':scope > .panel-h');if(!h)return;
     if(!foldTitles.some(ft=>h.textContent.includes(ft)))return;
     const det=document.createElement('details');det.className='fold';
-    const sum=document.createElement('summary');sum.className='panel-h';sum.innerHTML=h.innerHTML;
+    const sum=document.createElement('summary');sum.className='panel-h';
+    while(h.firstChild)sum.appendChild(h.firstChild);
     panel.parentNode.insertBefore(det,panel);
     h.remove();det.appendChild(sum);det.appendChild(panel);
     det.addEventListener('toggle',()=>render());
