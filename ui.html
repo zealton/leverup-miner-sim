@@ -542,10 +542,10 @@ function vBoost(){
   const bm=S.miners.find(m=>m.id===S.boundId&&!m.dead);
   return `
     <div class="panel-pad">
-      <div class="lbl">PNL (60H EMA) → SPEED</div>
+      <div class="lbl">我的钱包加成 · PNL (60H EMA)</div>
       <div class="speed"><span class="v ${b<=0?'zero':b<1.5?'slow':''}">${b.toFixed(2)}×</span>
-        <span style="font-size:11.5px;color:var(--mut2)">盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
-      <div class="row" style="margin-bottom:8px"><span>加成作用于</span><b>${bm?'#'+pad(bm.id)+'（'+bm.tier+' 级）':'<span style="color:var(--red)">未绑定任何矿机</span>'}</b></div>
+        <span style="text-align:right;font-size:11.5px;color:var(--mut2)">${bm?'作用于 <b style="color:var(--green)">#'+pad(bm.id)+'</b>（'+bm.tier+' 级）':'<b style="color:var(--red)">未绑定 · 不作用于任何矿机</b>'}<br>盈利占比 ${(GEARS[S.gear].pnl/(PNL_POOL+GEARS[S.gear].pnl)*100).toFixed(2)}%</span></div>
+      <p style="font-size:11px;color:var(--mut2);margin:-2px 0 10px">加成属于<b style="color:var(--mut)">钱包</b>，只作用于当前绑定的那台矿机；其余矿机按基础速度（在矿机列表换绑）。</p>
       ${(()=>{const act=alive();if(!act.length)return'';
         const fl=floorNow();
         const expDay=act.reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0);
