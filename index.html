@@ -172,6 +172,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .sblog div{border-bottom:1px dashed #1c1c1c;padding:2px 0}
 .sblog b{color:var(--acid)}
 
+.pbtn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;background:none;border:1px solid var(--border);color:var(--muted);padding:3px 10px;cursor:pointer}
+.pbtn.on{color:var(--acid);border-color:var(--acid)}
 /* collapsible modules */
 details.fold{border:1px solid var(--border);background:var(--panel);margin-bottom:16px}
 details.fold>summary{cursor:pointer;user-select:none;list-style:none}
@@ -336,6 +338,13 @@ footer a{color:var(--muted)}
       <div class="stat"><div class="k">用户整体产出市值</div><div class="v white" id="u_out">—</div><div class="u">全部排放 LV × 当前价</div></div>
       <div class="stat"><div class="k">用户整体净盈亏<span class="tip" data-tip="产出市值 − 投入。为负说明按当前 LV 价格、全体用户是净亏的——收益故事只能靠市值增长兑现。">?</span></div><div class="v" id="u_net">—</div><div class="u" id="u_net_u">—</div></div>
       <div class="stat"><div class="k">A 矿机 APR / APY<span class="tip" data-tip="按<b>当前市值</b>与全成本（购机+刷量）计算。APR = 单周期收益率 × (365 ÷ 寿命)，单利年化；APY = (1 + 周期收益率)^(365 ÷ 寿命) − 1，假设每期产出全部复投买新矿机的复利年化。">?</span></div><div class="v white" id="u_apr">—</div><div class="u" id="u_apr_u">—</div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h"><span>回本时间分布 · 谁先回本、谁回不了本<span class="tip" data-tip="按「边挖边卖」口径：每条线是该分层单台矿机的累计净现金流（产出变现 − 购机 − 交易摩擦）。穿越 $0 的那天 = 回本日。设计目标：大户短期回本形成战报，低 boost 者被时间和到期作废逐渐挤出短期回本区。">?</span></span>
+      <span><button class="pbtn" id="pb_cur">当前市值</button> <button class="pbtn on" id="pb_tgt">目标市值</button></span></div>
+      <div style="padding:16px 16px 0"><canvas id="c_payback" height="250"></canvas></div>
+      <div class="legend" id="pb_legend"></div>
     </div>
 
     <div class="panel" style="margin-bottom:16px">
@@ -940,7 +949,56 @@ function render(){
   });
 
   drawFlow(weeks);drawFleet(weeks);drawPnl(weeks);
+  drawPayback(PBMODE==='tgt'?P.tplv:P.plv,hwN,mN,idleN,bHW,bTyp,fl0);
   renderWallet();
+}
+
+/* ---- payback distribution chart ---- */
+let PBMODE='tgt';
+function drawPayback(plv,hwN,mN,idleN,bHW,bTyp,fl0){
+  const c=$('c_payback');if(!c||c.clientWidth<50)return;
+  const [ctx,W,H]=setup(c,250);
+  const padL=64,padR=12,N=P.T;
+  const frDay=P.vol/7*P.cuser;
+  const mk=(b,tradeEnd,prodEnd)=>{
+    const arr=[];let done=P.L.A/ (P.L.A/P.T*Math.max(b,0.0001)); // days to finish at boost b
+    for(let t=0;t<=N;t++){
+      const pd=Math.min(t,prodEnd,done);
+      const fd=Math.min(t,tradeEnd,done);
+      arr.push(-P.priceUsd+pd*(P.L.A/P.T*b*plv)-fd*frDay);
+    }
+    return arr;
+  };
+  const sH=mk(bHW,P.T,P.T);
+  const sM=mk(bTyp,P.T,P.T);
+  const idleEnd=Math.min(P.T,P.floorw*7);
+  const sI=(()=>{const a=[];for(let t=0;t<=N;t++){a.push(-P.priceUsd+Math.min(t,idleEnd)*(P.L.A/P.T*fl0*plv))}return a})();
+  const series=[
+    {label:'盈利大户（'+fmtI(hwN)+' 台 · '+bHW.toFixed(2)+'×）',color:'#C7F50D',vals:sH,n:hwN},
+    {label:'普通活跃（'+fmtI(mN)+' 台 · 期望 '+bTyp.toFixed(2)+'×）',color:'#8ab4ff',vals:sM,n:mN},
+    {label:'躺平（'+fmtI(idleN)+' 台 · '+fl0.toFixed(0)+'×→0）',color:'#FA5000',vals:sI,n:idleN}
+  ];
+  const all=series.flatMap(x=>x.vals);
+  let ymax=Math.max(...all,10)*1.15,ymin=Math.min(...all,-P.priceUsd)*1.15;
+  const X=t=>padL+t/N*(W-padL-padR);
+  const Y=v=>16+(1-(v-ymin)/(ymax-ymin))*(H-40);
+  grid(ctx,W,H,padL,ymin,ymax,fmt);
+  ctx.fillStyle='#4a4a4a';for(let t=0;t<=N;t+=Math.ceil(N/10))ctx.fillText(t+'天',X(t)-8,H-8);
+  ctx.strokeStyle='#e8e8e8';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(W-padR,Y(0));ctx.stroke();ctx.setLineDash([]);
+  ctx.font='10px Inter';ctx.fillStyle='#7a7a7a';ctx.fillText('回本线 $0',W-padR-64,Y(0)-6);
+  series.forEach(sr=>{
+    line(ctx,sr.vals.map((v,t)=>[X(t),Y(v)]),sr.color,2);
+    const cross=sr.vals.findIndex(v=>v>=0);
+    if(cross>0){
+      ctx.fillStyle=sr.color;ctx.beginPath();ctx.arc(X(cross),Y(0),4,0,7);ctx.fill();
+      ctx.font='10.5px Inter';ctx.fillText('第 '+cross+' 天 · '+fmtI(sr.n)+' 台回本',Math.min(X(cross)+8,W-150),Y(0)-10-series.indexOf(sr)*13);
+    }else{
+      ctx.font='10.5px Inter';ctx.fillStyle=sr.color;
+      ctx.fillText('到期未回本（差 '+fmt(-sr.vals[N])+'）',W-padR-190,Y(sr.vals[N])-6);
+    }
+  });
+  regChart('c_payback',{padL,padR,n:N+1,xl:t=>'第 '+t+' 天 · '+(PBMODE==='tgt'?'目标市值':'当前市值'),series:series.map(sr=>({label:sr.label,color:sr.color,vals:sr.vals,fmt}))});
+  $('pb_legend').innerHTML=series.map(sr=>`<span><i style="background:${sr.color}"></i>${sr.label}</span>`).join('')+`<span style="color:var(--dim)">定价：${PBMODE==='tgt'?'目标市值 '+fmt(P.tmc):'当前市值 '+fmt(P.mc)} · 边挖边卖口径</span>`;
 }
 
 /* ---- wallet mini-sim (RNG) ---- */
@@ -1027,6 +1085,8 @@ document.querySelectorAll('.tierrow input').forEach(el=>{
   el.addEventListener('change',()=>{const v=parseNum(el.value);if(!isNaN(v))el.value=fmtInput(v);render()});
 });
 $('i_expire').addEventListener('change',render);
+$('pb_cur').addEventListener('click',()=>{PBMODE='cur';$('pb_cur').classList.add('on');$('pb_tgt').classList.remove('on');render()});
+$('pb_tgt').addEventListener('click',()=>{PBMODE='tgt';$('pb_tgt').classList.add('on');$('pb_cur').classList.remove('on');render()});
 $('w_step').addEventListener('click',wStep);
 $('w_remint').addEventListener('click',wRemint);
 $('w_reset').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();read();wInit()});
