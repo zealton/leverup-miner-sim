@@ -304,6 +304,7 @@ const $=id=>document.getElementById(id);
 const fmtLV=v=>{const a=Math.abs(v);return a>=100?Math.round(a).toLocaleString('en-US'):a.toFixed(1)};
 const fmtU=v=>{const a=Math.abs(v);const t=a>=1000?Math.round(a).toLocaleString('en-US'):a.toFixed(2);return(v<0?'−$':'$')+t};
 const fmtDec=v=>v>=1000?Math.round(v).toLocaleString('en-US'):v.toFixed(1);
+const fmtLive=v=>v>=1000?v.toLocaleString('en-US',{maximumFractionDigits:1,minimumFractionDigits:1}):v.toFixed(3);
 
 /* ---- constants (aligned with simulator batch-1) ---- */
 const PLV=0.0533, PRICE_MON=8000, PRICE_USD=200, T=100, FLOOR_DAY=42;
@@ -362,9 +363,9 @@ setInterval(()=>{
     if(e>0){m.rem-=e;m.claimable+=e;m.mined=(m.mined||0)+e;S.minedTotal+=e;changed=true}
   });
   if(!changed)return;
-  S.miners.forEach(m=>{const el=$('cl_'+m.id);if(el)el.textContent=fmtDec(m.claimable)});
-  const t=$('cl_total');if(t)t.textContent=fmtDec(claimTotal());
-  const t2=$('cl_total2');if(t2)t2.textContent=fmtDec(claimTotal())+' LV ≈ '+fmtU(claimTotal()*PLV);
+  S.miners.forEach(m=>{const el=$('cl_'+m.id);if(el)el.textContent=fmtLive(m.claimable)});
+  const t=$('cl_total');if(t)t.textContent=fmtLive(claimTotal());
+  const t2=$('cl_total2');if(t2)t2.textContent=fmtLive(claimTotal())+' LV ≈ '+fmtU(claimTotal()*PLV);
 },1000);
 
 const pad=id=>String(id).padStart(4,'0');
@@ -424,7 +425,7 @@ function vMiner(){
         <span><span class="tierchip sm ${m.tier}">${m.tier}</span></span>
         <span>${m.done?'已挖完 · 全部释放':'已到期 · <b style="color:var(--red)">−'+fmtLV(m.forfeit)+' LV 作废</b>'}</span>
         <span>—</span>
-        <span class="pos">${m.claimable>0.1?`<span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV`:'—'}</span>
+        <span class="pos">${m.claimable>0.1?`<span id="cl_${m.id}">${fmtLive(m.claimable)}</span> LV`:'—'}</span>
         <span>—</span>
         <span class="acts">${m.claimable>0.1?`<button class="btn-xs pri" onclick="claimOne(${m.id})">领取</button>`:''}</span>
       </div>`;
@@ -439,7 +440,7 @@ function vMiner(){
         <span><span class="tierchip sm ${m.tier}">${m.tier} · ${tier.cn}</span></span>
         <span class="miniprog"><span>${(prog*100).toFixed(1)}%</span><div class="pbar ${daysLeft<=21?'warn':''}"><i style="width:${(prog*100).toFixed(1)}%"></i></div><span>${fmtLV(tier.total-m.rem)}/${fmtLV(tier.total)}</span></span>
         <span class="bcell ${bCls}">${b.toFixed(2)}×${b>=BMAX-0.01?'<span class="maxtag">MAX</span>':''}${b<=0?' 停转':''}<span class="car">${exp?'▲':'▼'}</span></span>
-        <span class="pos"><span id="cl_${m.id}">${fmtDec(m.claimable)}</span> LV</span>
+        <span class="pos"><span id="cl_${m.id}">${fmtLive(m.claimable)}</span> LV</span>
         <span>${daysLeft} 天</span>
         <span class="acts">
           ${bound?'<button class="btn-xs" onclick="event.stopPropagation();unbind()">解绑</button>':'<button class="btn-xs" onclick="event.stopPropagation();bind('+m.id+')">绑定</button>'}
@@ -452,7 +453,7 @@ function vMiner(){
     <div class="panel">
       <div class="ph"><span class="t">我的矿机 · ${S.miners.length} 台（运行中 ${act.length}）</span>
       <span class="msum"><span style="font-size:12px;color:var(--mut)">今日预期 <b style="color:var(--txt)">${fmtDec(alive().reduce((a,m)=>a+TIERS[m.tier].total/T*speedOf(m),0))} LV/天</b></span>
-      <span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtDec(claimTotal())}</span> LV</b></span>
+      <span style="font-size:12px;color:var(--mut)">总待领取 <b class="pos" style="font-weight:700"><span id="cl_total">${fmtLive(claimTotal())}</span> LV</b></span>
       <button class="btn mini2" onclick="claimAll()" ${claimTotal()<0.1?'disabled':''}>全部领取</button></span></div>
       <div class="mtablewrap"><div class="mtable">
         <div class="mrow mhead"><span>矿机</span><span>品质</span><span>进度</span><span>Boost</span><span>待领取</span><span>剩余</span><span style="text-align:right">操作</span></div>
@@ -649,7 +650,7 @@ function vVault(){
   return `
     <div class="panel-pad">
       <div class="lbl">CLAIMABLE · 待领取（全部矿机）</div>
-      <div class="bignum" style="margin-bottom:2px"><span id="cl_total2">${fmtDec(ct)} LV ≈ ${fmtU(ct*PLV)}</span></div>
+      <div class="bignum" style="margin-bottom:2px"><span id="cl_total2">${fmtLive(ct)} LV ≈ ${fmtU(ct*PLV)}</span></div>
       <p style="font-size:11.5px;color:var(--mut2);margin-bottom:12px">每秒累积 · 可按台领取（矿机列表）或一键全领</p>
       <div class="btnrow">
         <button class="btn ghost" ${ct<0.1?'disabled':''} onclick="claimAll()">全部领取</button>

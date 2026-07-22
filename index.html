@@ -354,7 +354,7 @@ footer a{color:var(--muted)}
     <div class="stats" style="margin-bottom:0;border:none">
       <div class="stat"><div class="k">用户整体投入<span class="tip" data-tip="模拟期内全体用户实际掏出的钱：矿机购买 + 刷量摩擦成本（交易量 × 刷量成本率）。B/C 通过 remint 获得、不额外付购机费。">?</span></div><div class="v white" id="u_in">—</div><div class="u" id="u_in_u">—</div></div>
       <div class="stat"><div class="k">用户整体产出市值</div><div class="v white" id="u_out">—</div><div class="u">全部排放 LV × 当前价</div></div>
-      <div class="stat"><div class="k">用户整体净盈亏<span class="tip" data-tip="产出市值 − 投入。为负说明按当前 LV 价格、全体用户是净亏的——收益故事只能靠市值增长兑现。">?</span></div><div class="v" id="u_net">—</div><div class="u" id="u_net_u">—</div></div>
+      <div class="stat"><div class="k">用户整体净盈亏<span class="tip" data-tip="产出市值 − 投入。为负说明按当前 LV 价格、全体用户是净亏的——收益故事只能靠市值增长兑现。恒等式：用户净 + 协议净 = −交易量×(用户成本率−客损率)（第三方 LP/手续费泄漏）；两率相等时严格零和。">?</span></div><div class="v" id="u_net">—</div><div class="u" id="u_net_u">—</div></div>
       <div class="stat"><div class="k">A 矿机 APR / APY<span class="tip" data-tip="按<b>当前市值</b>与全成本（购机+刷量）计算。APR = 单周期收益率 × (365 ÷ 寿命)，单利年化；APY = (1 + 周期收益率)^(365 ÷ 寿命) − 1，假设每期产出全部复投买新矿机的复利年化。">?</span></div><div class="v white" id="u_apr">—</div><div class="u" id="u_apr_u">—</div></div>
     </div>
     </details>
@@ -393,7 +393,7 @@ footer a{color:var(--muted)}
     </div>
 
     <div class="panel" style="margin-bottom:16px">
-      <div class="panel-h"><span>拉盘成本 ⇄ 回本联动<span class="tip" data-tip="AMM 恒定乘积模型：把价格从当前拉到 r 倍，需净买入 ≈ 深度 × (√r − 1)，同时金库顺带回收一批 LV。<b>假设无 LV 持有者抛压、无新增流动性</b>；矿机排放的结构性卖压见上方 ve 模块。下表展示价格每站上一档、各分层矿机回本天数如何递减——若不护盘价格回落，反向读表即可。">?</span></span><span class="tag" id="pump_tag">→ 目标市值</span></div>
+      <div class="panel-h"><span>拉盘成本 ⇄ 回本联动<span class="tip" data-tip="AMM 恒定乘积模型：把价格从当前拉到 r 倍，需净买入 ≈ 深度 × (√r − 1)，同时金库顺带回收一批 LV。<b>假设无 LV 持有者抛压、无新增流动性</b>；矿机排放的结构性卖压见 ve 模块。<b>预算互斥提示</b>：本模块的「弹药全用」与 ve 模块的回购分成引用同一笔营收，实际需按比例分配、不可两处同时全额计。下表展示价格每站上一档、各分层矿机回本天数如何递减——若不护盘价格回落，反向读表即可。">?</span></span><span class="tag" id="pump_tag">→ 目标市值</span></div>
       <div class="panel-b">
         <div class="kv" id="pump_kv"></div>
       </div>
@@ -941,9 +941,10 @@ function render(){
     <div class="row"><span>└ 协议净留存（回购后）</span><span class="${wkRetain>=0?'':'negv'}">${fmt(wkRetain)}/周</span></div>
     <div class="row"><span>矿机周排放 ${fmtLV(wkEmit)} LV × (1−质押率 ${Math.round(P.stake*100)}%)</span><span>卖压 ${fmtLV(wkSellLV)} LV/周</span></div>
     <div class="row hl"><span>净流量（回购买盘 − 排放卖压）</span><span style="color:${wkNetLV>=0?'var(--acid)':'var(--red)'}">${wkNetLV>=0?'+':''}${fmtLV(wkNetLV)} LV/周 ≈ ${fmt(wkNetLV*P.plv)}</span></div>`;
-  $('ve_note').innerHTML=wkNetLV>=0
+  const veShareNote=`<b style="color:var(--gold)">注意与「拉盘成本」模块的预算互斥</b>：两处引用同一笔营收——ve 按 ${Math.round(P.bb*100)}% 回购分配，拉盘模块展示 100% 全额买盘的理论上限；实际执行需在两者间分配预算，不可同时全额计。`;
+  $('ve_note').innerHTML=(wkNetLV>=0
     ?`结构性<b style="color:var(--text)">净买盘</b>：排放被质押吸收 + 回购对冲后，二级市场每周净吸筹 ${fmt(wkNetLV*P.plv)}——这就是「持续拉高价格」的机械基础。注意：回购资金中真实 fee 占 ${((wkFee*P.bb)/Math.max(1,wkBuybackUsd)*100).toFixed(0)}%，这部分才是外部输血；来自矿机销售/客损的部分是内循环。`
-    :`结构性<b style="color:var(--red)">净卖压</b>：回购买盘接不住排放，价格支撑只能靠外部投机盘。降低排放（L 值）、提高质押率（拉高 ve APR）或提高真实 fee 是三个出口。`;
+    :`结构性<b style="color:var(--red)">净卖压</b>：回购买盘接不住排放，价格支撑只能靠外部投机盘。降低排放（L 值）、提高质押率（拉高 ve APR）或提高真实 fee 是三个出口。`)+' '+veShareNote;
 
   // pump cost <-> payback linkage
   $('v_depth').textContent=fmt(P.depth);
