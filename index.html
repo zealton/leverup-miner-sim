@@ -339,6 +339,16 @@ footer a{color:var(--muted)}
       <div class="stat"><div class="k">A 矿机回本（用户视角）</div><div class="v white" id="o_payback">—</div><div class="u" id="o_payback_u">—</div></div>
     </div>
 
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-h">④ 协议侧收益结论 · 这一期我们得到什么 <span class="tag">PROTOCOL</span></div>
+      <div class="stats" style="border:none;margin-bottom:0">
+        <div class="stat"><div class="k">获客（绑定交易者）<span class="tip" data-tip="矿机强制绑定钱包交易——买矿机的人即交易用户。活跃交易者 = 非躺平分层；获客成本 = −净损益 ÷ 总钱包数（负值 = 每获取一个用户还倒赚）。">?</span></div><div class="v white" id="pr_users">—</div><div class="u" id="pr_users_u">—</div></div>
+        <div class="stat"><div class="k">撬动交易量（${'${P.hor}'} 周）<span class="tip" data-tip="矿工为 boost 与 remint 产生的累计交易量。「排放杠杆」= 每付出 $1 排放市值撬动多少美元交易量——这是矿机作为增长引擎的核心效率指标。">?</span></div><div class="v white" id="pr_vol">—</div><div class="u" id="pr_vol_u">—</div></div>
+        <div class="stat"><div class="k">现金净损益<span class="tip" data-tip="销售 + 客损 − 排放市值（横盘价口径，手续费未计）。≥0 = 整个获客与交易量引擎是免费甚至赚钱的。">?</span></div><div class="v" id="pr_cash">—</div><div class="u" id="pr_cash_u">—</div></div>
+        <div class="stat"><div class="k">战略弹药 → 市值<span class="tip" data-tip="按资金策略，全部收入作为买盘弹药；AMM 反解可拉至的理论市值（无抛压假设）。同时买盘换回的 LV 进金库，是随市值升值的仓位。">?</span></div><div class="v white" id="pr_ammo">—</div><div class="u" id="pr_ammo_u">—</div></div>
+      </div>
+    </div>
+
     <details class="fold"><summary class="panel-h">用户整体视角与 APR/APY</summary>
     <div class="stats" style="margin-bottom:0;border:none">
       <div class="stat"><div class="k">用户整体投入<span class="tip" data-tip="模拟期内全体用户实际掏出的钱：矿机购买 + 刷量摩擦成本（交易量 × 刷量成本率）。B/C 通过 remint 获得、不额外付购机费。">?</span></div><div class="v white" id="u_in">—</div><div class="u" id="u_in_u">—</div></div>
@@ -814,6 +824,19 @@ function render(){
   const bepLv=last.cumCost>0?P.plv*last.cumRev/last.cumCost:0;
   $('a3_v').innerHTML=`${P.hor} 周净损益 <b style="color:${net>=0?'var(--acid)':'var(--red)'}">${fmt(net)}</b>`;
   $('a3_d').innerHTML=`收入 ${fmt(last.cumRev)}（销售 ${fmt(totSold*P.priceUsd)} + 客损 ${fmt(last.cumRev-totSold*P.priceUsd)}）− 排放成本 ${fmt(last.cumCost)}（${fmtLV(weeks.reduce((a,x)=>a+x.emitLV,0))} LV × $${P.plv.toFixed(5)}）。平均每卖 1 台净 <b>${fmt(perMiner)}</b>。盈亏平衡 LV 价 ≈ <b>$${bepLv.toFixed(5)}</b>（市值 ${fmt(bepLv*P.circ)}）。${last.forfeitLV>0?`<b style="color:var(--acid)">到期作废 ${fmtLV(last.forfeitLV)} LV（≈${fmt(last.forfeitLV*P.plv)}，负债已随批次清零）</b>。`:P.expire==='freeze'?'<b style="color:var(--red)">冻结模式：未释放 LV 是永续负债</b>。':''}`;
+
+  // ④ protocol-side gains
+  const cumVol=weeks.reduce((a,x)=>a+x.volume,0);
+  const activeTraders=Math.round(totSold*(1-P.idle));
+  $('pr_users').textContent=fmtI(totSold)+' 钱包';
+  $('pr_users_u').textContent=fmtI(activeTraders)+' 名周活交易者 · 获客成本 '+(net>=0?'−':'')+fmt(Math.abs(net)/Math.max(1,totSold))+'/人'+(net>=0?'（倒赚）':'');
+  $('pr_vol').textContent=fmt(cumVol);
+  $('pr_vol_u').textContent='排放杠杆：每 $1 排放撬动 '+(last.cumCost>0?fmt(cumVol/last.cumCost):'—')+' 交易量';
+  const pc=$('pr_cash');pc.textContent=(net>=0?'+':'')+fmt(net);pc.className='v '+(net>=0?'':'red');
+  $('pr_cash_u').textContent='销售 '+fmt(totSold*P.priceUsd)+' + 客损 '+fmt(last.cumRev-totSold*P.priceUsd)+' − 排放 '+fmt(last.cumCost);
+  const ammo=last.cumRev;
+  $('pr_ammo').textContent=fmt(ammo);
+  $('pr_ammo_u').textContent='全额买盘理论可拉至 '+fmt(P.mc*Math.pow(1+ammo/P.depth,2))+'（深度 '+fmt(P.depth)+'）';
 
   // per-tier yield table at target MC
   $('v_tmc').textContent=fmt(P.tmc);
