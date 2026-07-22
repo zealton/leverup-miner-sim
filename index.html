@@ -770,16 +770,17 @@ function render(){
   $('a1_v').innerHTML=k<=0?'资金池无法承接任何排放':`单台 A ≤ <b>${fmtLV(P.L.A*k)}</b> LV`;
   $('a1_d').innerHTML=`第一期口径（先售罄后开挖）：期初资金 = 销售收入，开挖后每周新入场仅剩<b>客损</b>。判据 = 资金池全程 ≥ 0。当前设置 A=${fmtLV(P.L.A)}/台 → 资金池最低 <b style="color:${pool.min>=0?'var(--acid)':'var(--red)'}">${fmt(pool.min)}</b>${pool.negW!==null?'（第 '+pool.negW+' 周转负）':'（全程为正）'}。反解：单台 A ≤ ${fmtLV(P.L.A*k)} LV（B/C 等比 ${fmtLV(P.L.B*k)} / ${fmtLV(P.L.C*k)}），总排放上限 ≈ <b>${fmtLV(maxEmit*k)} LV</b>（市值 ${fmt(maxEmit*k*P.plv)}）。`;
 
-  // ② market cap thresholds around target payback
-  const mcFor=days=>totalCost*P.circ*P.T/(P.L.A*b*days);
-  const mcReal=mcFor(lifeDays*0.6), mcBoom=mcFor(10);
-  const mcNeed=mcFor(P.payt);
-  const lNeed=P.plv>0&&b>0?totalCost*P.T/(P.plv*b*P.payt):Infinity;
-  const budgetL=P.L.A*k;
-  const hit=payback<=P.payt;
+  // ② market cap thresholds: design target = WHALES pay back within P.payt days AT TARGET MC
+  const whaleLife=P.T/Math.max(bHW,0.0001);
+  const whaleCost=P.priceUsd+P.vol/7*Math.min(whaleLife,P.T)*P.cuser;
+  const pbWhale=plv=>{const dy=P.L.A/P.T*bHW*plv;return dy>0?whaleCost/dy:Infinity};
+  const pbWT=pbWhale(P.tplv), pbWC=pbWhale(P.plv);
+  const mcNeedW=whaleCost*P.circ*P.T/(P.L.A*bHW*P.payt);
+  const pbTypTgt=(P.priceUsd+lifeWashCost)/(P.L.A/P.T*b*P.tplv||1);
+  const hit=pbWT<=P.payt;
   const a2=$('ans_mc');hit?a2.classList.remove('warn'):a2.classList.add('warn');
-  $('a2_v').innerHTML=`${P.payt} 天回本 → 市值 ≥ <b>${fmt(mcNeed)}</b>`;
-  $('a2_d').innerHTML=`当前市值 ${fmt(P.mc)} 下实际回本 <b>${payback===Infinity?'不可能':Math.round(payback)+' 天'}</b>${hit?'（🎯 已达标）':''}。达成 ${P.payt} 天的两条路径：① 市值涨到 <b>${fmt(mcNeed)}</b>（当前的 ${(mcNeed/P.mc).toFixed(1)}×）；② 当前市值下把单台 A 提到 <b>${fmtLV(lNeed)} LV</b>——排放预算上限 ${fmtLV(budgetL)} LV${lNeed>budgetL?'，<b style="color:var(--red)">超预算 '+(lNeed/Math.max(1,budgetL)).toFixed(1)+'×：两周冲劲 = 首批亏损获客，需 treasury 补贴、靠市值上行回收</b>':'（预算内 ✓）'}。参考：稳回本（${Math.round(lifeDays*0.6)} 天）需 ≥ ${fmt(mcReal)}；10 天爆炸需 ≥ ${fmt(mcBoom)}。`;
+  $('a2_v').innerHTML=hit?`大户 @目标市值 <b>${Math.round(pbWT)} 天回本</b> 🎯`:`${P.payt} 天回本（大户）→ 市值 ≥ <b>${fmt(mcNeedW)}</b>`;
+  $('a2_d').innerHTML=`设计口径：目标 = 让<b>盈利大户</b>（boost ${bHW.toFixed(2)}×，全成本 ${fmt(whaleCost)}）在 ${P.payt} 天内回本。目标市值 ${fmt(P.tmc)} 下大户回本 <b>${pbWT===Infinity?'—':Math.round(pbWT)+' 天'}</b>${hit?'（🎯 达标）':`（未达标：需市值 ≥ ${fmt(mcNeedW)}，为目标的 ${(mcNeedW/P.tmc).toFixed(1)}×）`}；当前市值下大户 ${pbWC===Infinity?'—':Math.round(pbWC)+' 天'}。普通用户参考：当前 ${payback===Infinity?'—':Math.round(payback)+' 天'} → 目标市值 ${isFinite(pbTypTgt)?Math.round(pbTypTgt)+' 天':'—'}（完整分布见「回本时间分布」图——短期回本本来就<b>只属于一部分人</b>）。`;
 
   // ③ cost
   const last=weeks[weeks.length-1];
